@@ -4,6 +4,36 @@ Ovdje se zapisuju samo potvrđene odluke koje mijenjaju arhitekturu, tehnologiju
 
 Ne zapisuj obične implementacijske detalje, privremene eksperimente ni nepotvrđene pretpostavke. Postojeće odluke iz `AGENTS.md` ne kopiraj bez nove potrebe; ovdje se bilježi njihov nastanak ili kasnija promjena.
 
+## Transakcijska granica spremanja MachiningJob agregata
+
+**Datum:** 2026-08-26
+**Status:** IMPLEMENTIRANO / TESTIRANO
+
+**Odluka:** `JdbcMachiningJobRepository.save` posjeduje jednu JDBC transakciju za insert novih `MaterialSheet`, `MachiningParameters` i `Shape` snapshot zapisa te završni insert `MachiningJob`. Potpuno ponovno učitavanje spremljenog agregata izvodi se na istoj vezi prije commita. Bilo koja SQL ili runtime pogreška prije uspješnog commita uzrokuje rollback cijele transakcije.
+
+**Razlog:** Snapshot zapisi nemaju samostalan život izvan jednog joba. Jedna transakcija sprječava djelomično spremljene snapshote ako završni job insert ne uspije te drži SQL i rekonstrukciju agregata unutar persistence sloja.
+
+**Razmotrene alternative:** Uzastopno pozivanje javnih snapshot repository metoda nije odabrano jer svaka otvara vlastitu vezu i ne može sudjelovati u istoj transakciji. Spremanje `MaterialType`, `CncMachine`, `Tool` i `User` zajedno s jobom nije odabrano jer su to unaprijed postojeće reference stvarnog workflowa. `update` nije uveden jer quick-access ponovno učitava podatke, a ne mijenja postojeći job.
+
+**Utjecaj na implementaciju:** Snapshot JDBC implementacije imaju package-private insert metode koje koriste otvorenu vezu bez commita ili zatvaranja. `MachiningJobRepository` izlaže samo `save`, `findById` i `findAll`; service i controller ne trebaju SQL za ponovno sastavljanje cijelog joba.
+
+---
+
+## Konvencija jednostavnih JDBC repositoryja
+
+**Datum:** 2026-08-26
+**Status:** IMPLEMENTIRANO / TESTIRANO
+
+**Odluka:** Repository ugovori nalaze se u `persistence.repository`, a JDBC implementacije u `persistence.jdbc` te koriste nazive `XRepository` i `JdbcXRepository`. Ne postoji generički `CrudRepository`; svaki ugovor izlaže samo operacije potrebne workflowu. U milestoneu 7.1 `save` je insert-only, prima novi entitet bez ID-a i vraća ponovno učitani entitet s bazno generiranim identitetom i timestampovima.
+
+**Razlog:** Specifični ugovori čuvaju mali i razumljiv persistence API, a odvojene JDBC implementacije zadržavaju SQL izvan domene i JavaFX controllera. Ponovno učitavanje nakon inserta provjerava stvarno mapiranje baze u domenski objekt.
+
+**Razmotrene alternative:** Generički puni CRUD nije odabran jer bi unaprijed uveo nepotrebne operacije. Spremanje cijelog `MachiningJob` agregata pripada zasebnom transakcijskom milestoneu 7.2. Mutiranje ulaznog entiteta generiranim ID-em nije odabrano.
+
+**Utjecaj na implementaciju:** Repositoryji koriste `PreparedStatement`, try-with-resources i `ConnectionProvider`. `Role` ima samo dohvat po nazivu, a `User` samo insert i dohvat po korisničkom imenu, što je minimalna persistence podloga za odluku 6.1 bez autentikacijske i autorizacijske logike.
+
+---
+
 ## Lokalna autentikacija, uloge i vlasništvo nad poslovima u V1
 
 **Datum:** 2026-08-25
