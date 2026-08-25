@@ -20,11 +20,28 @@ Prije otvaranja iste file-based baze u Consoleu zatvori aplikaciju i sve njezine
 Driver Class:
 org.h2.Driver
 
-JDBC URL:
-jdbc:h2:C:/Users/lukab/Documents/Projekt/Zavrsni_Rad-Luka_Bosnjak/data/cnc_optimizer
+Ispravan apsolutni JDBC URL za H2 Console:
+jdbc:h2:file:C:/Users/lukab/Documents/Projekt/Zavrsni_Rad-Luka_Bosnjak/data/cnc-optimizer
 
 User Name:
 sa
 
 Password:
 prazno
+
+## Provjera da je otvorena prava baza
+
+Aplikacijska baza zove se `cnc-optimizer`. Naziv `cnc_optimizer` s donjom crtom nije ista baza i H2 ce za takav URL otvoriti ili stvoriti drugu datoteku baze.
+
+Ne koristiti:
+`jdbc:h2:C:/Users/lukab/Documents/Projekt/Zavrsni_Rad-Luka_Bosnjak/data/cnc_optimizer`
+
+Ako Console nakon spajanja prikazuje samo `INFORMATION_SCHEMA` i `Users`, najvjerojatnije je otvorena pogresna fizicka baza ili aplikacija nije inicijalizirala shemu u toj bazi.
+
+Nakon spajanja pokreni:
+
+```sql
+SHOW TABLES;
+```
+
+U ispravnoj aplikacijskoj bazi trebaju se vidjeti tablice poput `ROLE`, `APP_USER`, `MATERIAL_TYPE`, `CNC_MACHINE`, `TOOL`, `SHAPE` i `MACHINING_JOB`.
