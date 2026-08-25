@@ -170,7 +170,11 @@ Codex mora prije bilo kakve promjene:
 
 Nakon što razumiješ Codexov plan, prebaci se u Code Mode i koristi:
 
-> Implementiraj samo prethodno odobreni plan. Ne prelazi na sljedeći korak. Ne dodaj funkcionalnosti koje nisu dio ovog zadatka. Nakon promjena pokreni najrelevantniji build/test, pokaži rezultat, navedi sve promijenjene datoteke i objasni mi što je napravljeno kao studentu koji mora moći obraniti kod pred mentorom. Ako test ne prolazi, prvo objasni uzrok i popravi samo ono što pripada ovom koraku. Na kraju stani.
+> Implementiraj samo prethodno odobreni plan. Ne prelazi na sljedeći korak. Ne dodaj funkcionalnosti koje nisu dio ovog zadatka. Nakon promjena pokreni najrelevantniji build/test, pokaži rezultat, navedi sve promijenjene datoteke i objasni mi što je napravljeno kao studentu koji mora moći obraniti kod pred mentorom. Ako test ne prolazi, prvo objasni uzrok i popravi samo ono što pripada ovom koraku.
+>
+> Prije završnog odgovora obavezno ažuriraj dokumentacijski dnevnik u `dokumentacija/biljeske/` prema pravilima iz `AGENTS.md` i project-specific Skilla. Bilješka mora zabilježiti što je promijenjeno, zašto, kako je provjereno, što još nije testirano te izdvojiti samo stvarno važne kandidate za isječke koda za završni rad. Ako u ovom koraku nema smislenog isječka koda, napiši da ga nema umjesto da ubacuješ boilerplate. Ažuriraj i `dokumentacija/biljeske/00_indeks.md`.
+>
+> Na kraju stani.
 
 ## C. Pravilo baby-step rada
 
@@ -180,6 +184,173 @@ Ne šalji dva ili tri prompta odjednom. Nakon svakog:
 - pokreni aplikaciju/test kada je primjenjivo
 - pitaj ako ti neka klasa ili linija nije jasna
 - tek tada nastavi na sljedeći prompt
+
+## D. Dokumentacijski dnevnik za završni rad
+
+Uz izvorni kod tijekom cijelog razvoja vodi se **projektna dokumentacija razvoja**. Cilj nije dokumentirati svaku sitnicu, nego sačuvati upravo one informacije koje će kasnije biti potrebne za poglavlja o arhitekturi, bazi podataka, implementaciji, algoritmu raspoređivanja, generiranju G-koda, korisničkom sučelju i testiranju.
+
+U korijenu IntelliJ projekta treba postojati:
+
+```text
+dokumentacija/
+└── biljeske/
+    ├── 00_indeks.md
+    ├── 00_predlozak_biljeske.md
+    ├── 00_odluke.md
+    └── <oznaka-prompta>-<kratki-naziv>.md
+```
+
+Primjeri:
+
+```text
+dokumentacija/biljeske/01-02-maven-projekt.md
+dokumentacija/biljeske/03-03-cnc-machine.md
+dokumentacija/biljeske/08-05-toolpath-trokut.md
+dokumentacija/biljeske/09-03-grid-layout.md
+dokumentacija/biljeske/10-04-linearni-gcode.md
+```
+
+### Što se zapisuje nakon svakog implementacijskog prompta
+
+Bilješka mora sadržavati najmanje:
+
+1. **Oznaku i naziv koraka**
+2. **Datum**
+3. **Status**
+   - PLANIRANO
+   - IMPLEMENTIRANO
+   - TESTIRANO
+   - NIJE TESTIRANO
+   - BUDUĆI RAZVOJ
+4. **Cilj promjene**
+5. **Promijenjene datoteke**
+6. **Što je stvarno implementirano**
+7. **Zašto je odabrano upravo to rješenje**
+8. **Povezanost s arhitekturom aplikacije**
+9. **Važne odluke i ograničenja**
+10. **Način provjere**
+    - izvršena naredba/build/test
+    - rezultat testa
+11. **Otvorena pitanja / što još nije potvrđeno**
+12. **Moguće poglavlje završnog rada**
+13. **Kandidati za isječke koda**
+14. **Kandidati za sliku, UML, ER dijagram ili tablicu**, ako se tijekom koraka pojavi nešto vrijedno prikaza
+15. **Git commit/hash**, ako je Git već uveden i commit postoji.
+
+### Pravila za isječke koda
+
+Codex ne smije kopirati velike količine koda samo radi bilješki.
+
+Kandidat za isječak koda treba biti dio koji pomaže objasniti **kako aplikacija radi** ili **zašto je arhitektura napravljena na određeni način**, primjerice:
+
+- konfiguracija JavaFX/Maven projekta ako je relevantna za opis tehnologija
+- H2/JDBC konfiguracija
+- korištenje `PreparedStatement`
+- transakcijsko spremanje `MachiningJob`
+- važna validacija
+- pretvorba `Shape` podataka u `ToolPath`
+- izračun koordinata jednakostraničnog trokuta
+- layout algoritam
+- usporedba rotacije pravokutnika
+- izračun kapaciteta i potrebnog broja ploča
+- step-down logika
+- RichAuto A11 profil
+- formatiranje G-code brojeva
+- pretvorba `ToolPath` segmenata u G-kod
+- koordiniranje cijelog procesa u `ProgramGenerationService`
+- dinamička JavaFX polja za oblik
+- `.nc` export
+- relevantna obrada pogrešaka.
+
+U pravilu jedan kandidat treba sadržavati **otprilike 5–25 relevantnih linija**. Ako je metoda dulja, izdvojiti samo dio koji objašnjava bitnu ideju.
+
+Bilješka za svaki kandidat treba imati oblik:
+
+````markdown
+### Kandidat za isječak koda: <kratak akademski naziv>
+
+**Datoteka:** `src/.../ClassName.java`  
+**Klasa/metoda:** `ClassName#methodName`  
+**Zašto je važan:** kratko objašnjenje što ovaj kod dokazuje ili objašnjava.  
+**Moguće poglavlje:** npr. 9. Implementacija / 10. Algoritam raspoređivanja
+
+```java
+// samo relevantni dio stvarnog koda
+```
+
+**Ideja opisa u radu:** 2–4 rečenice koje objašnjavaju kod bez marketinških tvrdnji.
+````
+
+Ne treba unaprijed numerirati `Isječak koda 1`, `Isječak koda 2`, itd. Konačna numeracija dodjeljuje se tek pri pisanju Word dokumenta, kada bude poznato koji će kandidati stvarno ući u rad.
+
+Ako korak nema vrijedan isječak, bilješka treba sadržavati:
+
+```text
+Kandidat za isječak koda: nema – u ovom koraku nema koda dovoljno značajnog za završni rad.
+```
+
+### Što se NE zapisuje kao kandidat za završni rad
+
+Ne izdvajati:
+
+- obične gettere i settere
+- import liste
+- trivijalne konstruktore
+- generirani boilerplate
+- cijele klase bez potrebe
+- ponovljene isječke koji pokazuju istu stvar
+- dependency konfiguraciju koja na kraju nije korištena
+- kod iz neuspjelih eksperimenata koji nije dio konačne implementacije, osim ako je problem i njegovo rješenje važno za poglavlje o ograničenjima ili razvoju
+- tajne, lozinke, tokene, lokalne putanje koje sadrže osobne podatke ili druge osjetljive podatke.
+
+### `00_indeks.md`
+
+`00_indeks.md` služi kao kronološki katalog i treba se ažurirati nakon svakog koraka.
+
+Predloženi stupci:
+
+```text
+Prompt | Tema | Status | Glavne datoteke | Testirano | Kandidat za završni rad | Bilješka
+```
+
+Time će se na kraju razvoja moći brzo pronaći:
+
+- gdje je određena funkcionalnost implementirana
+- kada je uvedena
+- kako je testirana
+- koji je kod dobar kandidat za prikaz u završnom radu.
+
+### `00_odluke.md`
+
+U ovu datoteku ulaze **samo važne projektne odluke** koje mogu utjecati na tekst završnog rada, primjerice:
+
+- odabrani build alat
+- stvarna JDK verzija
+- FXML ili programatski JavaFX
+- konačni model `ToolType`
+- autentikacija/RBAC scope
+- način reprezentacije kružnice u `ToolPath`
+- način layouta
+- način pohrane G-koda
+- potvrđene RichAuto A11 postavke
+- promjene početnog modela baze.
+
+Svaka odluka treba sadržavati:
+
+```text
+Datum
+Odluka
+Razlog
+Alternative koje su razmotrene
+Utjecaj na implementaciju
+Status: PLANIRANO / IMPLEMENTIRANO / TESTIRANO
+```
+
+### Zašto ovo radimo
+
+Primjer završnog rada `Primjer_ZavrsniRadMatijaKisFinal` koristi poseban **Popis isječaka koda**, a zatim u poglavljima o tehnologijama i implementaciji prikazuje odabrane isječke te tekstom objašnjava njihovu svrhu. Naš dnevnik služi kao priprema za isti princip, ali će se u konačni rad prenijeti samo isječci iz **stvarno završene implementacije**.
+
+Bilješke nisu konačni tekst završnog rada. One su tehnički trag razvoja i izvor iz kojeg se kasnije piše akademski oblikovan tekst.
 
 ---
 
@@ -206,6 +377,16 @@ Ne šalji dva ili tri prompta odjednom. Nakon svakog:
 >
 > Dodaj pravilo da se svaki veći zadatak prvo analizira u Plan/Ask modu i da se implementira samo jedna mala cjelina.
 >
+> U `AGENTS.md` obavezno dodaj i trajno pravilo dokumentiranja:
+> - projektna dokumentacija razvoja nalazi se u `dokumentacija/biljeske/`
+> - nakon svakog zadatka koji promijeni kod, konfiguraciju, SQL, testove ili UI mora se stvoriti ili ažurirati bilješka za taj prompt
+> - nakon važne arhitektonske/tehnološke odluke ažurira se `00_odluke.md`
+> - nakon svakog takvog koraka ažurira se `00_indeks.md`
+> - bilješka mora razlikovati IMPLEMENTIRANO od TESTIRANO
+> - bilješka mora izdvojiti najviše nekoliko smislenih kandidata za isječak koda i ne smije forsirati isječak ako je kod trivijalan
+> - isječak mora biti iz stvarnog trenutnog koda i mora sadržavati putanju datoteke, klasu/metodu, razlog važnosti i moguće poglavlje završnog rada
+> - ne zapisivati tajne, lozinke, tokene ni osobne podatke.
+>
 > Nemoj još stvarati aplikacijske klase.
 
 ## Prompt 0.2 – Project-specific Skill
@@ -221,9 +402,53 @@ Ne šalji dva ili tri prompta odjednom. Nakon svakog:
 > - provjera da geometrija ostaje odvojena od G-koda
 > - provjera da layout algoritam ne naziva rezultat matematički optimalnim
 > - provjera da RichAuto profil razlikuje IMPLEMENTIRANO od TESTIRANO
-> - nakon svake izmjene tražiti build/test i sažetak promijenjenih datoteka.
+> - nakon svake izmjene tražiti build/test i sažetak promijenjenih datoteka
+> - automatska provjera je li nakon implementacije ažuriran `dokumentacija/biljeske/`
+> - pomoć pri izboru samo smislenih kandidata za isječke koda koji će se kasnije moći objasniti u završnom radu
+> - zabrana zapisivanja trivijalnog boilerplatea kao „važnog isječka“
+> - ažuriranje `00_indeks.md` i, kada je donesena važna odluka, `00_odluke.md`.
 >
 > Nemoj mijenjati aplikacijski kod. Prvo mi pokaži sadržaj i strukturu Skilla te objasni gdje će biti spremljen i kada će se automatski koristiti.
+
+## Prompt 0.3 – Kreiranje sustava `dokumentacija/biljeske`
+
+> PLAN MODE. Prije početka aplikacijskog koda pripremi sustav radnih bilješki za završni rad.
+>
+> U projektu želim:
+>
+> ```text
+> dokumentacija/
+> └── biljeske/
+>     ├── 00_indeks.md
+>     ├── 00_predlozak_biljeske.md
+>     └── 00_odluke.md
+> ```
+>
+> `00_predlozak_biljeske.md` mora sadržavati:
+> - oznaku/naziv prompta
+> - datum
+> - status PLANIRANO / IMPLEMENTIRANO / TESTIRANO / NIJE TESTIRANO / BUDUĆI RAZVOJ
+> - cilj
+> - popis promijenjenih datoteka
+> - opis stvarne implementacije
+> - razlog odabranog rješenja
+> - arhitektonsku povezanost
+> - važne odluke i ograničenja
+> - naredbe za build/test i stvarni rezultat
+> - otvorena pitanja
+> - moguće poglavlje završnog rada
+> - kandidata za isječak koda s putanjom, klasom/metodom, kratkim stvarnim kodom i idejom opisa
+> - kandidata za sliku/dijagram/tablicu ako postoji
+> - commit/hash ako postoji.
+>
+> `00_indeks.md` neka bude kratka tablica:
+> `Prompt | Tema | Status | Glavne datoteke | Testirano | Kandidat za završni rad | Bilješka`.
+>
+> `00_odluke.md` služi samo za odluke koje mijenjaju način na koji ćemo kasnije opisivati aplikaciju.
+>
+> Nakon kreiranja dodaj provjeru da se ova pravila nalaze i u `AGENTS.md` te project-specific Skillu. Ako postoje, nemoj ih duplicirati bez potrebe.
+>
+> Nemoj još stvarati aplikacijske klase.
 
 ---
 
@@ -237,7 +462,7 @@ Ne šalji dva ili tri prompta odjednom. Nakon svakog:
 > - postoji li Maven i koja je verzija
 > - postoji li Gradle i koja je verzija
 > - je li direktorij već Git repozitorij
-> - postoji li postojeći `pom.xml`, `build.gradle` ili `build.gradle.kts`.
+> - postoji li postojeći `../pom.xml`, `build.gradle` ili `build.gradle.kts`.
 >
 > Rezultate mi objasni i preporuči build alat za JavaFX + H2 + JUnit projekt. Prednost daj jednostavnosti za studentski projekt. Ne pretpostavljaj JDK verziju.
 
@@ -246,7 +471,7 @@ Ne šalji dva ili tri prompta odjednom. Nakon svakog:
 > PLAN MODE. Na temelju stvarno pronađenog JDK-a predloži minimalni Maven projekt za ovu desktop Java aplikaciju.
 >
 > Za sada želim samo:
-> - ispravan `pom.xml`
+> - ispravan `../pom.xml`
 > - Java source/test strukturu
 > - JavaFX dependency potrebnu za minimalni prozor
 > - JUnit za testove
@@ -1351,6 +1576,30 @@ Ovaj korak se radi tek nakon što svi prethodni softverski testovi prolaze.
 
 ---
 
+# Dokumentacijska struktura projekta
+
+Ova struktura nije dio Java package arhitekture, nego prati razvoj radi završnog rada:
+
+```text
+<project-root>
+├── dokumentacija
+│   └── biljeske
+│       ├── 00_indeks.md
+│       ├── 00_predlozak_biljeske.md
+│       ├── 00_odluke.md
+│       ├── 01-02-maven-projekt.md
+│       ├── 03-03-cnc-machine.md
+│       ├── ...
+│       └── 13-06-finalni-test-report.md
+├── src
+├── pom.xml
+└── AGENTS.md
+```
+
+Naziv pojedine bilješke treba sadržavati oznaku prompta kako bi se kasnije mogla izravno povezati s fazom implementacije.
+
+---
+
 # Predložena konačna package struktura
 
 Ovo je planirana struktura; stvarni base package upisuje se tek nakon kreiranja projekta.
@@ -1596,6 +1845,8 @@ UNIQUE(MACHINING_JOB.shape_id)
 
 # Redoslijed milestoneova
 
+Za **svaki milestone** vrijedi dodatni kriterij: odgovarajuće bilješke u `dokumentacija/biljeske/` moraju biti ažurirane i moraju odgovarati stvarnom kodu/testovima.
+
 ## Milestone A – projekt se pokreće
 
 Završeno kada:
@@ -1677,6 +1928,7 @@ Završeno kada:
 5. RichAuto A11 dokumentacija pokazuje da se postavke za `F`, `S` i `G54` mogu konfigurirati kao read/ignore, zato generator mora biti profiliran, a ne hardkodiran.
 6. RichAuto A11/A11plus dokumentacija navodi G00/G01/G02/G03, G17, G21, G54–G59, G90/G91 i tipične M03/M05/M30 naredbe, ali stvarni output za konkretni ZK-1325 mora se potvrditi fizičkim testom.
 7. OpenAI Codex best practices preporučuju prvo planiranje u Ask/Plan načinu, dobro scoped zadatke, persistent project context preko `AGENTS.md` i iterativnu implementaciju umjesto jednog velikog zadatka.
+8. OpenAI smjernice za rad s Codexom navode `AGENTS.md` kao mehanizam za trajne projektne upute, a smjernice za AI-native engineering posebno preporučuju uključivanje pravila za dokumentaciju u `AGENTS.md`, automatsko generiranje dokumentacije gdje ima smisla te ljudski pregled važnih dokumenata. Zato se bilješke generiraju automatski, ali ih student mora pregledati prije korištenja u završnom radu.
 
 ---
 
@@ -1697,4 +1949,7 @@ Završeno kada:
 - Ne hardkodirati RichAuto F/S/G54 ponašanje prije provjere.
 - Ne tvrditi da je layout matematički optimalan.
 - Ne označiti RichAuto kompatibilnost kao TESTIRANU prije stvarnog testa.
-- Ne prelaziti na sljedeći prompt dok prethodni korak nije razumljiv i provjeren.
+- Ne preskakati ažuriranje `dokumentacija/biljeske/` nakon implementacijskih promjena.
+- Ne puniti bilješke trivijalnim getterima/setterima i boilerplateom samo da bi postojao isječak koda.
+- Ne koristiti bilješke kao dokaz TESTIRANOG stanja ako test nije stvarno izvršen.
+- Ne prelaziti na sljedeći prompt dok prethodni korak nije razumljiv, provjeren i dokumentiran.
