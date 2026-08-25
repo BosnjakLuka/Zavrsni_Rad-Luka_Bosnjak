@@ -4,6 +4,21 @@ Ovdje se zapisuju samo potvrđene odluke koje mijenjaju arhitekturu, tehnologiju
 
 Ne zapisuj obične implementacijske detalje, privremene eksperimente ni nepotvrđene pretpostavke. Postojeće odluke iz `AGENTS.md` ne kopiraj bez nove potrebe; ovdje se bilježi njihov nastanak ili kasnija promjena.
 
+## V1 geometrijska reprezentacija i ToolPath
+
+**Datum:** 2026-08-26
+**Status:** IMPLEMENTIRANO / TESTIRANO
+
+**Odluka:** Geometry sloj koristi vlastite nepromjenjive 2D vrijednosne objekte `Point2`, `LineSegment`, `ArcSegment` i `ToolPath`, bez JavaFX tipova i bez G-code teksta. Lokalne konture pravokutnih oblika i trokuta počinju u `(0,0)` i imaju smjer suprotan kazaljci na satu. Lokalni koordinatni prostor kruga koristi donji lijevi origin njegovog bounding prostora: za promjer `d` centar je `(d/2,d/2)`, a kružnica se zapisuje kao dva `COUNTERCLOCKWISE` polukružna `ArcSegment` zapisa od lijeve do desne krajnje točke i natrag. `ToolPath.translated` stvara novu pomaknutu putanju za budući layout. `ToolPathBoundsCalculator` računa `Bounds2` iz stvarnih krajnjih točaka segmenata i kardinalnih ekstrema obuhvaćenih lukova. Single-shape fit prihvaća putanju samo kada je cijeli opseg unutar nenegativnog lokalnog XY prostora te ne prelazi ni dimenzije ploče ni XY radno područje stroja.
+
+**Razlog:** Vlastiti geometrijski tipovi čuvaju geometry sloj neovisnim o JavaFX-u i RichAuto formatu. Dva polukruga imaju različite početne i završne točke pa izbjegavaju dvosmislen full-circle zapis sa `start == end`; eksplicitni centar i smjer daju budućem G-code sloju dovoljno podataka za zasebno mapiranje na I/J i G02/G03. Donji lijevi origin omogućuje da lokalni opseg kruga ostane od 0 do promjera po obje osi, što pojednostavljuje buduće bounds i layout operacije.
+
+**Razmotrene alternative:** JavaFX `Point2D` nije odabran jer bi geometry vezao uz UI framework. Jedan full-circle segment nije odabran zbog dvosmislene jednake početne i završne točke. Mutable geometrijske klase nisu odabrane jer translacija treba sačuvati izvornu putanju. Zasebne generator klase za svaki oblik nisu uvedene jer su četiri algoritma dovoljno kratka i čitljiva kao privatne metode jednog `ToolPathService` razreda.
+
+**Utjecaj na implementaciju:** Bounds i fit koriste već generirane segmente bez ponavljanja formula trokuta ili kruga. Budući layout sloj može premještati cijele putanje, ponovno izračunati njihov opseg i primijeniti zasebna pravila rasporeda, a gcode sloj mora konzumirati segmente bez računanja geometrije. `COUNTERCLOCKWISE` je geometrijska orijentacija, ne fizički potvrđena strategija rezanja na ZK-1325 / RichAuto A11.
+
+---
+
 ## Transakcijska granica spremanja MachiningJob agregata
 
 **Datum:** 2026-08-26
