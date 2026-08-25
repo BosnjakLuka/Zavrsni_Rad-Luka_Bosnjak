@@ -1,0 +1,6 @@
+interface:
+  display_name: "CNC Final Project Guardrails"
+  short_description: "Provjera arhitekture, scopea i razvojnih bilješki"
+  default_prompt: "Use $cnc-final-project-guardrails to review this project change against its architecture, testing, and documentation rules."
+policy:
+  allow_implicit_invocation: true
