@@ -12,12 +12,14 @@ public record RichAutoA11Profile(
         PositioningMode positioningMode,
         int numericPrecision,
         ZCoordinateConvention zCoordinateConvention,
+        ArcCenterMode arcCenterMode,
         Set<PhysicalCapability> physicallyConfirmedCapabilities
 ) {
     public RichAutoA11Profile {
         Objects.requireNonNull(units, "units");
         Objects.requireNonNull(positioningMode, "positioningMode");
         Objects.requireNonNull(zCoordinateConvention, "zCoordinateConvention");
+        Objects.requireNonNull(arcCenterMode, "arcCenterMode");
         Objects.requireNonNull(physicallyConfirmedCapabilities, "physicallyConfirmedCapabilities");
         if (numericPrecision < 0) {
             throw new IllegalArgumentException("Numeric precision must not be negative");
@@ -35,6 +37,10 @@ public record RichAutoA11Profile(
 
     public enum PositioningMode {
         ABSOLUTE
+    }
+
+    public enum ArcCenterMode {
+        RELATIVE_TO_ARC_START
     }
 
     public enum ZCoordinateConvention {
@@ -74,6 +80,8 @@ public record RichAutoA11Profile(
         XY_PLANE_G17,
         ABSOLUTE_POSITIONING_G90,
         PROGRAM_END_M30,
-        Z_DIRECTION_AND_WORK_ZERO
+        Z_DIRECTION_AND_WORK_ZERO,
+        ARC_MOVES_G02_G03,
+        RELATIVE_ARC_CENTER_IJ
     }
 }

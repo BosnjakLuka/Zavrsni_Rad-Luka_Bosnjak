@@ -1,6 +1,7 @@
 package hr.lukabosnjak.gcode;
 
 import hr.lukabosnjak.domain.entities.MachiningParameters;
+import hr.lukabosnjak.geometry.ArcSegment;
 import hr.lukabosnjak.geometry.LineSegment;
 import hr.lukabosnjak.geometry.PathSegment;
 import hr.lukabosnjak.geometry.Point2;
@@ -26,7 +27,7 @@ public final class RichAutoA11GCodeGenerator implements GCodeGenerator {
         Objects.requireNonNull(toolPath, "toolPath");
         Objects.requireNonNull(parameters, "parameters");
 
-        List<LineSegment> segments = requireConnectedClosedLinePath(toolPath);
+        List<PathSegment> segments = requireConnectedClosedPath(toolPath);
         List<Double> passDepths = PassDepthCalculator.calculate(
                 parameters.getCutDepth(),
                 parameters.getStepDown());
@@ -48,25 +49,20 @@ public final class RichAutoA11GCodeGenerator implements GCodeGenerator {
         return new GCodeProgram(lines);
     }
 
-    private List<LineSegment> requireConnectedClosedLinePath(ToolPath toolPath) {
-        List<LineSegment> lineSegments = new ArrayList<>(toolPath.segments().size());
+    private List<PathSegment> requireConnectedClosedPath(ToolPath toolPath) {
         Point2 previousEnd = null;
 
         for (PathSegment segment : toolPath.segments()) {
-            if (!(segment instanceof LineSegment lineSegment)) {
-                throw new IllegalArgumentException("Linear G-code generator supports only line segments");
+            if (previousEnd != null && !previousEnd.equals(segment.start())) {
+                throw new IllegalArgumentException("ToolPath must be connected");
             }
-            if (previousEnd != null && !previousEnd.equals(lineSegment.start())) {
-                throw new IllegalArgumentException("Line-segment ToolPath must be connected");
-            }
-            lineSegments.add(lineSegment);
-            previousEnd = lineSegment.end();
+            previousEnd = segment.end();
         }
 
-        if (!previousEnd.equals(lineSegments.getFirst().start())) {
-            throw new IllegalArgumentException("Line-segment ToolPath must be closed");
+        if (!previousEnd.equals(toolPath.startPoint())) {
+            throw new IllegalArgumentException("ToolPath must be closed");
         }
-        return List.copyOf(lineSegments);
+        return toolPath.segments();
     }
 
     private String rapidZ(double z) {
@@ -86,17 +82,46 @@ public final class RichAutoA11GCodeGenerator implements GCodeGenerator {
         return command;
     }
 
-    private List<String> cuttingMoves(List<LineSegment> segments, double feedRate) {
+    private List<String> cuttingMoves(List<PathSegment> segments, double feedRate) {
         List<String> lines = new ArrayList<>(segments.size());
         for (int index = 0; index < segments.size(); index++) {
-            Point2 end = segments.get(index).end();
-            String command = "G01 X" + formatter.format(end.x())
-                    + " Y" + formatter.format(end.y());
+            String command = cuttingMove(segments.get(index));
             if (index == 0 && profile.emitFeedRate()) {
                 command += " F" + formatter.format(feedRate);
             }
             lines.add(command);
         }
         return lines;
+    }
+
+    private String cuttingMove(PathSegment segment) {
+        return switch (segment) {
+            case LineSegment line -> linearMove(line);
+            case ArcSegment arc -> arcMove(arc);
+        };
+    }
+
+    private String linearMove(LineSegment line) {
+        return "G01 X" + formatter.format(line.end().x())
+                + " Y" + formatter.format(line.end().y());
+    }
+
+    private String arcMove(ArcSegment arc) {
+        double centerOffsetI = switch (profile.arcCenterMode()) {
+            case RELATIVE_TO_ARC_START -> arc.center().x() - arc.start().x();
+        };
+        double centerOffsetJ = switch (profile.arcCenterMode()) {
+            case RELATIVE_TO_ARC_START -> arc.center().y() - arc.start().y();
+        };
+
+        String command = switch (arc.direction()) {
+            case CLOCKWISE -> "G02";
+            case COUNTERCLOCKWISE -> "G03";
+        };
+        return command
+                + " X" + formatter.format(arc.end().x())
+                + " Y" + formatter.format(arc.end().y())
+                + " I" + formatter.format(centerOffsetI)
+                + " J" + formatter.format(centerOffsetJ);
     }
 }

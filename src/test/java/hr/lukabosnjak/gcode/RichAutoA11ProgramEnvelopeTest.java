@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 import java.util.Set;
 
+import static hr.lukabosnjak.gcode.RichAutoA11Profile.ArcCenterMode.RELATIVE_TO_ARC_START;
 import static hr.lukabosnjak.gcode.RichAutoA11Profile.PhysicalCapability.PROGRAM_END_M30;
 import static hr.lukabosnjak.gcode.RichAutoA11Profile.PhysicalCapability.SPINDLE_COMMANDS;
 import static hr.lukabosnjak.gcode.RichAutoA11Profile.PositioningMode.ABSOLUTE;
@@ -85,6 +86,7 @@ class RichAutoA11ProgramEnvelopeTest {
                 ABSOLUTE,
                 2,
                 MATERIAL_SURFACE_ZERO_NEGATIVE_CUT,
+                RELATIVE_TO_ARC_START,
                 confirmations);
     }
 

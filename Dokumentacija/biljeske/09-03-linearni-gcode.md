@@ -1,7 +1,7 @@
 # 9.3 — Linearni single-element G-code
 
 **Datum:** 2026-08-26
-**Status:** IMPLEMENTIRANO / TESTIRANO / NIJE FIZIČKI TESTIRANO
+**Status:** IMPLEMENTIRANO / TESTIRANO / NIJE FIZIČKI TESTIRANO / OGRANIČENJE LUKA ZAMIJENJENO 9.4
 
 ## Cilj
 
@@ -15,7 +15,7 @@ Pretvoriti jedan povezani i zatvoreni line-segment `ToolPath` u determinističan
 
 ## Stvarna implementacija
 
-`RichAutoA11GCodeGenerator` prima `RichAutoA11Profile` i implementira postojeći `generate(ToolPath, MachiningParameters)` ugovor. Prije generiranja provjerava da svaki segment ima tip `LineSegment`, da je početak svakog sljedećeg segmenta jednak kraju prethodnog i da je završna točka putanje jednaka početnoj. `ArcSegment`, nepovezana putanja i otvorena kontura odbijaju se jasnom `IllegalArgumentException` porukom.
+U izvornom stanju milestonea 9.3 `RichAutoA11GCodeGenerator` primao je `RichAutoA11Profile` i implementirao postojeći `generate(ToolPath, MachiningParameters)` ugovor samo za `LineSegment`. Provjeravao je da je početak svakog sljedećeg segmenta jednak kraju prethodnog i da je završna točka putanje jednaka početnoj. `ArcSegment`, nepovezana putanja i otvorena kontura tada su se odbijali jasnom `IllegalArgumentException` porukom. Milestone 9.4 naknadno je zadržao provjere povezanosti i zatvorenosti, ali je ograničenje tipa proširio na postojeće linije i lukove.
 
 Generator sastavlja postojeći RichAuto header, zatim emitira početni `G00 Z<safe>`. Za svaki rezultat postojećeg `PassDepthCalculatora` emitira `G00 X<start> Y<start>`, `G01 Z<cut>` plunge, `G01` pomake do krajnjih točaka svih postojećih segmenata i `G00 Z<safe>` retract. Nakon zadnjeg retracta dodaje postojeći footer. Safe i cut koordinate dobivaju se isključivo iz `ZCoordinateConvention`; pozitivni `cutDepth`, `stepDown` i `safeZ` u `MachiningParameters` ne mijenjaju predznak.
 
@@ -23,7 +23,7 @@ Kada je `emitFeedRate` uključen, svaki plunge sadrži `F<plungeRate>`, a prvi r
 
 ## Razlog odabranog rješenja
 
-Generator koristi samo već pripremljene točke i segmente pa ne duplicira geometriju kvadrata, pravokutnika ili trokuta. Explicitni rapid do početka u svakom prolazu čini sigurnosni redoslijed vidljivim čak i kada je putanja već završila na početnoj točki. Strukturna provjera sprečava nenamjerni rez preko prekida u putanji, dok zasebno odbijanje lukova čuva G02/G03 za milestone u kojem će I/J i smjer biti ciljano testirani.
+Generator koristi samo već pripremljene točke i segmente pa ne duplicira geometriju oblika. Eksplicitni rapid do početka u svakom prolazu čini sigurnosni redoslijed vidljivim čak i kada je putanja već završila na početnoj točki. Strukturna provjera sprečava nenamjerni rez preko prekida u putanji. U izvornom koraku odbijanje lukova čuvalo je G02/G03 za zaseban milestone; to je ograničenje zamijenjeno implementacijom 9.4.
 
 ## Arhitektonska povezanost
 
@@ -31,12 +31,12 @@ Promjena ostaje u `gcode` sloju i ovisi samo o postojećim geometry vrijednostim
 
 ## Važne odluke i ograničenja
 
-- Podržana je samo jedna povezana, zatvorena kontura sastavljena od linijskih segmenata.
+- U milestoneu 9.3 bila je podržana samo jedna povezana, zatvorena kontura sastavljena od linijskih segmenata; 9.4 ju je proširio na postojeće lukove.
 - Svaki prolaz sadrži retract na safe Z i novi XY rapid do početka; zadnji prolaz također završava retractom.
 - F se emitira pri promjeni iz plunge u rezni feed, a ne na svakom segmentu.
 - Profil određuje predznak safe i cut Z koordinata. To nije fizička potvrda Z-smjera ili work zeroa.
 - Testne konstante imaju prefiks `SOFTWARE_TEST_`, profil koristi prazan skup fizičkih potvrda, a vrijednosti nisu stvarni ni preporučeni parametri ZK-1325.
-- Nisu implementirani G02/G03, krug, tool compensation, layout, `.nc` export, service/UI povezivanje ni fizička provjera.
+- G02/G03 i krug nisu bili implementirani u ovom koraku, ali su naknadno implementirani u 9.4. Tool compensation, layout, `.nc` export, service/UI povezivanje i fizička provjera i dalje nisu implementirani.
 - `00_odluke.md` je ažuriran jer sigurnosni redoslijed i ugovor zatvorene povezane putanje postaju osnova budućeg generatora.
 
 ## Build i testiranje
@@ -64,7 +64,7 @@ Program nije izvezen u `.nc` datoteku niti pokrenut na CNC kontroleru. Nisu fizi
 
 ## Otvorena pitanja
 
-- Milestone 9.4 treba mapirati postojeći `ArcSegment` na G02/G03 i relativne I/J vrijednosti bez ponovnog računanja kruga.
+- RIJEŠENO U 9.4: postojeći `ArcSegment` mapiran je na G02/G03 i relativne I/J vrijednosti bez ponovnog računanja kruga.
 - Budući service workflow treba prije generatora koordinirati postojeću validaciju i fit provjeru te nakon generiranja omogućiti zaseban `.nc` export.
 
 ## Moguće poglavlje završnog rada
@@ -99,16 +99,16 @@ lines.addAll(programEnvelope.footerLines());
 ### Kandidat: Ugovor povezane i zatvorene putanje
 
 **Datoteka:** `src/main/java/hr/lukabosnjak/gcode/RichAutoA11GCodeGenerator.java`
-**Klasa/metoda:** `RichAutoA11GCodeGenerator#requireConnectedClosedLinePath`
+**Klasa/metoda:** `RichAutoA11GCodeGenerator#requireConnectedClosedPath`
 **Zašto je važan:** Pokazuje da generator ne izračunava geometriju, ali prije emitiranja provjerava strukturne pretpostavke potrebne za sigurno praćenje krajnjih točaka.
 **Moguće poglavlje:** Ugovor između geometry i G-code sloja.
 
 ```java
-if (!(segment instanceof LineSegment lineSegment)) {
-    throw new IllegalArgumentException("Linear G-code generator supports only line segments");
-}
-if (previousEnd != null && !previousEnd.equals(lineSegment.start())) {
-    throw new IllegalArgumentException("Line-segment ToolPath must be connected");
+for (PathSegment segment : toolPath.segments()) {
+    if (previousEnd != null && !previousEnd.equals(segment.start())) {
+        throw new IllegalArgumentException("ToolPath must be connected");
+    }
+    previousEnd = segment.end();
 }
 ```
 

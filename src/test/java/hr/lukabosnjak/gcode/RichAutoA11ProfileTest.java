@@ -5,6 +5,8 @@ import org.junit.jupiter.api.Test;
 import java.util.EnumSet;
 import java.util.Set;
 
+import static hr.lukabosnjak.gcode.RichAutoA11Profile.ArcCenterMode.RELATIVE_TO_ARC_START;
+import static hr.lukabosnjak.gcode.RichAutoA11Profile.PhysicalCapability.RELATIVE_ARC_CENTER_IJ;
 import static hr.lukabosnjak.gcode.RichAutoA11Profile.PhysicalCapability.SPINDLE_SPEED_S;
 import static hr.lukabosnjak.gcode.RichAutoA11Profile.PhysicalCapability.WORK_OFFSET_G54;
 import static hr.lukabosnjak.gcode.RichAutoA11Profile.PositioningMode.ABSOLUTE;
@@ -68,7 +70,23 @@ class RichAutoA11ProfileTest {
         assertThrows(IllegalArgumentException.class, () -> new RichAutoA11Profile(
                 false, false, false, false,
                 MILLIMETERS, ABSOLUTE, -1,
-                MATERIAL_SURFACE_ZERO_NEGATIVE_CUT, Set.of()));
+                MATERIAL_SURFACE_ZERO_NEGATIVE_CUT, RELATIVE_TO_ARC_START, Set.of()));
+    }
+
+    @Test
+    void keepsArcCenterModeExplicitAndPhysicallyUnconfirmed() {
+        RichAutoA11Profile profile = profile(false, false, Set.of());
+
+        assertEquals(RELATIVE_TO_ARC_START, profile.arcCenterMode());
+        assertFalse(profile.isPhysicallyConfirmed(RELATIVE_ARC_CENTER_IJ));
+    }
+
+    @Test
+    void requiresArcCenterMode() {
+        assertThrows(NullPointerException.class, () -> new RichAutoA11Profile(
+                false, false, false, false,
+                MILLIMETERS, ABSOLUTE, 3,
+                MATERIAL_SURFACE_ZERO_NEGATIVE_CUT, null, Set.of()));
     }
 
     private RichAutoA11Profile profile(
@@ -85,6 +103,7 @@ class RichAutoA11ProfileTest {
                 ABSOLUTE,
                 3,
                 MATERIAL_SURFACE_ZERO_NEGATIVE_CUT,
+                RELATIVE_TO_ARC_START,
                 confirmations);
     }
 }

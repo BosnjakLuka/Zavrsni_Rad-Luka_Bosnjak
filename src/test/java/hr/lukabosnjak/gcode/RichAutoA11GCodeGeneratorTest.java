@@ -11,6 +11,7 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 import java.util.Set;
 
+import static hr.lukabosnjak.gcode.RichAutoA11Profile.ArcCenterMode.RELATIVE_TO_ARC_START;
 import static hr.lukabosnjak.gcode.RichAutoA11Profile.PositioningMode.ABSOLUTE;
 import static hr.lukabosnjak.gcode.RichAutoA11Profile.Units.MILLIMETERS;
 import static hr.lukabosnjak.gcode.RichAutoA11Profile.ZCoordinateConvention.MATERIAL_SURFACE_ZERO_NEGATIVE_CUT;
@@ -102,19 +103,44 @@ class RichAutoA11GCodeGeneratorTest {
     }
 
     @Test
-    void rejectsArcSegmentsUntilArcGenerationIsImplemented() {
-        ToolPath arcPath = new ToolPath(List.of(new ArcSegment(
-                new Point2(0.0, 1.0),
-                new Point2(2.0, 1.0),
-                new Point2(1.0, 1.0),
-                ArcDirection.COUNTERCLOCKWISE)));
+    void emitsRelativeIjAndG03ForCounterclockwiseSemicirclesAcrossPasses() {
         RichAutoA11GCodeGenerator generator = generatorWithDefaultSoftwareTestProfile();
 
-        IllegalArgumentException exception = assertThrows(
-                IllegalArgumentException.class,
-                () -> generator.generate(arcPath, softwareTestParameters()));
+        GCodeProgram program = generator.generate(
+                translatedCircle(ArcDirection.COUNTERCLOCKWISE),
+                softwareTestParameters());
 
-        assertEquals("Linear G-code generator supports only line segments", exception.getMessage());
+        assertEquals(List.of(
+                        "G03 X20.000 Y25.000 I5.000 J0.000 F900.000",
+                        "G03 X10.000 Y25.000 I-5.000 J0.000",
+                        "G03 X20.000 Y25.000 I5.000 J0.000 F900.000",
+                        "G03 X10.000 Y25.000 I-5.000 J0.000",
+                        "G03 X20.000 Y25.000 I5.000 J0.000 F900.000",
+                        "G03 X10.000 Y25.000 I-5.000 J0.000"),
+                program.lines().stream().filter(line -> line.startsWith("G03")).toList());
+    }
+
+    @Test
+    void emitsG02ForClockwiseSemicircles() {
+        RichAutoA11GCodeGenerator generator = new RichAutoA11GCodeGenerator(
+                softwareTestProfile(MATERIAL_SURFACE_ZERO_NEGATIVE_CUT, false, false, false, false));
+        MachiningParameters onePassParameters = new MachiningParameters(
+                null,
+                SOFTWARE_TEST_SPINDLE_SPEED,
+                SOFTWARE_TEST_FEED_RATE,
+                SOFTWARE_TEST_PLUNGE_RATE,
+                SOFTWARE_TEST_CUT_DEPTH,
+                10.0,
+                SOFTWARE_TEST_SAFE_Z);
+
+        GCodeProgram program = generator.generate(
+                translatedCircle(ArcDirection.CLOCKWISE),
+                onePassParameters);
+
+        assertEquals(List.of(
+                        "G02 X20.000 Y25.000 I5.000 J0.000",
+                        "G02 X10.000 Y25.000 I-5.000 J0.000"),
+                program.lines().stream().filter(line -> line.startsWith("G02")).toList());
     }
 
     @Test
@@ -128,7 +154,7 @@ class RichAutoA11GCodeGeneratorTest {
                 IllegalArgumentException.class,
                 () -> generator.generate(disconnected, softwareTestParameters()));
 
-        assertEquals("Line-segment ToolPath must be connected", exception.getMessage());
+        assertEquals("ToolPath must be connected", exception.getMessage());
     }
 
     @Test
@@ -142,7 +168,7 @@ class RichAutoA11GCodeGeneratorTest {
                 IllegalArgumentException.class,
                 () -> generator.generate(open, softwareTestParameters()));
 
-        assertEquals("Line-segment ToolPath must be closed", exception.getMessage());
+        assertEquals("ToolPath must be closed", exception.getMessage());
     }
 
     private RichAutoA11GCodeGenerator generatorWithDefaultSoftwareTestProfile() {
@@ -166,6 +192,7 @@ class RichAutoA11GCodeGeneratorTest {
                 ABSOLUTE,
                 SOFTWARE_TEST_PRECISION,
                 zConvention,
+                RELATIVE_TO_ARC_START,
                 Set.of());
     }
 
@@ -200,5 +227,14 @@ class RichAutoA11GCodeGeneratorTest {
                 new LineSegment(pointA, pointB),
                 new LineSegment(pointB, pointC),
                 new LineSegment(pointC, pointA)));
+    }
+
+    private ToolPath translatedCircle(ArcDirection direction) {
+        Point2 left = new Point2(10.0, 25.0);
+        Point2 right = new Point2(20.0, 25.0);
+        Point2 center = new Point2(15.0, 25.0);
+        return new ToolPath(List.of(
+                new ArcSegment(left, right, center, direction),
+                new ArcSegment(right, left, center, direction)));
     }
 }

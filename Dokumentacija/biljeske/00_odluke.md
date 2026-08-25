@@ -4,6 +4,36 @@ Ovdje se zapisuju samo potvrđene odluke koje mijenjaju arhitekturu, tehnologiju
 
 Ne zapisuj obične implementacijske detalje, privremene eksperimente ni nepotvrđene pretpostavke. Postojeće odluke iz `AGENTS.md` ne kopiraj bez nove potrebe; ovdje se bilježi njihov nastanak ili kasnija promjena.
 
+## Ugovor `.nc` izvoza
+
+**Datum:** 2026-08-26
+**Status:** IMPLEMENTIRANO / TESTIRANO
+
+**Odluka:** `NcExportService` u `gcode` sloju prima već generirani `GCodeProgram` i eksplicitni odredišni `Path`. Prihvaća samo naziv datoteke s `.nc` ekstenzijom bez obzira na veličinu slova, kodira cijeli sadržaj kao US-ASCII bez BOM-a i odbija znak koji se ne može tako zapisati prije stvaranja datoteke. Zapis koristi create-new semantiku i ne prepisuje postojeću datoteku. Servis ne formatira brojeve, ne bira odredište, ne stvara direktorije i ne traži USB ili druge uređaje.
+
+**Razlog:** G-code generator i formatter već proizvode determinističan tekst s decimalnom točkom, pa export treba samo očuvati te znakove u eksplicitnom, kontroleru prikladnom charsetu. Predani `Path` čuva odabir lokacije kao buduću UI odgovornost, a odbijanje postojećeg odredišta sprječava tihi gubitak datoteke bez potvrde korisnika.
+
+**Razmotrene alternative:** Nisu odabrani platformski default charset, lokalizirano ponovno formatiranje brojeva, prešutna zamjena ne-ASCII znakova, automatsko traženje USB uređaja, automatsko stvaranje direktorija ni silent overwrite postojeće datoteke.
+
+**Utjecaj na implementaciju:** Budući JavaFX UI mora korisniku omogućiti izbor konkretnog `.nc` patha i obraditi invalid extension, postojeću datoteku i I/O pogreške. Ako kasnije bude potreban potvrđeni overwrite tok, mora biti eksplicitno uveden nakon korisničke potvrde; trenutačni servis namjerno ga ne izvodi.
+
+---
+
+## Relativni I/J i G02/G03 mapiranje
+
+**Datum:** 2026-08-26
+**Status:** IMPLEMENTIRANO / SOFTVERSKI TESTIRANO / NIJE TESTIRANO NA STROJU
+
+**Odluka:** `RichAutoA11Profile` eksplicitno koristi `ArcCenterMode.RELATIVE_TO_ARC_START`. Za svaki postojeći `ArcSegment` generator emitira apsolutni završni X/Y prema G90 te relativni centar `I = center.x - start.x` i `J = center.y - start.y`. `ArcDirection.CLOCKWISE` mapira se na `G02`, a `COUNTERCLOCKWISE` na `G03`. Postojeći krug ostaje zapisan kao dvije polukružnice s različitim početnim i završnim točkama. Profil odvojeno evidentira fizičke mogućnosti `ARC_MOVES_G02_G03` i `RELATIVE_ARC_CENTER_IJ`; sama konfiguracija ne znači fizičku potvrdu.
+
+**Razlog:** `ArcSegment` već daje početak, kraj, centar i smjer pa generator treba samo mapirati geometrijske podatke u tekst. Relativni I/J ostaje stabilan nakon translacije cijele putanje, a dvije polukružnice izbjegavaju osjetljiv full-circle zapis s jednakim početkom i krajem.
+
+**Razmotrene alternative:** Nisu odabrani apsolutni I/J, radijusni R format, linearna aproksimacija kružnice ni ponovno računanje centra ili radijusa u generatoru. Jedan full-circle segment nije uveden jer ga `ArcSegment` namjerno zabranjuje i postojeća geometrija već daje dvije jasne polukružnice.
+
+**Utjecaj na implementaciju:** `RichAutoA11GCodeGenerator` sada prihvaća povezane i zatvorene putanje sastavljene od linija i lukova te odabire G01, G02 ili G03 prema stvarnom tipu segmenta. String-level testovi potvrđuju oba smjera i relativne I/J vrijednosti, ali ponašanje tih naredbi i konvencije nije fizički testirano na ZK-1325 / RichAuto A11.
+
+---
+
 ## Linearni single-element G-code tok
 
 **Datum:** 2026-08-26
@@ -13,7 +43,7 @@ Ne zapisuj obične implementacijske detalje, privremene eksperimente ni nepotvr�
 
 **Razlog:** Eksplicitni retract prije svakog XY repositioninga čini softverski redoslijed lako provjerljivim i ne oslanja se na činjenicu da trenutačni zatvoreni oblici završavaju na početnoj točki. Generator samo slijedi postojeću putanju i ne ponavlja Shape geometriju. Provjera povezanosti i zatvorenosti sprječava da se prekid u ulaznoj putanji prešutno pretvori u rezni pomak između nepovezanih točaka.
 
-**Razmotrene alternative:** Nije odabrano preskakanje prividno redundantnog XY rapida između prolaza, ponavljanje F na svakom segmentu ni prihvaćanje otvorenih ili nepovezanih kontura. `ArcSegment` se ne aproksimira linijama i ostaje odbijen do zasebnog milestonea za G02/G03.
+**Razmotrene alternative:** Nije odabrano preskakanje prividno redundantnog XY rapida između prolaza, ponavljanje F na svakom segmentu ni prihvaćanje otvorenih ili nepovezanih kontura. U milestoneu 9.3 `ArcSegment` se nije aproksimirao linijama; milestone 9.4 naknadno je dodao izravno G02/G03 mapiranje.
 
 **Utjecaj na implementaciju:** Kvadrat, pravokutnik i jednakostranični trokut iz postojećeg `ToolPathServicea` mogu se softverski pretvoriti u single-element G-code. Krug još nije podržan. Testovi koriste isključivo označene softverske vrijednosti i ne potvrđuju stvarne machining parametre, ponašanje naredbi, Z-smjer ni work zero na ZK-1325 / RichAuto A11.
 
