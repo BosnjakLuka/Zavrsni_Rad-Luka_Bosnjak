@@ -67,7 +67,7 @@ Implementacija aplikacijske ulazne točke / JavaFX lifecycle.
 
 ### Kandidat: Pokretanje JavaFX aplikacije i prikaz praznog Stagea
 
-**Datoteka:** `src/main/java/hr/lukabosnjak/Main.java`  
+**Datoteka:** `src/main/java/hr/lukabosnjak/app/Main.java`
 **Klasa/metoda:** `Main#main`, `Main#start`  
 **Zašto je važan:** Pokazuje minimalni JavaFX lifecycle i jasnu granicu između aplikacijske ulazne točke i budućeg UI-ja.  
 **Moguće poglavlje:** Implementacija / JavaFX korisničko sučelje

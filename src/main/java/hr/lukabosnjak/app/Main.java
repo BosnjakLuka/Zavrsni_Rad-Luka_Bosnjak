@@ -1,4 +1,4 @@
-package hr.lukabosnjak;
+package hr.lukabosnjak.app;
 
 import javafx.application.Application;
 import javafx.scene.Group;
