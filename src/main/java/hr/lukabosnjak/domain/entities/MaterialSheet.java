@@ -22,9 +22,9 @@ public class MaterialSheet {
     ) {
         this.materialSheetId = materialSheetId;
         this.materialType = materialType;
-        setWidth(width);
-        setHeight(height);
-        setThickness(thickness);
+        this.width = width;
+        this.height = height;
+        this.thickness = thickness;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
     }
@@ -50,7 +50,7 @@ public class MaterialSheet {
     }
 
     public void setWidth(double width) {
-        this.width = requirePositiveDimension("width", width);
+        this.width = width;
     }
 
     public double getHeight() {
@@ -58,7 +58,7 @@ public class MaterialSheet {
     }
 
     public void setHeight(double height) {
-        this.height = requirePositiveDimension("height", height);
+        this.height = height;
     }
 
     public double getThickness() {
@@ -66,7 +66,7 @@ public class MaterialSheet {
     }
 
     public void setThickness(double thickness) {
-        this.thickness = requirePositiveDimension("thickness", thickness);
+        this.thickness = thickness;
     }
 
     public LocalDateTime getCreatedAt() {
@@ -83,12 +83,5 @@ public class MaterialSheet {
 
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
-    }
-
-    private static double requirePositiveDimension(String fieldName, double value) {
-        if (!Double.isFinite(value) || value <= 0) {
-            throw new IllegalArgumentException(fieldName + " must be finite and greater than 0");
-        }
-        return value;
     }
 }

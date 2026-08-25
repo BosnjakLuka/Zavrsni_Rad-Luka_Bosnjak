@@ -3,6 +3,8 @@
 **Datum:** 2026-08-25
 **Status:** IMPLEMENTIRANO / TESTIRANO
 
+> Povijesna bilješka: od milestonea 3.1 klasa se nalazi u `hr.lukabosnjak.domain.entities`; aktualno stanje dokumentirano je u `03-01-domain-core.md`.
+
 ## Cilj
 
 Dodati prvi domenski model za vrstu materijala s isključivo potvrđenim podacima i bez vezivanja domenskog sloja uz JavaFX, JDBC ili ORM.

@@ -3,6 +3,8 @@
 **Datum:** 2026-08-25
 **Status:** IMPLEMENTIRANO / TESTIRANO
 
+> Naknadna bilješka: milestone 3.1 zadržao je `hr.lukabosnjak.domain.entities` kao aktualni paket; vidi `03-01-domain-core.md`.
+
 ## Cilj
 
 Preimenovati podpaket domenskih klasa iz `domain.model` u pregledniji `domain.entities`, uz zadržavanje svih ostalih potvrđenih package naziva.

@@ -3,6 +3,8 @@
 **Datum:** 2026-08-25
 **Status:** IMPLEMENTIRANO / TESTIRANO
 
+> Povijesna bilješka: validacija dimenzija u konstruktoru i setterima uklonjena je milestoneom 3.1 jer potpuna validacija pripada zasebnom `validation` sloju. Aktualno stanje dokumentirano je u `03-01-domain-core.md`.
+
 ## Cilj
 
 Dodati domenski entitet ploče materijala s objektnom vezom prema `MaterialType` i minimalnom invarijantom valjanih dimenzija u milimetrima.

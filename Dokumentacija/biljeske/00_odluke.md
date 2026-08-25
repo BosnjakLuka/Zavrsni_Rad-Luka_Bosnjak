@@ -4,10 +4,34 @@ Ovdje se zapisuju samo potvrđene odluke koje mijenjaju arhitekturu, tehnologiju
 
 Ne zapisuj obične implementacijske detalje, privremene eksperimente ni nepotvrđene pretpostavke. Postojeće odluke iz `AGENTS.md` ne kopiraj bez nove potrebe; ovdje se bilježi njihov nastanak ili kasnija promjena.
 
-## Domenski model ploče materijala
+## V1 reprezentacija oblika
 
 **Datum:** 2026-08-25
 **Status:** IMPLEMENTIRANO / TESTIRANO
+
+**Odluka:** `Shape` je jedan domenski entitet u paketu `domain.entities`, a potvrđene klasifikacije nalaze se u `domain.enums`. `ShapeType` sadrži samo `SQUARE`, `RECTANGLE`, `CIRCLE` i `TRIANGLE`, dok `ShapeSubtype` u V1 sadrži samo `EQUILATERAL`. Dimenzije se pohranjuju generički: kvadrat koristi A kao stranicu, pravokutnik A kao širinu i B kao visinu, krug A kao promjer, a jednakostranični trokut A kao stranicu.
+**Razlog:** Jedan model odgovara planiranom persistence zapisu i izbjegava četiri gotovo prazna entiteta. Enumovi ograničavaju tipove na potvrđene vrijednosti, dok geometrijski izračun ostaje izvan podatkovnog modela.
+**Razmotrene alternative:** Zasebni entiteti `Square`, `Rectangle`, `Circle` i `Triangle` nisu odabrani jer bi preuranjeno duplicirali identitet, vremenske oznake i persistence mapiranje. Stringovi za tip i podtip nisu odabrani jer dopuštaju proizvoljne vrijednosti.
+**Utjecaj na implementaciju:** `shapeSubtype` je nullable za oblike kojima podtip nije smislen, a `dimensionB` i `dimensionC` mogu biti `null`. Budući UI mora prikazivati semantičke nazive poput stranice, širine, visine i promjera, a validation i geometry slojevi zasebno će tumačiti i provjeravati dimenzije.
+
+---
+
+## Osnovni domenski modeli i granica validacije
+
+**Datum:** 2026-08-25
+**Status:** IMPLEMENTIRANO / TESTIRANO
+
+**Odluka:** Osnovni domenski modeli `MaterialType`, `MaterialSheet`, `CncMachine`, `MachiningParameters`, `Role` i `User` nalaze se u paketu `domain.entities`. To su obične mutable Java klase s punim konstruktorom, getterima i setterima, bez ORM anotacija i bez JavaFX/JDBC ovisnosti. `MaterialSheet` koristi objektnu vezu prema `MaterialType`, a `User` prema `Role`. Potpuna pravila valjanosti modela implementirat će se u zasebnom `validation` sloju, a ne u setterima.
+**Razlog:** Jedinstven paket i jednostavan javni API čine modele preglednima i pogodnima za buduće ručno JDBC mapiranje, dok odvojena validacija sprječava miješanje podatkovnog modela s pravilima pojedinog workflowa.
+**Razmotrene alternative:** Naziv `domain.model` bio je razmatran, ali potvrđeni milestoneovi koriste `domain.entities` za domenske objekte s identitetom. Lokalna provjera dimenzija u `MaterialSheet` setterima zamijenjena je validacijom u zasebnom sloju. JPA/Hibernate, nepromjenjivi modeli, recordi i validacija u setterima nisu odabrani.
+**Utjecaj na implementaciju:** Modeli ne hardkodiraju vrijednosti ZK-1325, `cutDepth` ostaje neovisan o `MaterialSheet.thickness`, a login, hashing, session i RBAC nisu dio ovog milestonea. Budući persistence sloj mapirat će objektne veze na strane ključeve.
+
+---
+
+## Domenski model ploče materijala
+
+**Datum:** 2026-08-25
+**Status:** ZAMIJENJENO MILESTONEOM 3.1
 
 **Odluka:** `MaterialSheet` u domeni sadrži objektni odnos `MaterialType materialType`, a ne samo strani ključ. Širina, visina i debljina izražene su u milimetrima te moraju biti konačne vrijednosti veće od nule.
 **Razlog:** Objektni odnos izravno izražava pripadnost ploče vrsti materijala i ne svodi domenu na SQL strukturu. Ručni JDBC repository kasnije može mapirati povezani `MaterialType`, a pri spremanju dohvatiti njegov ID. Pozitivne konačne dimenzije predstavljaju minimalnu domensku invarijantu, ne UI validaciju.

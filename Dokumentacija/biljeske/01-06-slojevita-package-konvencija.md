@@ -3,6 +3,8 @@
 **Datum:** 2026-08-25
 **Status:** IMPLEMENTIRANO / TESTIRANO
 
+> Naknadna bilješka: milestone 3.1 zadržao je `domain.entities` kao aktualni paket domenskih objekata s identitetom.
+
 ## Cilj
 
 Učiniti buduću strukturu projekta preglednijom pomoću jasnih podpaketa unutar potvrđenih arhitektonskih slojeva, bez stvaranja praznih direktorija ili nepotrebnih klasa.
