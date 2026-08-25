@@ -4,6 +4,21 @@ Ovdje se zapisuju samo potvrđene odluke koje mijenjaju arhitekturu, tehnologiju
 
 Ne zapisuj obične implementacijske detalje, privremene eksperimente ni nepotvrđene pretpostavke. Postojeće odluke iz `AGENTS.md` ne kopiraj bez nove potrebe; ovdje se bilježi njihov nastanak ili kasnija promjena.
 
+## Minimalna H2/JDBC infrastruktura
+
+**Datum:** 2026-08-25
+**Status:** IMPLEMENTIRANO / NIJE TESTIRANO
+
+**Odluka:** Aplikacija koristi embedded, file-based H2 preko ručnog JDBC-a s URL-om `jdbc:h2:file:./data/cnc-optimizer`. Integracijski testovi koriste zasebne in-memory H2 baze. `DatabaseConfig` centralizira JDBC URL, korisnika i razvojnu lozinku te za svaki poziv stvara novu vezu; pozivatelj je zatvara pomoću try-with-resources.
+
+**Razlog:** File-based baza čuva aplikacijske podatke između pokretanja, dok in-memory baza izolira testove i ne ostavlja lokalne datoteke. Kratkoživuće veze izbjegavaju globalno JDBC stanje i jasno određuju vlasništvo nad resursom.
+
+**Razmotrene alternative:** ORM i connection pool nisu odabrani jer nisu potrebni za potvrđeni opseg. In-memory baza nije odabrana za aplikacijski runtime jer ne čuva podatke nakon gašenja procesa.
+
+**Utjecaj na implementaciju:** Budući persistence kod dobiva novu vezu iz `DatabaseConfig` i zatvara je u istom toku. Relativni file path razrješava se prema working directoryju. H2 Console ostaje zaseban razvojni alat, a SQL shema i inicijalizacija dolaze u kasnijim milestoneovima.
+
+---
+
 ## MachiningJob agregat i snapshot granica
 
 **Datum:** 2026-08-25
