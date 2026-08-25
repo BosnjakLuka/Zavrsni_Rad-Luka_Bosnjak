@@ -5,6 +5,8 @@ Ova datoteka sadrži potvrđene projektne odluke i obvezna pravila rada. Ne pro�
 ## Potvrđeni tehnološki kontekst
 
 - Aplikacija se razvija u Javi uz JavaFX.
+- Potvrđeni JDK je Oracle OpenJDK 26.0.2, a IntelliJ SDK nosi naziv `openjdk-26`.
+- Build alat je Maven, a Maven `artifactId` projekta je `cnc-optimizer`.
 - Za bazu podataka koristi se H2.
 - Sve geometrijske veličine izražavaju se u milimetrima.
 - Izlazni CNC program sprema se kao `.nc` datoteka.
@@ -27,7 +29,7 @@ Ova datoteka sadrži potvrđene projektne odluke i obvezna pravila rada. Ne pro�
 - Layout opisuj kao rezultat implementiranog algoritma. Ne tvrdi da je matematički ili globalno optimalan.
 - RichAuto A11 podršku uvijek razlikuj kao IMPLEMENTIRANU od fizički TESTIRANE.
 - Ne tvrdi da je RichAuto kompatibilnost TESTIRANA prije stvarnog fizičkog testa na ciljnom stroju.
-- Ne izmišljaj niti zaključavaj JDK verziju, vrijednosti `ToolType`, machining parametre, orijentaciju osi, work zero ili druge postavke fizičkog kontrolera.
+- Ne izmišljaj niti zaključavaj nepotvrđene vrijednosti `ToolType`, machining parametre, orijentaciju osi, work zero ili druge postavke fizičkog kontrolera.
 - Vrijednost koja se trenutačno nalazi u konfiguraciji nije automatski potvrđena trajna projektna odluka.
 
 ## Obvezni način rada
