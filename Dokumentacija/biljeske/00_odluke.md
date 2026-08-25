@@ -4,6 +4,30 @@ Ovdje se zapisuju samo potvrđene odluke koje mijenjaju arhitekturu, tehnologiju
 
 Ne zapisuj obične implementacijske detalje, privremene eksperimente ni nepotvrđene pretpostavke. Postojeće odluke iz `AGENTS.md` ne kopiraj bez nove potrebe; ovdje se bilježi njihov nastanak ili kasnija promjena.
 
+## MachiningJob agregat i snapshot granica
+
+**Datum:** 2026-08-25
+**Status:** IMPLEMENTIRANO / TESTIRANO
+
+**Odluka:** `MachiningJob` povezuje korisnika koji je stvorio posao, stroj, alat, ploču materijala, parametre obrade, oblik, naziv, količinu, spremljeni G-kod i vremenske oznake. `MaterialSheet`, `MachiningParameters` i `Shape` predstavljaju snapshot podatke jednog posla, dok su `User`, `CncMachine` i `Tool` dijeljene reference koje se očekuju unaprijed spremljene. `MaterialType` se također očekuje unaprijed spremljen preko veze iz `MaterialSheet`.
+**Razlog:** Snapshoti čuvaju dimenzije ploče, parametre obrade i oblik korištene za konkretan posao neovisno o budućim poslovnim unosima, dok se stabilni zajednički zapisi korisnika, stroja, alata i vrste materijala ne dupliciraju za svaki posao.
+**Razmotrene alternative:** Spremanje samo ID-eva u domenskoj klasi nije odabrano jer bi model svodio na SQL strukturu. Dijeljenje jednog promjenjivog `MaterialSheet`, `MachiningParameters` ili `Shape` zapisa između više poslova nije odabrano za V1 jer bi moglo promijeniti povijesno značenje već spremljenog posla.
+**Utjecaj na implementaciju:** Domenski model samo drži objektne veze; budući persistence sloj transakcijski sprema snapshot zapise i posao, dok `User`, `CncMachine`, `Tool` i `MaterialType` moraju već imati bazni identitet. Buduća validacija provjerava da alat pripada odabranom stroju. U Iteraciji 1 workflow koristi `quantity = 1`, ali model zadržava opće `int quantity` polje bez UI unosa prije GATE 1. `gCode` je spremnik budućeg rezultata i ne generira se u agregatu.
+
+---
+
+## Privremena reprezentacija tipa alata
+
+**Datum:** 2026-08-25
+**Status:** IMPLEMENTIRANO / TESTIRANO
+
+**Odluka:** `Tool` privremeno koristi `String type`. Ta vrijednost nije konačna zamjena za `ToolType` enum i nema unaprijed definirane konstante dok se ne evidentiraju i potvrde stvarni alati za ZK-1325.
+**Razlog:** U kodu, odlukama, planu, dijagramima i projektnoj dokumentaciji ne postoji potvrđen popis tipova alata. String omogućuje dovršavanje osnovnog domenskog modela bez izmišljanja fizičkih karakteristika ili lažne konačne klasifikacije.
+**Razmotrene alternative:** Uvođenje praznog ili pretpostavljenog `ToolType` enuma nije odabrano jer bi zaključalo nepotvrđene vrijednosti. Odgoda cijelog `Tool` modela do inventure bila je sigurnija, ali bi nepotrebno zaustavila ostale podatke modela koji su već potvrđeni.
+**Utjecaj na implementaciju:** `Tool.type` ostaje nekontrolirani tekstualni podatak, bez hardkodiranih vrijednosti i bez enum mapiranja. Prije konačnog enuma treba prikupiti oznake ili kataloške nazive alata, reznu geometriju i namjenu, broj alata te potvrdu operatora koje kategorije trebaju postojati u V1. Promjer, rezna duljina i broj oštrica ostaju zasebna polja i ne određuju sami naziv tipa.
+
+---
+
 ## V1 reprezentacija oblika
 
 **Datum:** 2026-08-25
