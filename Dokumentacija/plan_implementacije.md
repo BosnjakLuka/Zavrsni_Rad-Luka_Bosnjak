@@ -4,7 +4,9 @@
 
 Ovaj dokument je izvedbeni plan za razvoj aplikacije završnog rada **„Razvoj aplikacije za optimiziranje rada na CNC stroju“**. Plan je složen tako da se aplikacija ne pokuša izgraditi u nekoliko velikih AI promptova, nego kroz male, razumljive i provjerljive korake.
 
-Glavni redoslijed ostaje:
+Glavni redoslijed više nije jedan linearni niz do završnog fizičkog testa. Razvoj je podijeljen u **dvije implementacijske iteracije** s obveznim prolazom kroz prvi stvarni test između njih.
+
+## ITERACIJA 1 – dokaz da osnovni generator radi za jedan element
 
 1. Kreiranje Java projekta
 2. Struktura paketa
@@ -13,14 +15,38 @@ Glavni redoslijed ostaje:
 5. H2 konfiguracija
 6. SQL schema
 7. Repository/DAO sloj
-8. Service / poslovna logika
-9. Prvi algoritam raspoređivanja
-10. RichAuto A11 G-code generator
-11. JavaFX UI
-12. Integracija
-13. Testiranje na ZK-1325
+8. Service / validacija / Geometry / ToolPath
+9. RichAuto A11 G-code generator za **jedan element**
+10. JavaFX UI za **jedan element**
+11. Integracija prve iteracije
+12. Prvi test na ZK-1325 / RichAuto A11 za **jedan element**
 
-Prije toga postoji samo **korak 0 – priprema Codexa**, jer je za ovaj način rada korisno imati trajne projektne upute i project-specific Skill. To nije dio aplikacijske arhitekture i ne mijenja navedeni redoslijed implementacije.
+### GATE 1 – obvezna kontrolna točka
+
+**Ne implementirati korisnički unos količine, algoritam raspoređivanja, izračun kapaciteta ploče, broj potrebnih ploča ni batch G-code prije nego što je prvi single-element workflow dovoljno provjeren da možemo nastaviti.**
+
+Prvi cilj je potvrditi cijeli lanac:
+
+`Shape -> ToolPath -> RichAutoA11GCodeGenerator -> .nc -> ZK-1325 -> jedan element`
+
+Testni primjer ostaje:
+
+- ploča 500 × 500 mm
+- jednakostranični trokut
+- stranica 30 mm
+- količina u prvoj iteraciji: **1**
+
+## ITERACIJA 2 – više jednakih elemenata i raspoređivanje
+
+13. Aktivacija korisničkog unosa količine
+14. Algoritam raspoređivanja više jednakih elemenata
+15. Batch G-code za raspoređene elemente
+16. Proširenje JavaFX UI-a za quantity/layout rezultate
+17. Integracija druge iteracije
+18. Batch test na ZK-1325
+19. Završni testni izvještaj
+
+Prije toga postoji samo **korak 0 – priprema Codexa**, jer je za ovaj način rada korisno imati trajne projektne upute, project-specific Skill i sustav razvojnih bilješki.
 
 ---
 
@@ -131,7 +157,23 @@ Za stvarne 1:1 relacije treba `UNIQUE` ograničenje na odgovarajućim FK stupcim
 
 `UNIQUE(cnc_machine_id, tool_number)`
 
-## 0.6. Još uvijek otvorene odluke
+## 0.6. Potvrđena odluka o redoslijedu implementacije
+
+FR-12, FR-13, FR-14 i FR-15 ostaju dio planiranog završnog opsega, ali se **ne implementiraju prije prvog fizičkog single-element testa**.
+
+To znači:
+
+- prije prvog testa nema korisničkog unosa `quantity`
+- prije prvog testa nema layout/nesting algoritma
+- prije prvog testa nema izračuna `capacity per sheet`
+- prije prvog testa nema `requiredSheets`
+- prije prvog testa nema batch G-code generatora.
+
+U prvoj iteraciji aplikacija radi s jednim elementom (`quantity = 1` kao interno stanje/testna vrijednost gdje je potrebna zbog konačnog modela baze). Tek nakon prolaska kroz GATE 1 aktivira se korisnički unos količine i razvoj raspoređivanja.
+
+Razlog ove odluke je smanjenje tehničkog rizika: prije razvoja složenijeg layout dijela potrebno je potvrditi da osnovni tok `Shape -> ToolPath -> G-code -> .nc -> ZK-1325` radi za jedan element.
+
+## 0.7. Još uvijek otvorene odluke
 
 Ove stavke se ne smiju izmišljati:
 
@@ -462,7 +504,7 @@ Bilješke nisu konačni tekst završnog rada. One su tehnički trag razvoja i iz
 > - postoji li Maven i koja je verzija
 > - postoji li Gradle i koja je verzija
 > - je li direktorij već Git repozitorij
-> - postoji li postojeći `../pom.xml`, `build.gradle` ili `build.gradle.kts`.
+> - postoji li postojeći `pom.xml`, `build.gradle` ili `build.gradle.kts`.
 >
 > Rezultate mi objasni i preporuči build alat za JavaFX + H2 + JUnit projekt. Prednost daj jednostavnosti za studentski projekt. Ne pretpostavljaj JDK verziju.
 
@@ -471,7 +513,7 @@ Bilješke nisu konačni tekst završnog rada. One su tehnički trag razvoja i iz
 > PLAN MODE. Na temelju stvarno pronađenog JDK-a predloži minimalni Maven projekt za ovu desktop Java aplikaciju.
 >
 > Za sada želim samo:
-> - ispravan `../pom.xml`
+> - ispravan `pom.xml`
 > - Java source/test strukturu
 > - JavaFX dependency potrebnu za minimalni prozor
 > - JUnit za testove
@@ -732,12 +774,12 @@ Napomena: zbog zadanog redoslijeda prvo gradimo klase koje ne ovise o još-nepos
 > - `MachiningParameters`
 > - `Shape`
 > - `String name`
-> - `int quantity`
+> - `int quantity` – polje ostaje dio konačnog modela; tijekom Iteracije 1 koristi se vrijednost 1 i još nema korisničkog unosa količine
 > - `String gCode` kao V1 representation spremljenog programa; SQL će biti CLOB
 > - `LocalDateTime createdAt`
 > - `LocalDateTime updatedAt`
 >
-> `quantity` mora u valjanom nalogu biti > 0.
+> `quantity` mora u valjanom nalogu biti > 0. U Iteraciji 1 workflow radi samo s `quantity = 1`; korisnički unos količine uvodi se tek nakon GATE 1.
 >
 > Nemoj u ovoj klasi implementirati SQL ni generiranje G-koda.
 >
@@ -871,7 +913,7 @@ Prije DDL-a treba zaključati nekoliko korekcija koje su ranije identificirane.
 > - FK `machining_parameters_id`
 > - FK `shape_id`
 > - `name VARCHAR NOT NULL`
-> - `quantity INTEGER NOT NULL`
+> - `quantity INTEGER NOT NULL` – u Iteraciji 1 sprema se vrijednost 1; korisnički unos količine dolazi tek u Iteraciji 2
 > - `g_code CLOB`
 > - timestamps
 >
@@ -997,7 +1039,7 @@ Ovaj korak uključuje i Geometry/ToolPath jer je taj sloj potvrđen arhitekturom
 > - Shape
 > - MaterialSheet
 > - MachiningParameters
-> - MachiningJob quantity.
+> - MachiningJob quantity – model-level pravilo; tijekom Iteracije 1 praktično se provjerava fiksna vrijednost 1, a korisnički unos dolazi tek u Iteraciji 2.
 >
 > Shape pravila:
 > - Square: A > 0
@@ -1073,107 +1115,14 @@ Ovaj korak uključuje i Geometry/ToolPath jer je taj sloj potvrđen arhitekturom
 
 ---
 
-# 9. Prvi algoritam raspoređivanja
 
-Cilj V1 nije dokaz matematičke optimalnosti. Prvi algoritam mora dati valjan, deterministički i objašnjiv raspored te može birati bolju od nekoliko jednostavnih varijanti.
-
-## Prompt 9.1 – Formalizacija layout ulaza
-
-> PLAN MODE. Prije algoritma definiraj podatke koji layout mora dobiti.
->
-> Potvrđeno:
-> - sheet width/height
-> - shape
-> - quantity
->
-> Još nije potvrđeno:
-> - edge margin
-> - part spacing
-> - dopuštena rotacija pravokutnika
-> - treba li part spacing automatski uključivati promjer alata.
->
-> Ne izmišljaj te vrijednosti.
->
-> Predloži mali `LayoutSettings` model s eksplicitnim vrijednostima umjesto skrivenih magic defaulta. Objasni koje postavke moraju biti potvrđene prije stvarnog rezanja.
-
-## Prompt 9.2 – Layout output modeli
-
-> PLAN MODE. Implementiraj samo modele rezultata raspoređivanja:
-> - `PlacedShape`
-> - `SheetLayout`
-> - `LayoutResult`
->
-> Rezultat treba moći reći:
-> - položaj svakog komada
-> - eventualnu rotaciju/orijentaciju
-> - na kojoj je ploči
-> - koliko komada stane na jednu ploču
-> - koliko je ploča potrebno za zadanu količinu.
->
-> Ne implementiraj algoritam još.
-
-## Prompt 9.3 – Baseline grid za Square/Rectangle
-
-> PLAN MODE. Implementiraj prvi deterministički grid layout za Square i Rectangle.
->
-> Pravila:
-> - nijedan bounding box ne smije izaći iz ploče
-> - poštuj LayoutSettings margin/spacing
-> - za rectangle usporedi barem orijentaciju 0° i 90° ako je rotacija dopuštena
-> - odaberi varijantu koja smješta više elemenata
-> - nemoj rezultat nazivati globalno optimalnim.
->
-> Dodaj unit testove za:
-> - oblik koji stane
-> - oblik koji ne stane
-> - količinu 1
-> - više redova/stupaca
-> - slučaj gdje rotacija daje bolji kapacitet.
-
-## Prompt 9.4 – Baseline layout za Circle
-
-> PLAN MODE. Implementiraj jednostavan, objašnjiv layout za krugove.
->
-> Za prvu implementaciju koristi pravilan grid temeljen na promjeru i spacingu.
->
-> Ne uvodi hexagonal close packing u ovom koraku.
->
-> Cilj je ispravan baseline koji možemo kasnije usporediti s poboljšanjem.
->
-> Dodaj test da svi centri/krugovi ostaju unutar granica ploče.
-
-## Prompt 9.5 – Layout za Equilateral Triangle
-
-> PLAN MODE. Implementiraj prvi valjani layout za jednakostranične trokute.
->
-> Prvo napravi jednostavnu varijantu koju možemo lako testirati. Zatim, ako je unutar malog scopea, usporedi s alterniranjem orijentacije trokuta koje može poboljšati iskorištenost.
->
-> Ne tvrdi matematičku optimalnost.
->
-> Unit test mora provjeriti da nijedna točka trokuta ne izlazi iz ploče.
-
-## Prompt 9.6 – Strategy selector + kapacitet + broj ploča
-
-> PLAN MODE. Spoji postojeće shape-specific layout algoritme kroz mali `LayoutService` ili strategy pristup.
->
-> `LayoutService` treba:
-> - odabrati algoritam prema ShapeType
-> - izračunati capacity per sheet
-> - izračunati requiredSheets = ceil(quantity / capacity)
-> - vratiti placement za traženu količinu
-> - jasno odbiti slučaj capacity = 0.
->
-> Dodaj unit testove za sva 4 oblika.
->
-> Ne generiraj G-code u ovom servisu.
-
----
-
-# 10. RichAuto A11 G-code generator
+# 9. RichAuto A11 G-code generator – ITERACIJA 1
 
 RichAuto dokumentacija za A11/A11plus obitelj navodi standardne naredbe poput G00, G01, G02, G03, G17, G21, G54–G59, G90/G91 te M03/M05/M30. Posebno je važno da kontroler ima postavke kojima se `F`, `S` i `G54` mogu čitati ili ignorirati. Zbog toga generator mora imati konfigurabilan profil i ne smije unaprijed pretpostaviti da ih naš fizički kontroler obrađuje na određeni način.
 
-## Prompt 10.1 – `GCodeGenerator` interface i controller profile
+**U ovoj iteraciji generator radi isključivo za jedan element. Layout i batch generiranje namjerno još ne postoje.**
+
+## Prompt 9.1 – `GCodeGenerator` interface i RichAuto A11 profil
 
 > PLAN MODE. Implementiraj:
 > - `GCodeGenerator` interface
@@ -1189,9 +1138,9 @@ RichAuto dokumentacija za A11/A11plus obitelj navodi standardne naredbe poput G0
 >
 > Ne hardkodiraj „stroj sigurno čita F/S/G54“. To ostaje konfiguracija koja će se potvrditi na stroju.
 >
-> Ne generiraj puni program još.
+> Nemoj implementirati layout niti batch G-code.
 
-## Prompt 10.2 – Formatter G-code brojeva i linija
+## Prompt 9.2 – Formatter G-code brojeva i linija
 
 > PLAN MODE. Implementiraj mali formatter za G-code numeričke vrijednosti.
 >
@@ -1204,9 +1153,9 @@ RichAuto dokumentacija za A11/A11plus obitelj navodi standardne naredbe poput G0
 >
 > Ne biraj proizvoljno konačnu preciznost fizičkog stroja bez objašnjenja; napravi konfigurabilno i kasnije zaključaj nakon testa.
 
-## Prompt 10.3 – Header/footer bez rezanja
+## Prompt 9.3 – Header/footer bez rezanja
 
-> PLAN MODE. Implementiraj samo generiranje sigurnog programskog header/footer kostura prema RichAuto profilu.
+> PLAN MODE. Implementiraj samo generiranje programskog header/footer kostura prema RichAuto profilu.
 >
 > Kandidati koje dokumentacija podržava uključuju:
 > - G21 za mm
@@ -1221,9 +1170,9 @@ RichAuto dokumentacija za A11/A11plus obitelj navodi standardne naredbe poput G0
 >
 > Ne generiraj još shape movement.
 
-## Prompt 10.4 – Jedan linearni ToolPath u G-code
+## Prompt 9.4 – Jedan linearni ToolPath u G-code
 
-> PLAN MODE. Implementiraj pretvaranje line-segment ToolPatha u G-code za jedan oblik.
+> PLAN MODE. Implementiraj pretvaranje line-segment ToolPatha u G-code za **jedan oblik**.
 >
 > Logika:
 > - rapid move do XY starta na safe Z
@@ -1236,10 +1185,12 @@ RichAuto dokumentacija za A11/A11plus obitelj navodi standardne naredbe poput G0
 > Napravi funkciju koja iz `cutDepth` i `stepDown` računa stvarne dubine prolaza tako da zadnji prolaz završi točno na ciljnoj dubini.
 >
 > Dodaj unit testove samo za generirani tekst, bez stroja.
+>
+> Ne dodaj quantity/layout logiku.
 
-## Prompt 10.5 – Arc output za krug
+## Prompt 9.5 – Arc output za krug
 
-> PLAN MODE. Implementiraj RichAuto output za kružne ArcSegment naredbe koristeći G02/G03 samo na temelju već postojeće geometrijske reprezentacije.
+> PLAN MODE. Implementiraj RichAuto output za kružne `ArcSegment` naredbe koristeći G02/G03 samo na temelju već postojeće geometrijske reprezentacije.
 >
 > Ne računaj krug u generatoru.
 >
@@ -1249,19 +1200,7 @@ RichAuto dokumentacija za A11/A11plus obitelj navodi standardne naredbe poput G0
 >
 > Označi ovu podršku kao IMPLEMENTIRANO, ali ne TESTIRANO NA STROJU.
 
-## Prompt 10.6 – G-code za layout više elemenata
-
-> PLAN MODE. Proširi generator tako da primi `LayoutResult` / placement listu i za svaki element:
-> - translira lokalni ToolPath na XY placement
-> - primijeni istu machining logiku
-> - između elemenata se sigurno vrati na safe Z
-> - ne izlazi iz dopuštenih koordinata.
->
-> G-code generator ne smije sam računati nesting.
->
-> Dodaj unit test s dva jednostavna kvadrata na različitim offsetima.
-
-## Prompt 10.7 – `.nc` export service
+## Prompt 9.6 – `.nc` export service
 
 > PLAN MODE. Implementiraj odvojeni servis za spremanje generiranog `GCodeProgram` sadržaja u `.nc` datoteku.
 >
@@ -1277,11 +1216,11 @@ RichAuto dokumentacija za A11/A11plus obitelj navodi standardne naredbe poput G0
 
 ---
 
-# 11. JavaFX UI
+# 10. JavaFX UI – ITERACIJA 1, jedan element
 
-UI se implementira tek sada, kada postoje provjerivi domain/service slojevi.
+UI prve iteracije služi tome da možemo napraviti cijeli single-element tok i što prije doći do stvarnog testa. **Ne prikazujemo quantity, capacity per sheet ni required sheets.**
 
-## Prompt 11.1 – FXML decision gate
+## Prompt 10.1 – FXML decision gate
 
 > PLAN MODE. Usporedi dvije opcije za ovaj projekt:
 > 1. JavaFX UI programatski u Javi
@@ -1298,28 +1237,28 @@ UI se implementira tek sada, kada postoje provjerivi domain/service slojevi.
 >
 > Ako odaberemo FXML, tek tada dodaj `javafx.fxml` dependency i potrebnu module/config podršku.
 
-## Prompt 11.2 – Glavni ekran: samo layout forme
+## Prompt 10.2 – Glavni ekran prve iteracije
 
-> PLAN MODE. Implementiraj samo vizualni kostur glavnog ekrana bez poslovne logike.
+> PLAN MODE. Implementiraj samo vizualni kostur glavnog ekrana za rad s **jednim elementom**, bez poslovne logike.
 >
-> Ekran treba imati logičke cjeline:
+> Ekran treba imati:
 > - odabir ShapeType
 > - dinamička polja dimenzija
-> - quantity
 > - MaterialSheet width/height/thickness
 > - odabir machine
 > - odabir tool
 > - machining parameters
 > - Generate
-> - rezultat capacity / required sheets
 > - G-code preview TextArea
 > - Save
 > - Export `.nc`
 > - Saved Programs navigation.
 >
+> **Nemoj dodavati quantity, capacity per sheet, required sheets ni layout prikaz.**
+>
 > Ne spajaj još gumbe na servise.
 
-## Prompt 11.3 – Dinamička shape polja + parsiranje inputa
+## Prompt 10.3 – Dinamička shape polja + parsiranje inputa
 
 > PLAN MODE. Implementiraj samo ponašanje forme prema odabranom shapeu:
 > - Square → stranica
@@ -1333,7 +1272,7 @@ UI se implementira tek sada, kada postoje provjerivi domain/service slojevi.
 >
 > Još nemoj generirati G-code.
 
-## Prompt 11.4 – UI validacija preko service/validation sloja
+## Prompt 10.4 – UI validacija preko service/validation sloja
 
 > PLAN MODE. Spoji formu s postojećim validatorima.
 >
@@ -1345,33 +1284,34 @@ UI se implementira tek sada, kada postoje provjerivi domain/service slojevi.
 >
 > Controller ne smije:
 > - računati trokut
-> - računati broj ploča
 > - raditi SQL
 > - slagati G-code string.
 >
+> U ovoj iteraciji nema quantity/layout validacije na UI-u.
+>
 > Testiraj nekoliko nevaljanih inputa ručno ili controller testom ako je razumno.
 
-## Prompt 11.5 – Generate workflow na UI-u
+## Prompt 10.5 – Generate workflow za jedan element
 
 > PLAN MODE. Spoji `Generate` gumb s postojećim service slojem.
 >
 > Nakon klika želim:
 > - validaciju
-> - fit/layout rezultat
-> - capacity per sheet
-> - required sheets
+> - provjeru stane li **jedan** oblik na ploču
 > - generiranje ToolPatha
 > - generiranje G-koda
 > - prikaz G-koda u TextArea.
 >
+> Workflow mora koristiti jedan element. Ako `MachiningJob` već ima `quantity`, za ovu iteraciju koristi vrijednost `1` bez korisničkog polja.
+>
 > Controller treba ostati tanak.
 >
-> Nemoj još spremati u bazu u ovom promptu.
+> Nemoj implementirati layout, capacity ni requiredSheets.
 
-## Prompt 11.6 – Save + Saved Programs screen
+## Prompt 10.6 – Save + Saved Programs screen
 
 > PLAN MODE. Implementiraj:
-> - spremanje trenutačno generiranog joba preko service/repository sloja
+> - spremanje trenutačno generiranog single-element joba preko service/repository sloja
 > - ekran/listu spremljenih jobova
 > - otvaranje odabranog joba
 > - prikaz spremljenog G-koda.
@@ -1379,8 +1319,10 @@ UI se implementira tek sada, kada postoje provjerivi domain/service slojevi.
 > Nemoj raditi SELECT/INSERT u controlleru.
 >
 > Quick access znači ponovno učitati spremljene parametre u formu, ne samo pokazati tekst G-koda.
+>
+> Ako se `quantity` sprema u bazu, u ovoj iteraciji vrijednost je 1.
 
-## Prompt 11.7 – Export `.nc` iz UI-a
+## Prompt 10.7 – Export `.nc` iz UI-a
 
 > PLAN MODE. Spoji Export gumb s postojećim `.nc` export serviceom.
 >
@@ -1395,59 +1337,50 @@ UI se implementira tek sada, kada postoje provjerivi domain/service slojevi.
 
 ---
 
-# 12. Integracija
+# 11. Integracija – ITERACIJA 1
 
-## Prompt 12.1 – Composition root / dependency wiring
+## Prompt 11.1 – Composition root / dependency wiring
 
-> PLAN MODE. Pregledaj sve postojeće slojeve i predloži jedno jasno mjesto gdje se stvaraju i povezuju:
+> PLAN MODE. Pregledaj postojeće slojeve i predloži jedno jasno mjesto gdje se stvaraju i povezuju:
 > - DatabaseConfig
 > - repository implementacije
 > - validators
 > - geometry generators
-> - layout services
 > - GCodeGenerator
 > - ProgramGenerationService
 > - controller dependencies.
+>
+> **LayoutService još ne postoji i ne smije se uvoditi prije GATE 1.**
 >
 > Nemoj uvoditi Spring ili drugi dependency injection framework.
 >
 > Za studentski projekt želim jednostavno ručno dependency wiring rješenje koje mogu objasniti.
 
-## Prompt 12.2 – End-to-end Iteracija 1
+## Prompt 11.2 – End-to-end Iteracija 1
 
 > PLAN MODE. Spoji i provjeri cijeli tok za **jedan oblik bez batch layouta**:
-> UI input → validation → single-shape fit → ToolPath → RichAuto generator → preview → `.nc` export.
+>
+> `UI input -> validation -> single-shape fit -> ToolPath -> RichAuto generator -> preview -> .nc export`
 >
 > Koristi testni primjer iz dokumentacije projekta:
 > - ploča 500 × 500 mm
 > - jednakostranični trokut
-> - stranica 30 mm.
+> - stranica 30 mm
+> - quantity = 1.
 >
 > Machining parametre nemoj izmišljati ako još nisu potvrđeni; u automatiziranom testu koristi jasno označene testne vrijednosti koje nisu deklarirane kao stvarni strojni parametri.
 >
-> Rezultat ovog koraka je softverski test, ne fizički CNC test.
+> Rezultat ovog koraka je softverski test, ne fizički test.
 
-## Prompt 12.3 – End-to-end Iteracija 2
-
-> PLAN MODE. Spoji tok za više jednakih elemenata:
-> input quantity → layout → capacity → requiredSheets → translated ToolPaths → G-code za sve placements.
->
-> Provjeri da:
-> - layout ne prelazi sheet granice
-> - generirani XY ne prelazi sheet granice
-> - sheet dimenzije ne prelaze machine work area
-> - svaki element se reže kroz pravilne step-down prolaze.
->
-> Dodaj integration test s malim brojem elemenata čiji expected rezultat možemo ručno provjeriti.
-
-## Prompt 12.4 – Persistence round-trip
+## Prompt 11.3 – Persistence round-trip za single-element job
 
 > PLAN MODE. Napravi end-to-end test:
-> - generiraj job
+> - generiraj single-element job
 > - spremi ga
-> - zatvori/read fresh repository context
+> - otvori fresh repository context
 > - ponovno učitaj job
-> - potvrdi da su shape, material, machining parameters, quantity i gCode isti.
+> - potvrdi da su shape, material, machining parameters i gCode isti
+> - ako model sadrži quantity, potvrdi da je spremljeno `1`.
 >
 > To je ključni test za FR-9, FR-10 i FR-11.
 >
@@ -1455,13 +1388,15 @@ UI se implementira tek sada, kada postoje provjerivi domain/service slojevi.
 
 ---
 
-# 13. Testiranje na ZK-1325 / RichAuto A11
+# 12. PRVI TEST – ZK-1325 / RichAuto A11, jedan element
 
-Ovaj korak se radi tek nakon što svi prethodni softverski testovi prolaze.
+Ovo je **obvezna kontrolna točka prije quantity/layout implementacije**.
 
-## Prompt 13.1 – Pre-machine test checklist
+Prvi fizički test ne dokazuje da je cijela aplikacija završena. Njegova je svrha potvrditi da osnovni generacijski lanac može proizvesti program koji se na ciljnom stroju ponaša očekivano za jedan jednostavan element.
 
-> PLAN MODE. Na temelju implementiranog generatora napravi checklist za provjeru prije fizičkog testa.
+## Prompt 12.1 – Pre-machine test checklist
+
+> PLAN MODE. Na temelju implementiranog single-element generatora napravi checklist za provjeru prije fizičkog testa.
 >
 > Mora uključivati:
 > - verziju aplikacije/commit
@@ -1483,11 +1418,12 @@ Ovaj korak se radi tek nakon što svi prethodni softverski testovi prolaze.
 >
 > Ne predlaži proizvoljne brzine ili dubine rezanja. Te vrijednosti mora dati stvarni alat/materijal/operator.
 
-## Prompt 13.2 – Static G-code audit za testni trokut
+## Prompt 12.2 – Static G-code audit za testni trokut
 
 > PLAN MODE. Za generirani testni program:
 > - ploča 500 × 500
 > - trokut 30 mm
+> - quantity = 1
 >
 > napravi statičku analizu `.nc` sadržaja bez pokretanja stroja.
 >
@@ -1505,7 +1441,7 @@ Ovaj korak se radi tek nakon što svi prethodni softverski testovi prolaze.
 >
 > Ne mijenjaj kod ako nema konkretno pronađenog problema.
 
-## Prompt 13.3 – Kontrolirani prvi test bez obrade materijala
+## Prompt 12.3 – Kontrolirani prvi test bez obrade materijala
 
 > PLAN MODE. Pripremi plan prvog kontroliranog testa na fizičkom ZK-1325 koji prvenstveno provjerava koordinatni sustav i smjer putanje prije stvarnog rezanja.
 >
@@ -1518,11 +1454,12 @@ Ovaj korak se radi tek nakon što svi prethodni softverski testovi prolaze.
 >
 > Ne izmišljaj sigurnosne ili strojne postavke koje ne znamo.
 
-## Prompt 13.4 – Prvi stvarni test trokuta
+## Prompt 12.4 – Prvi stvarni test jednog trokuta
 
 > PLAN MODE. Nakon što je prethodni kontrolirani test prošao i operator je potvrdio machining parametre, pripremi test-case zapis za stvarni primjer:
 > - material sheet 500 × 500 mm
 > - equilateral triangle side 30 mm
+> - quantity = 1
 > - tool: stvarno korišteni tool zapis
 > - machining parameters: stvarno potvrđene vrijednosti
 > - generated `.nc`.
@@ -1538,9 +1475,286 @@ Ovaj korak se radi tek nakon što svi prethodni softverski testovi prolaze.
 >
 > Nemoj unaprijed popuniti rezultate.
 
-## Prompt 13.5 – Test batch layouta
+## GATE 1 – odluka nakon prvog testa
 
-> PLAN MODE. Nakon uspješnog single-shape testa pripremi test za više jednakih elemenata.
+Prije nastavka na Korak 13 mora se pregledati bilješka prvog testa.
+
+Nastavljamo na quantity/layout ako je potvrđeno da:
+
+- `.nc` datoteka se može učitati u ciljnom workflowu
+- koordinatna orijentacija je razumljiva i dokumentirana
+- work zero / WCS ponašanje je dovoljno jasno za nastavak
+- single-element putanja odgovara očekivanom obliku
+- safe Z / plunge / step-down ponašanje nema poznatu prepreku za nastavak
+- relevantno ponašanje `F`, `S` i `G54` je zabilježeno
+- eventualne korekcije generatora nakon testa su implementirane i ponovno provjerene.
+
+**Ako single-element test ne prođe, ne počinjati layout. Prvo popraviti i ponovno testirati osnovni generator.**
+
+---
+
+# 13. Quantity – početak ITERACIJE 2
+
+Tek nakon prolaska kroz GATE 1 aktivira se funkcionalni zahtjev za više jednakih elemenata.
+
+## Prompt 13.1 – Audit postojećeg `quantity` modela
+
+> PLAN MODE. Ne dodaj još UI.
+>
+> Pregledaj postojeći kod i utvrdi gdje `quantity` već postoji:
+> - `MachiningJob`
+> - SQL schema
+> - repository mapping
+> - test fixtures.
+>
+> Ne dupliciraj postojeće polje.
+>
+> Objasni što treba promijeniti da `quantity`, koji je u Iteraciji 1 bio praktično fiksiran na 1, postane stvarni korisnički podatak u Iteraciji 2.
+
+## Prompt 13.2 – Poslovna validacija količine
+
+> PLAN MODE. Implementiraj ili aktiviraj poslovnu validaciju quantity vrijednosti:
+> - mora biti cijeli broj
+> - mora biti > 0
+> - ne smije se tretirati kao decimalna vrijednost.
+>
+> Dodaj unit testove za:
+> - 1
+> - veću valjanu količinu
+> - 0
+> - negativnu vrijednost.
+>
+> Još nemoj implementirati layout.
+
+## Prompt 13.3 – Request/service podrška za quantity
+
+> PLAN MODE. Proširi request/service workflow tako da može prenijeti korisnički zadanu quantity vrijednost kroz poslovni sloj.
+>
+> U ovom koraku quantity se samo prenosi i validira.
+>
+> Ne računaj još gdje će elementi biti postavljeni i ne generiraj batch G-code.
+
+---
+
+# 14. Algoritam raspoređivanja više jednakih elemenata
+
+Cilj V1 nije dokaz matematičke optimalnosti. Prvi algoritam mora dati valjan, deterministički i objašnjiv raspored te može birati bolju od nekoliko jednostavnih varijanti.
+
+## Prompt 14.1 – Formalizacija layout ulaza
+
+> PLAN MODE. Prije algoritma definiraj podatke koji layout mora dobiti.
+>
+> Potvrđeno:
+> - sheet width/height
+> - shape
+> - quantity
+>
+> Još nije potvrđeno:
+> - edge margin
+> - part spacing
+> - dopuštena rotacija pravokutnika
+> - treba li part spacing automatski uključivati promjer alata.
+>
+> Ne izmišljaj te vrijednosti.
+>
+> Predloži mali `LayoutSettings` model s eksplicitnim vrijednostima umjesto skrivenih magic defaulta. Objasni koje postavke moraju biti potvrđene prije stvarnog rezanja.
+
+## Prompt 14.2 – Layout output modeli
+
+> PLAN MODE. Implementiraj samo modele rezultata raspoređivanja:
+> - `PlacedShape`
+> - `SheetLayout`
+> - `LayoutResult`
+>
+> Rezultat treba moći reći:
+> - položaj svakog komada
+> - eventualnu rotaciju/orijentaciju
+> - na kojoj je ploči
+> - koliko komada stane na jednu ploču
+> - koliko je ploča potrebno za zadanu količinu.
+>
+> Ne implementiraj algoritam još.
+
+## Prompt 14.3 – Baseline grid za Square/Rectangle
+
+> PLAN MODE. Implementiraj prvi deterministički grid layout za Square i Rectangle.
+>
+> Pravila:
+> - nijedan bounding box ne smije izaći iz ploče
+> - poštuj LayoutSettings margin/spacing
+> - za rectangle usporedi barem orijentaciju 0° i 90° ako je rotacija dopuštena
+> - odaberi varijantu koja smješta više elemenata
+> - nemoj rezultat nazivati globalno optimalnim.
+>
+> Dodaj unit testove za:
+> - oblik koji stane
+> - oblik koji ne stane
+> - količinu 1
+> - više redova/stupaca
+> - slučaj gdje rotacija daje bolji kapacitet.
+
+## Prompt 14.4 – Baseline layout za Circle
+
+> PLAN MODE. Implementiraj jednostavan, objašnjiv layout za krugove.
+>
+> Za prvu implementaciju koristi pravilan grid temeljen na promjeru i spacingu.
+>
+> Ne uvodi hexagonal close packing u ovom koraku.
+>
+> Cilj je ispravan baseline koji možemo kasnije usporediti s poboljšanjem.
+>
+> Dodaj test da svi centri/krugovi ostaju unutar granica ploče.
+
+## Prompt 14.5 – Layout za Equilateral Triangle
+
+> PLAN MODE. Implementiraj prvi valjani layout za jednakostranične trokute.
+>
+> Prvo napravi jednostavnu varijantu koju možemo lako testirati. Zatim, ako je unutar malog scopea, usporedi s alterniranjem orijentacije trokuta koje može poboljšati iskorištenost.
+>
+> Ne tvrdi matematičku optimalnost.
+>
+> Unit test mora provjeriti da nijedna točka trokuta ne izlazi iz ploče.
+
+## Prompt 14.6 – Strategy selector + kapacitet + broj ploča
+
+> PLAN MODE. Spoji postojeće shape-specific layout algoritme kroz mali `LayoutService` ili strategy pristup.
+>
+> `LayoutService` treba:
+> - odabrati algoritam prema ShapeType
+> - izračunati capacity per sheet
+> - izračunati requiredSheets = ceil(quantity / capacity)
+> - vratiti placement za traženu količinu
+> - jasno odbiti slučaj capacity = 0.
+>
+> Dodaj unit testove za sva 4 oblika.
+>
+> Ne generiraj G-code u ovom servisu.
+
+---
+
+# 15. Batch G-code – ITERACIJA 2
+
+## Prompt 15.1 – Translacija ToolPatha na placement
+
+> PLAN MODE. Prije generiranja batch programa implementiraj i testiraj samo translaciju lokalnog `ToolPath` objekta na XY offset jednog `PlacedShape`.
+>
+> Cilj je ponovno koristiti single-element ToolPath koji je već prošao prvu iteraciju, a ne ponovno računati geometriju u GCodeGeneratoru.
+>
+> Dodaj unit test s jednostavnim oblikom i poznatim offsetom.
+
+## Prompt 15.2 – G-code za više raspoređenih elemenata
+
+> PLAN MODE. Proširi generator tako da primi `LayoutResult` / placement listu i za svaki element:
+> - translira lokalni ToolPath na XY placement
+> - primijeni istu machining logiku koja je već korištena za single-element test
+> - između elemenata se sigurno vrati na safe Z
+> - ne izlazi iz dopuštenih koordinata.
+>
+> G-code generator ne smije sam računati layout.
+>
+> Dodaj unit test s dva jednostavna kvadrata na različitim offsetima.
+>
+> Posebno objasni koji dio koda je ponovno korišten iz TESTIRANE single-element logike, a koji je nov i još NIJE TESTIRAN NA STROJU.
+
+---
+
+# 16. JavaFX UI – proširenje za quantity i layout
+
+## Prompt 16.1 – Dodavanje quantity polja
+
+> PLAN MODE. Proširi postojeći single-element ekran samo s korisničkim unosom `quantity`.
+>
+> Zahtjevi:
+> - cijeli broj > 0
+> - jasna poruka za nevaljani unos
+> - postojeći single-element workflow za quantity=1 mora i dalje raditi.
+>
+> Nemoj još prikazivati capacity/requiredSheets dok layout nije spojen.
+
+## Prompt 16.2 – Prikaz layout rezultata
+
+> PLAN MODE. Nakon što `LayoutService` postoji, dodaj prikaz:
+> - capacity per sheet
+> - required sheets
+> - stvarno raspoređena quantity vrijednost.
+>
+> Ako još nemamo grafički prikaz ploče, nemoj ga uvoditi samo zbog ovog prompta. Tekstualni rezultat je dovoljan za prvi batch workflow.
+
+## Prompt 16.3 – Generate workflow za više elemenata
+
+> PLAN MODE. Proširi postojeći `Generate` workflow:
+>
+> `input -> validation -> quantity -> layout -> capacity/requiredSheets -> ToolPaths -> batch G-code -> preview`
+>
+> Controller treba ostati tanak.
+>
+> Controller ne smije računati layout niti slagati batch G-code.
+>
+> Single-element quantity=1 mora ostati valjan slučaj.
+
+---
+
+# 17. Integracija – ITERACIJA 2
+
+## Prompt 17.1 – Composition root proširenje
+
+> PLAN MODE. Proširi postojeći dependency wiring samo onim što je sada potrebno za Iteraciju 2:
+> - `LayoutSettings`
+> - layout strategije
+> - `LayoutService`
+> - batch generation dependencies.
+>
+> Ne mijenjaj postojeće single-element komponente ako za to nema stvarnog razloga.
+
+## Prompt 17.2 – End-to-end Iteracija 2
+
+> PLAN MODE. Spoji tok za više jednakih elemenata:
+>
+> `input quantity -> layout -> capacity -> requiredSheets -> translated ToolPaths -> G-code za placements`
+>
+> Provjeri da:
+> - layout ne prelazi sheet granice
+> - generirani XY ne prelazi sheet granice
+> - sheet dimenzije ne prelaze machine work area
+> - svaki element koristi postojeću machining/step-down logiku.
+>
+> Dodaj integration test s malim brojem elemenata čiji expected rezultat možemo ručno provjeriti.
+
+## Prompt 17.3 – Persistence round-trip nakon uvođenja quantity
+
+> PLAN MODE. Ponovi persistence round-trip sada s quantity > 1.
+>
+> Potvrdi da se nakon ponovnog učitavanja čuvaju:
+> - shape
+> - material
+> - machining parameters
+> - quantity
+> - gCode.
+>
+> Ako layout placementi nisu predviđeni za trajnu pohranu, nemoj stvarati novu tablicu samo zbog ovog testa. Dokumentiraj da se layout ponovno izračunava iz spremljenih ulaza, ako je to stvarni odabrani dizajn.
+
+---
+
+# 18. Batch test na ZK-1325
+
+## Prompt 18.1 – Statički audit batch programa
+
+> PLAN MODE. Prije fizičkog batch testa napravi statičku analizu generiranog programa za malu quantity vrijednost.
+>
+> Provjeri:
+> - sve placement koordinate
+> - sheet granice
+> - machine work-area granice
+> - safe Z između elemenata
+> - step-down za svaki element
+> - početak i kraj programa
+> - ponašanje profila F/S/G54 prema stvarno potvrđenim postavkama prvog testa.
+>
+> Ne mijenjaj kod bez konkretno pronađenog problema.
+
+## Prompt 18.2 – Test više jednakih elemenata
+
+> PLAN MODE. Nakon uspješnog single-shape testa i statičkog batch audita pripremi test za više jednakih elemenata.
 >
 > Cilj:
 > - provjeriti placement
@@ -1553,9 +1767,13 @@ Ovaj korak se radi tek nakon što svi prethodni softverski testovi prolaze.
 >
 > Ne proglašavaj layout optimalnim; mjeri samo stvarni rezultat implementiranog algoritma.
 
-## Prompt 13.6 – Finalni test report i status IMPLEMENTIRANO/TESTIRANO
+---
 
-> PLAN MODE. Nakon što unesemo stvarne rezultate svih testova, sastavi tehnički sažetak implementacije.
+# 19. Finalni test report
+
+## Prompt 19.1 – Finalni status IMPLEMENTIRANO/TESTIRANO
+
+> PLAN MODE. Nakon što unesemo stvarne rezultate svih provedenih testova, sastavi tehnički sažetak implementacije.
 >
 > Za svaku funkcionalnost označi:
 > - IMPLEMENTIRANO
@@ -1565,17 +1783,20 @@ Ovaj korak se radi tek nakon što svi prethodni softverski testovi prolaze.
 >
 > Posebno razdvoji:
 > - geometriju
+> - single-element G-code
+> - single-element fizički test
+> - quantity
 > - layout
 > - kapacitet / broj ploča
+> - batch G-code
 > - persistence
 > - `.nc` export
-> - RichAuto G-code
-> - fizički test ZK-1325.
+> - RichAuto A11 profil
+> - batch fizički test.
 >
 > Ne izmišljaj mjerne rezultate. Koristi samo stvarno zabilježene podatke.
 
 ---
-
 # Dokumentacijska struktura projekta
 
 Ova struktura nije dio Java package arhitekture, nego prati razvoj radi završnog rada:
@@ -1590,7 +1811,7 @@ Ova struktura nije dio Java package arhitekture, nego prati razvoj radi završno
 │       ├── 01-02-maven-projekt.md
 │       ├── 03-03-cnc-machine.md
 │       ├── ...
-│       └── 13-06-finalni-test-report.md
+│       └── 19-01-finalni-test-report.md
 ├── src
 ├── pom.xml
 └── AGENTS.md
@@ -1768,7 +1989,7 @@ TriangleToolPathGenerator
 CircleToolPathGenerator
 ```
 
-## Layout
+## Layout – ITERACIJA 2, tek nakon GATE 1
 
 ```text
 LayoutSettings
@@ -1784,6 +2005,8 @@ TriangleLayoutStrategy
 Nazivi strategy klasa se mogu prilagoditi nakon što vidimo koliko će algoritam stvarno biti generičan. Ne stvarati interface/klasu samo radi patterna ako ne donosi čitljivost.
 
 ## G-code
+
+Single-element generator pripada Iteraciji 1; batch proširenje tek Iteraciji 2.
 
 ```text
 GCodeProgram
@@ -1853,15 +2076,16 @@ Završeno kada:
 
 - Maven build prolazi
 - JavaFX minimalni prozor se otvara
-- stvarna JDK verzija je zapisana
+- stvarna JDK verzija je zapisana.
 
 ## Milestone B – domain model postoji
 
 Završeno kada:
 
-- sve potvrđene domain klase postoje
+- potvrđene domain klase postoje
 - enumovi postoje samo za potvrđene vrijednosti
 - nema JavaFX/JDBC ovisnosti u domainu
+- `quantity` može postojati u konačnom modelu, ali korisnički workflow prve iteracije koristi samo vrijednost 1.
 
 ## Milestone C – H2 persistence radi
 
@@ -1869,53 +2093,84 @@ Završeno kada:
 
 - schema se kreira na praznoj H2 bazi
 - repository integration testovi prolaze
-- kompletan MachiningJob se može save/loadati
+- single-element `MachiningJob` se može save/loadati
+- persistence nije kriterij kojim se proglašava RichAuto kompatibilnost.
 
-## Milestone D – geometrija i validacija rade
+## Milestone D – geometrija i validacija za jedan element rade
 
 Završeno kada:
 
 - sva 4 oblika daju očekivani ToolPath
 - nevaljani unosi se odbijaju
 - geometrija ne proizvodi G-code tekst
+- jedan oblik se može provjeriti prema dimenzijama ploče.
 
-## Milestone E – layout radi
+## Milestone E – single-element G-code radi softverski
 
 Završeno kada:
 
+- generator radi za jedan oblik
+- step-down radi
+- `.nc` export radi
+- postoje string/unit/integration testovi
+- quantity/layout/batch još nisu implementirani u korisničkom workflowu
+- status je IMPLEMENTIRANO, ali još ne TESTIRANO NA STROJU.
+
+## Milestone F – single-element UI i integracija rade
+
+Završeno kada:
+
+- korisnik može odabrati jedan oblik i njegove dimenzije
+- može unijeti materijal i machining parametre
+- može generirati i pregledati G-code
+- može spremiti/otvoriti program prema stvarno implementiranom persistence workflowu
+- može izvesti `.nc`
+- nema quantity/layout UI-a
+- controller nema poslovnu logiku.
+
+## Milestone G – GATE 1: prvi stvarni test
+
+Završeno kada:
+
+- postavke konkretnog RichAuto A11 relevantne za generator su zabilježene
+- single-element kontrolirani test je stvarno proveden
+- stvarni test jednog trokuta je proveden ako su uvjeti sigurni i operator ga odobri
+- rezultat je zapisan bez izmišljanja
+- eventualne korekcije generatora su ponovno softverski provjerene
+- donesena je odluka smije li projekt prijeći na quantity/layout.
+
+**Bez ovog milestonea ne počinje Iteracija 2.**
+
+## Milestone H – quantity i layout rade softverski
+
+Završeno kada:
+
+- korisnik može zadati quantity > 0
 - capacity per sheet radi
 - required sheets radi
 - placements su unutar ploče
-- nema tvrdnje matematičke optimalnosti
+- algoritam je deterministički i testiran
+- nema tvrdnje matematičke optimalnosti.
 
-## Milestone F – G-code generator radi softverski
-
-Završeno kada:
-
-- generira program za jedan oblik
-- step-down radi
-- generira program za više placementa
-- `.nc` export radi
-- status je IMPLEMENTIRANO, ali još ne TESTIRANO NA STROJU
-
-## Milestone G – UI i integracija rade
+## Milestone I – batch G-code i prošireni UI rade
 
 Završeno kada:
 
-- puni korisnički tok radi
-- save/open radi
-- export `.nc` radi
-- controller nema poslovnu logiku
+- već provjereni single-element ToolPath/generation pristup koristi se za više placementa
+- batch G-code se generira
+- safe Z se koristi između elemenata
+- UI prikazuje quantity, capacity i requiredSheets
+- integration test za više elemenata prolazi
+- batch dio je IMPLEMENTIRAN, ali fizički TESTIRAN tek nakon stvarnog batch testa.
 
-## Milestone H – stvarni test
+## Milestone J – batch test i završni izvještaj
 
 Završeno kada:
 
-- postavke konkretnog RichAuto A11 su zabilježene
-- single-shape test je stvarno proveden
-- batch test je stvarno proveden ako je sigurno i potrebno
-- rezultati su zapisani bez izmišljanja
-- tek tada relevantne stavke dobivaju status TESTIRANO
+- batch program prođe statički audit
+- fizički batch test je proveden ako je sigurno i potrebno
+- stvarni rezultati su zabilježeni
+- konačni izvještaj jasno razlikuje IMPLEMENTIRANO, TESTIRANO, NIJE TESTIRANO i BUDUĆI RAZVOJ.
 
 ---
 
@@ -1929,6 +2184,7 @@ Završeno kada:
 6. RichAuto A11/A11plus dokumentacija navodi G00/G01/G02/G03, G17, G21, G54–G59, G90/G91 i tipične M03/M05/M30 naredbe, ali stvarni output za konkretni ZK-1325 mora se potvrditi fizičkim testom.
 7. OpenAI Codex best practices preporučuju prvo planiranje u Ask/Plan načinu, dobro scoped zadatke, persistent project context preko `AGENTS.md` i iterativnu implementaciju umjesto jednog velikog zadatka.
 8. OpenAI smjernice za rad s Codexom navode `AGENTS.md` kao mehanizam za trajne projektne upute, a smjernice za AI-native engineering posebno preporučuju uključivanje pravila za dokumentaciju u `AGENTS.md`, automatsko generiranje dokumentacije gdje ima smisla te ljudski pregled važnih dokumenata. Zato se bilješke generiraju automatski, ali ih student mora pregledati prije korištenja u završnom radu.
+9. Aktualne OpenAI preporuke za Codex naglašavaju Ask/Plan pristup, dobro ograničene zadatke i iterativni rad. Ovaj plan zato uvodi GATE 1: prvo se završava i provjerava mali end-to-end single-element tok, a tek zatim se otvara složeniji quantity/layout/batch dio.
 
 ---
 
@@ -1949,6 +2205,8 @@ Završeno kada:
 - Ne hardkodirati RichAuto F/S/G54 ponašanje prije provjere.
 - Ne tvrditi da je layout matematički optimalan.
 - Ne označiti RichAuto kompatibilnost kao TESTIRANU prije stvarnog testa.
+- Ne implementirati korisnički quantity, layout, capacity, requiredSheets ni batch G-code prije prolaska kroz GATE 1.
+- Ako prvi single-element test otkrije problem u osnovnom generatoru, ne zaobilaziti ga prelaskom na Iteraciju 2.
 - Ne preskakati ažuriranje `dokumentacija/biljeske/` nakon implementacijskih promjena.
 - Ne puniti bilješke trivijalnim getterima/setterima i boilerplateom samo da bi postojao isječak koda.
 - Ne koristiti bilješke kao dokaz TESTIRANOG stanja ako test nije stvarno izvršen.
