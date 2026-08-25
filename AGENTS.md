@@ -46,7 +46,9 @@ Ova datoteka sadrži potvrđene projektne odluke i obvezna pravila rada. Ne pro�
 - Nakon važne arhitektonske ili tehnološke odluke ažuriraj `Dokumentacija/biljeske/00_odluke.md`.
 - Nakon svakog dokumentiranog koraka ažuriraj `Dokumentacija/biljeske/00_indeks.md`.
 - Ako potrebna dokumentacijska mapa, indeks ili datoteka odluka još ne postoji, prijavi to kao preduvjet umjesto da prešutno preskočiš dokumentiranje.
+- Svaku bilješku izradi prema `Dokumentacija/biljeske/00_predlozak_biljeske.md` i sačuvaj sve njegove obvezne odjeljke.
 - Bilješka mora jasno razlikovati IMPLEMENTIRANO od TESTIRANO. Navedi izvršenu provjeru i njezin stvarni rezultat; ne prikazuj neizvršeni test kao uspješan.
 - Izdvoji najviše nekoliko smislenih kandidata za isječak koda. Ne forsiraj isječak kada je kod trivijalan; tada izričito navedi da smislen kandidat ne postoji.
 - Svaki kandidat za isječak mora biti iz stvarnog trenutačnog koda i mora sadržavati putanju datoteke, klasu i metodu, razlog važnosti te moguće poglavlje završnog rada.
+- Kandidata za sliku, dijagram ili tablicu te Git commit/hash navedi samo kada stvarno postoje.
 - Ne zapisuj tajne, lozinke, tokene, osobne podatke ni osobne lokalne putanje.

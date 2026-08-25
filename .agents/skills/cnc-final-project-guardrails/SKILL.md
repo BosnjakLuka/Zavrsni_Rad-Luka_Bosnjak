@@ -72,8 +72,12 @@ After a task changes code, configuration, SQL, tests, or UI:
 2. Verify that `Dokumentacija/biljeske/00_indeks.md` was updated.
 3. If the task introduced or confirmed an important architectural or technological
    decision, verify that `Dokumentacija/biljeske/00_odluke.md` was updated.
-4. Ensure the note matches the current code and actual test evidence.
-5. If the documentation structure does not yet exist, report it as a blocking
+4. Verify that the note follows `Dokumentacija/biljeske/00_predlozak_biljeske.md`
+   and retains all required sections.
+5. Ensure the note matches the current code and actual test evidence.
+6. Verify that visual candidates and a Git commit/hash are recorded only when they
+   actually exist.
+7. If the documentation structure does not yet exist, report it as a blocking
    documentation prerequisite instead of silently treating documentation as complete.
 
 A note must distinguish `IMPLEMENTIRANO` from `TESTIRANO` and must not contain
