@@ -1,8 +1,8 @@
-# Plan implementacije aplikacije – baby-step promptovi za Codex
+# Plan implementacije aplikacije – kontrolirani milestone promptovi za Codex
 
 ## Svrha dokumenta
 
-Ovaj dokument je izvedbeni plan za razvoj aplikacije završnog rada **„Razvoj aplikacije za optimiziranje rada na CNC stroju“**. Plan je složen tako da se aplikacija ne pokuša izgraditi u nekoliko velikih AI promptova, nego kroz male, razumljive i provjerljive korake.
+Ovaj dokument je izvedbeni plan za razvoj aplikacije završnog rada **„Razvoj aplikacije za optimiziranje rada na CNC stroju“**. Plan koristi kombinaciju manjih koraka i grupiranih implementacijskih milestoneova. Jednostavne, međusobno povezane promjene mogu se odraditi u jednom Codex zadatku, dok se Plan/Ask Mode zadržava za arhitektonske odluke, višeslojne promjene, bazu podataka, geometriju, G-kod, layout, integraciju i druge rizičnije korake.
 
 Glavni redoslijed više nije jedan linearni niz do završnog fizičkog testa. Razvoj je podijeljen u **dvije implementacijske iteracije** s obveznim prolazom kroz prvi stvarni test između njih.
 
@@ -173,12 +173,20 @@ U prvoj iteraciji aplikacija radi s jednim elementom (`quantity = 1` kao interno
 
 Razlog ove odluke je smanjenje tehničkog rizika: prije razvoja složenijeg layout dijela potrebno je potvrditi da osnovni tok `Shape -> ToolPath -> G-code -> .nc -> ZK-1325` radi za jedan element.
 
-## 0.7. Još uvijek otvorene odluke
+## 0.7. Potvrđena package konvencija
 
-Ove stavke se ne smiju izmišljati:
+Base package projekta je:
 
-- točna instalirana verzija JDK-a
-- konačni base package projekta
+`hr.lukabosnjak`
+
+Dogovorena struktura koristi `domain.model`, `domain.enums`, `service.dto`, `persistence.repository`, `persistence.jdbc`, `ui.controller` i `ui.view` kao jasne podjele odgovornosti. `layout` postoji kao paket, ali se funkcionalno aktivira tek nakon GATE 1. FXML datoteke, ako FXML bude odabran, pripadaju `src/main/resources`, a ne Java source paketu samo zato što postoji naziv `ui.view`.
+
+## 0.8. JDK status i još uvijek otvorene odluke
+
+JDK je već odabran u stvarnom IntelliJ/Maven projektu. Ovaj plan ne izmišlja broj verzije: ako još nije zapisan u `00_odluke.md`, treba ga samo pročitati iz postojećeg projekta (`pom.xml`, IntelliJ Project SDK ili stvarni build output) i evidentirati. Ne treba ponovno trošiti poseban Codex milestone na provjeru razvojnog okruženja ako je to već napravljeno.
+
+Sljedeće stavke se još uvijek ne smiju izmišljati:
+
 - hoće li UI koristiti FXML ili će biti građen programatski
 - konkretne vrijednosti `ToolType` enuma
 - treba li `RoleType` enum i ide li autentikacija/RBAC u završni scope
@@ -192,40 +200,74 @@ Ove stavke se ne smiju izmišljati:
 
 # Kako koristiti promptove
 
-## A. Plan/Ask Mode
+## A. Plan/Ask Mode nije obvezan za svaki zadatak
 
-Svaki numerirani prompt prvo koristi u **Plan/Ask modu**.
+Plan/Ask Mode koristi se kada zadatak uključuje barem jedno od sljedećeg:
 
-Codex mora prije bilo kakve promjene:
+- arhitektonsku odluku ili promjenu granica između slojeva
+- više povezanih paketa/slojeva
+- SQL shemu, relacije, transakcije ili migracije
+- geometrijski algoritam, G-kod ili layout
+- integraciju većeg dijela aplikacije
+- otvorenu odluku koja se ne smije pretpostaviti
+- fizički *CNC* test ili statički audit programa
+- refaktoriranje koje može promijeniti postojeće ponašanje.
 
-1. pročitati `AGENTS.md`
-2. koristiti project-specific Skill ako postoji
-3. pregledati trenutačno stanje repozitorija
-4. objasniti što je već implementirano
-5. predložiti mali plan samo za taj prompt
-6. navesti koje će datoteke mijenjati
-7. navesti kako će rezultat biti provjeren
-8. upozoriti ako prompt ovisi o odluci koja još nije potvrđena
-9. **ne pisati kod dok plan ne odobriš**
+Za male, jasno specificirane i niskorizične zadatke dopušten je **DIRECT CODE** bez zasebnog Plan turna. Primjeri su jednostavni enumovi, DTO/model boilerplate, mali formatter ili `.nc` export kada su ulazi i očekivano ponašanje već zaključani.
 
-## B. Universal follow-up nakon odobrenja plana
+Kod grupiranog milestonea koristi se jedan Plan/Ask turn za cijelu povezanu cjelinu, zatim jedan Code turn. Nema potrebe raditi zaseban Plan turn za svaku POJO klasu.
+
+### Oznake korištene u ovom dokumentu
+
+- **PLAN → CODE** – prvo pregled plana, zatim implementacija nakon odobrenja
+- **DIRECT CODE** – Codex u istom turnu kratko navede plan, implementira i testira; ne čeka dodatno odobrenje
+- **ASK / AUDIT** – analiza, odluka, checklist ili audit bez izmjene koda
+
+## B. Pravilo veličine zadatka
+
+Cilj nije imati najmanji mogući broj promptova, nego najmanji broj **dobro ograničenih** promptova.
+
+- grupiraj jednostavne klase koje pripadaju istoj cjelini
+- ne spajaj G-kod, bazu i UI samo radi uštede jednog turna
+- jedan grouped milestone mora imati jasan cilj, popis datoteka/slojeva i acceptance kriterije
+- ako Codex tijekom plana otkrije da zadatak prelazi razumnu veličinu ili sadrži neriješenu odluku, smije predložiti podjelu na dva manja milestonea
+- ne ponavljaj cijeli projektni opis u svakom promptu; `AGENTS.md`, Skill, `00_odluke.md` i kod trebaju biti izvor trajnog konteksta
+- ako je thread postao vrlo dug i pun zastarjelog konteksta, novi milestone se može otvoriti u novom threadu jer projektni kontekst mora biti u repozitoriju, a ne samo u chatu.
+
+## C. Universal follow-up nakon odobrenja plana
 
 Nakon što razumiješ Codexov plan, prebaci se u Code Mode i koristi:
 
-> Implementiraj samo prethodno odobreni plan. Ne prelazi na sljedeći korak. Ne dodaj funkcionalnosti koje nisu dio ovog zadatka. Nakon promjena pokreni najrelevantniji build/test, pokaži rezultat, navedi sve promijenjene datoteke i objasni mi što je napravljeno kao studentu koji mora moći obraniti kod pred mentorom. Ako test ne prolazi, prvo objasni uzrok i popravi samo ono što pripada ovom koraku.
+> Implementiraj samo prethodno odobreni plan. Ne prelazi na sljedeći milestone i ne dodaj funkcionalnosti izvan scopea. Nakon promjena pokreni najrelevantniji build/test, pokaži rezultat, navedi sve promijenjene datoteke i objasni što je napravljeno tako da kod mogu objasniti mentoru.
 >
-> Prije završnog odgovora obavezno ažuriraj dokumentacijski dnevnik u `dokumentacija/biljeske/` prema pravilima iz `AGENTS.md` i project-specific Skilla. Bilješka mora zabilježiti što je promijenjeno, zašto, kako je provjereno, što još nije testirano te izdvojiti samo stvarno važne kandidate za isječke koda za završni rad. Ako u ovom koraku nema smislenog isječka koda, napiši da ga nema umjesto da ubacuješ boilerplate. Ažuriraj i `dokumentacija/biljeske/00_indeks.md`.
+> Ako test ne prolazi, najprije utvrdi uzrok i popravi samo ono što pripada ovom milestoneu. Ne skrivaj neuspješan test prebacivanjem na drugi korak.
+>
+> Prije završnog odgovora ažuriraj `dokumentacija/biljeske/` prema pravilima iz `AGENTS.md` i project-specific Skilla. Bilješka mora zabilježiti što je IMPLEMENTIRANO, što je stvarno TESTIRANO, što NIJE TESTIRANO, zašto je rješenje odabrano i koje su otvorene odluke. Ažuriraj i `00_indeks.md`; `00_odluke.md` mijenjaj samo ako je donesena stvarna projektna odluka.
+>
+> Kandidata za isječak koda dodaj samo ako je tehnički vrijedan za završni rad. Ne izdvajaj gettere, settere i boilerplate samo zato da bilješka ima isječak.
 >
 > Na kraju stani.
 
-## C. Pravilo baby-step rada
+Za **DIRECT CODE** prompt nije potreban poseban follow-up. Sam prompt mora sadržavati iste zahtjeve za testiranje i bilješke.
 
-Ne šalji dva ili tri prompta odjednom. Nakon svakog:
+## C.1. Build naredbe na Windowsu
 
-- pregledaj što je Codex napravio
-- pokreni aplikaciju/test kada je primjenjivo
-- pitaj ako ti neka klasa ili linija nije jasna
-- tek tada nastavi na sljedeći prompt
+Ne pretpostavljaj da je globalna naredba `mvn` dostupna u PowerShellu. Ako projekt ima Maven Wrapper, preferiraj:
+
+```powershell
+.\mvnw.cmd test
+.\mvnw.cmd javafx:run
+```
+
+Ako Wrapper ne postoji, koristi Maven koji je stvarno konfiguriran u IntelliJ/Codex okruženju. Ne mijenjaj `pom.xml` samo zato što obični PowerShell ne pronalazi globalni `mvn`.
+
+## C.2. Reasoning effort – praktično pravilo
+
+Ne zaključavati plan uz naziv jednog modela jer se Codex modeli mijenjaju. Praktično:
+
+- **medium**: jednostavni domain modeli, enumovi, DTO-i, manji UI boilerplate, jednostavan export
+- **high**: SQL, JDBC transakcije, geometrija, G-kod, layout, integracija i ozbiljniji debugging
+- **najviši dostupni effort**: samo za posebno težak audit/debugging ili kritičnu G-code/layout odluku kada postoji stvarna korist.
 
 ## D. Dokumentacijski dnevnik za završni rad
 
@@ -246,13 +288,13 @@ Primjeri:
 
 ```text
 dokumentacija/biljeske/01-02-maven-projekt.md
-dokumentacija/biljeske/03-03-cnc-machine.md
-dokumentacija/biljeske/08-05-toolpath-trokut.md
-dokumentacija/biljeske/09-03-grid-layout.md
-dokumentacija/biljeske/10-04-linearni-gcode.md
+dokumentacija/biljeske/03-01-domain-core.md
+dokumentacija/biljeske/08-02-geometry-toolpath.md
+dokumentacija/biljeske/14-02-baseline-layout.md
+dokumentacija/biljeske/09-03-linearni-gcode.md
 ```
 
-### Što se zapisuje nakon svakog implementacijskog prompta
+### Što se zapisuje nakon svakog implementacijskog milestonea
 
 Bilješka mora sadržavati najmanje:
 
@@ -498,6 +540,8 @@ Bilješke nisu konačni tekst završnog rada. One su tehnički trag razvoja i iz
 
 ## Prompt 1.1 – Provjera stvarnog razvojnog okruženja
 
+**Status za trenutačni projekt: povijesni korak – ne ponavljati ako je JDK/build alat već potvrđen i zapisan.**
+
 > PLAN MODE. Ne mijenjaj projekt. U terminalu provjeri stvarno razvojno okruženje:
 > - `java -version`
 > - `javac -version`
@@ -539,51 +583,85 @@ Bilješke nisu konačni tekst završnog rada. One su tehnički trag razvoja i iz
 
 # 2. Struktura paketa
 
-## Prompt 2.1 – Dizajn paketa bez stvaranja klasa
+Dogovorena package konvencija za projekt je:
 
-> PLAN MODE. Na temelju dogovorene arhitekture predloži package strukturu ispod odabranog base packagea.
->
-> Želim jasno odvojiti najmanje:
-> - `app`
-> - `config`
-> - `domain`
-> - `domain.enums`
-> - `validation`
-> - `geometry`
-> - `layout`
-> - `gcode`
-> - `service`
-> - `persistence.repository`
-> - `persistence.jdbc`
-> - `ui`
-> - `ui.controller`
-> - eventualno `exception` samo ako stvarno ima smisla.
->
-> Prije bilo kakvog stvaranja direktorija objasni:
-> - odgovornost svakog paketa
-> - koje pakete smije pozivati UI
-> - zašto domain ne smije ovisiti o JavaFX-u ili JDBC-u
-> - zašto gcode ne smije spremati u bazu.
+```text
+hr.lukabosnjak
+├── app
+├── config
+├── domain
+│   ├── entities
+│   └── enums
+├── validation
+├── geometry
+├── layout
+├── gcode
+├── service
+│   └── dto
+├── persistence
+│   ├── repository
+│   └── jdbc
+└── ui
+    ├── controller
+    └── view
+```
 
-## Prompt 2.2 – Kreiranje package kostura
+Odgovornosti:
 
-> PLAN MODE. Kreiraj samo prethodno odobrenu package strukturu.
+- `app` – ulazna točka i composition root / ručno povezivanje ovisnosti
+- `config` – konfiguracija baze i ostala infrastrukturna konfiguracija
+- `domain.model` – poslovni/domenski modeli bez JavaFX-a i JDBC-a
+- `domain.enums` – potvrđene domenske enum vrijednosti
+- `validation` – poslovna validacija ulaza i modela
+- `geometry` – geometrija, `ToolPath` i segmenti; bez G-code stringova
+- `layout` – raspoređivanje više elemenata; funkcionalno se koristi tek nakon GATE 1
+- `gcode` – RichAuto profil, formatter, generator i `.nc` export
+- `service` – koordinacija use-caseova između UI-a i poslovnih dijelova
+- `service.dto` – request/result modeli samo kada stvarno pojednostavljuju granicu UI → service
+- `persistence.repository` – repository ugovori
+- `persistence.jdbc` – JDBC/H2 implementacije repositoryja
+- `ui.controller` – tanki JavaFX controlleri
+- `ui.view` – Java view klase samo ako ih stvarno bude; ako se odabere FXML, FXML datoteke idu u odgovarajući path unutar `src/main/resources`.
+
+`util`, `io`, dodatni `common` paketi i slični catch-all paketi ne uvode se unaprijed. Dodaju se samo ako se tijekom implementacije pojavi jasna odgovornost koja ne pripada postojećim paketima.
+
+## Prompt 2.1 – Audit i zaključavanje package strukture
+
+**Način: ASK / AUDIT**
+
+> Pregledaj trenutno stanje repozitorija i usporedi ga s potvrđenom package strukturom `hr.lukabosnjak` iz plana.
 >
-> Ako Java ne dopušta prazan package bez datoteke, nemoj stvarati beskorisne placeholder klase samo radi direktorija. Kreiraj samo ono što je potrebno i objasni kako će se paketi pojavljivati kako budemo dodavali klase.
+> Ne mijenjaj aplikacijsku logiku. Prikaži samo:
+> - postojeće pakete
+> - odstupanja od dogovorene strukture
+> - koje prazne pakete nema smisla stvarati unaprijed
+> - postoje li klase koje su već smještene u pogrešan sloj.
 >
-> Ne implementiraj još domenske klase.
+> Posebno potvrdi da `domain` ne ovisi o JavaFX-u/JDBC-u i da `gcode` neće spremati podatke u bazu.
+
+## Prompt 2.2 – Kreiranje / korekcija package kostura
+
+**Način: DIRECT CODE**
+
+> Uskladi samo package kostur s prethodno potvrđenom strukturom `hr.lukabosnjak`.
+>
+> Ne stvaraj beskorisne placeholder klase samo radi praznih direktorija. Ne implementiraj domenske klase. Ako je neka postojeća klasa već dio smoke testa, ne premještaj je bez potrebe samo radi estetike.
+>
+> Nakon promjene pokreni najrelevantniji compile/build i ažuriraj razvojnu bilješku.
 
 ---
 
 # 3. Domain / model klase
 
-Napomena: zbog zadanog redoslijeda prvo gradimo klase koje ne ovise o još-nepostojećim enumovima. `Shape`, `Tool` i završni `MachiningJob` dovršavaju se nakon koraka s enumovima.
+Ovaj korak je namjerno grupiran. Jednostavne POJO/model klase ne trebaju zaseban Plan turn za svaku klasu.
 
-## Prompt 3.1 – `MaterialType`
+## Prompt 3.1 – Core domain milestone
 
-> PLAN MODE. Implementiraj samo domensku klasu `MaterialType`.
+**Način: PLAN → CODE**
+
+> Pregledaj postojeći projekt i u jednom milestoneu isplaniraj i implementiraj osnovne domenske modele u `hr.lukabosnjak.domain.entities`:
 >
-> Potvrđeni podaci:
+> **`MaterialType`**
 > - `Long materialTypeId`
 > - `String name`
 > - `String description` – nullable
@@ -591,20 +669,7 @@ Napomena: zbog zadanog redoslijeda prvo gradimo klase koje ne ovise o još-nepos
 > - `LocalDateTime updatedAt`
 > - `LocalDateTime deletedAt` – nullable
 >
-> Ne dodaj JPA anotacije jer koristimo JDBC/H2, ne ORM.
->
-> Prije implementacije objasni:
-> - zašto je ID `Long`
-> - zašto je `deletedAt` nullable
-> - hoćemo li koristiti konstruktor + gettere/settere ili drugi jednostavan pristup prikladan JDBC mapiranju.
->
-> Dodaj samo minimalne unit testove ako postoji stvarna logika za testiranje; nemoj pisati besmislene getter testove.
-
-## Prompt 3.2 – `MaterialSheet`
-
-> PLAN MODE. Implementiraj samo `MaterialSheet`.
->
-> Potvrđeni podaci:
+> **`MaterialSheet`**
 > - `Long materialSheetId`
 > - veza prema `MaterialType`
 > - `double width`
@@ -613,15 +678,7 @@ Napomena: zbog zadanog redoslijeda prvo gradimo klase koje ne ovise o još-nepos
 > - `LocalDateTime createdAt`
 > - `LocalDateTime updatedAt`
 >
-> Sve tri dimenzije u valjanom stanju moraju biti > 0, ali nemoj još gurati kompletnu UI validaciju u ovu klasu.
->
-> Prije implementacije objasni je li za domenski model čišće imati `MaterialType materialType` ili samo `Long materialTypeId`, uzimajući u obzir da persistence radimo ručnim JDBC-om. Odaberi jednostavniju opciju koju možemo jasno obraniti.
-
-## Prompt 3.3 – `CncMachine`
-
-> PLAN MODE. Implementiraj samo `CncMachine`.
->
-> Potvrđeni atributi:
+> **`CncMachine`**
 > - `Long cncMachineId`
 > - `String name`
 > - `String manufacturer` – nullable
@@ -636,15 +693,7 @@ Napomena: zbog zadanog redoslijeda prvo gradimo klase koje ne ovise o još-nepos
 > - `LocalDateTime createdAt`
 > - `LocalDateTime updatedAt`
 >
-> Ne hardkodiraj još ZK-1325 vrijednosti unutar klase. One pripadaju podacima baze/configu, ne source kodu.
->
-> Ne tvrdi da su radne osi fizičkog stroja već provjerene.
-
-## Prompt 3.4 – `MachiningParameters`
-
-> PLAN MODE. Implementiraj samo `MachiningParameters`.
->
-> Potvrđeni atributi:
+> **`MachiningParameters`**
 > - `Long machiningParametersId`
 > - `double spindleSpeed`
 > - `double feedRate`
@@ -653,33 +702,12 @@ Napomena: zbog zadanog redoslijeda prvo gradimo klase koje ne ovise o još-nepos
 > - `double stepDown`
 > - `double safeZ`
 >
-> Sve vrijednosti za valjan machining job trebaju biti > 0.
->
-> Posebno objasni:
-> - razliku `cutDepth` i debljine `MaterialSheet`
-> - svrhu `stepDown`
-> - zašto `safeZ` pripada machining parametrima, a ne `MaterialType`.
->
-> Ne generiraj još G-kod.
-
-## Prompt 3.5 – `Role`
-
-> PLAN MODE. Implementiraj samo klasu `Role`.
->
-> Potvrđeni atributi:
+> **`Role`**
 > - `Long roleId`
 > - `String name`
 > - `String description` – nullable
 >
-> Nemoj još uvoditi `RoleType` enum ni prava ADMIN/ENGINEER/CNC_OPERATOR kao implementiranu funkcionalnost, jer autentikacija/RBAC nije potvrđena funkcionalnim zahtjevima.
->
-> Klasa treba biti spremna za JDBC mapiranje, ali bez autentikacijske logike.
-
-## Prompt 3.6 – `User`
-
-> PLAN MODE. Implementiraj samo Java domensku klasu `User`. SQL tablica će se kasnije zvati `APP_USER` jer je `USER` H2 keyword.
->
-> Potvrđeni atributi:
+> **`User`**
 > - `Long userId`
 > - veza prema `Role`
 > - `String username`
@@ -690,33 +718,37 @@ Napomena: zbog zadanog redoslijeda prvo gradimo klase koje ne ovise o još-nepos
 > - `LocalDateTime createdAt`
 > - `LocalDateTime updatedAt`
 >
-> Ne implementiraj login, password hashing algoritam, session management niti autorizaciju u ovom koraku.
+> Pravila:
+> - bez JPA/Hibernate anotacija
+> - bez JavaFX i JDBC ovisnosti u domain sloju
+> - koristi jednostavan pristup pogodan ručnom JDBC mapiranju
+> - ne hardkodiraj ZK-1325 vrijednosti u `CncMachine`
+> - ne implementiraj login, hashing, session ili RBAC
+> - `cutDepth` i `MaterialSheet.thickness` nisu isti podatak
+> - potpuna validacija ne pripada setterima; dolazi u validation sloju
+> - ne piši besmislene getter/setter unit testove.
 >
-> Objasni zašto `passwordHash` nije isto što i lozinka u čistom tekstu.
+> U Plan dijelu objasni samo zajedničke dizajnerske odluke za svih šest klasa i navedi datoteke koje će nastati. Nemoj raditi šest zasebnih mini-planova.
 
 ---
 
 # 4. Enumovi i dovršavanje modela
 
-## Prompt 4.1 – `ShapeType` i `ShapeSubtype`
+## Prompt 4.1 – Shape enumovi + `Shape`
 
-> PLAN MODE. Implementiraj potvrđene enumove za geometriju.
->
-> `ShapeType` mora pokriti V1:
-> - SQUARE
-> - RECTANGLE
-> - CIRCLE
-> - TRIANGLE
->
-> Za `ShapeSubtype` u V1 imamo potvrđen samo koncept jednakostraničnog trokuta. Ne izmišljaj druge podtipove. Predloži najjednostavniji način da `EQUILATERAL` postoji bez stvaranja bespotrebnih vrijednosti.
->
-> Objasni zašto ne koristimo Stringove za sve shape tipove.
+**Način: DIRECT CODE**
 
-## Prompt 4.2 – `Shape`
-
-> PLAN MODE. Implementiraj samo `Shape` entitet.
+> Pregledaj trenutni domain model i implementiraj potvrđene geometrijske enumove u `hr.lukabosnjak.domain.enums` te `Shape` u `hr.lukabosnjak.domain.entities`.
 >
-> Potvrđeni atributi:
+> `ShapeType`:
+> - `SQUARE`
+> - `RECTANGLE`
+> - `CIRCLE`
+> - `TRIANGLE`
+>
+> `ShapeSubtype` u V1 treba sadržavati samo stvarno potvrđeni koncept `EQUILATERAL`. Ne izmišljaj druge podtipove.
+>
+> `Shape`:
 > - `Long shapeId`
 > - `ShapeType shapeType`
 > - `ShapeSubtype shapeSubtype` – nullable kada nema smisla
@@ -731,24 +763,26 @@ Napomena: zbog zadanog redoslijeda prvo gradimo klase koje ne ovise o još-nepos
 > - SQUARE: A = stranica
 > - RECTANGLE: A = width, B = height
 > - CIRCLE: A = promjer
-> - TRIANGLE + EQUILATERAL: A = stranica
+> - TRIANGLE + EQUILATERAL: A = stranica.
 >
-> Nemoj kreirati `Square`, `Rectangle`, `Circle` i `Triangle` kao zasebne persistence entitete. Specifičnu geometrijsku logiku ćemo kasnije odvojiti u geometry generatore.
+> Ne kreiraj zasebne persistence entitete `Square`, `Rectangle`, `Circle` i `Triangle`. Ne generiraj geometriju u `Shape` klasi. UI kasnije mora koristiti semantičke nazive polja, a ne `dimensionA/B/C`.
 >
-> UI kasnije mora prikazivati semantičke nazive polja, a ne `dimensionA`.
+> U istom turnu kratko navedi što ćeš promijeniti, implementiraj, pokreni build/test i ažuriraj bilješku.
 
-## Prompt 4.3 – `ToolType` decision gate i `Tool`
+## Prompt 4.2 – `ToolType` decision gate + `Tool`
 
-> PLAN MODE. Prije implementacije `Tool` klase provjeri postoji li u projektu potvrđen popis vrijednosti `ToolType`.
+**Način: PLAN → CODE**
+
+> Prije implementacije `Tool` provjeri `00_odluke.md`, postojeći kod i dokumentaciju projekta postoji li potvrđen popis `ToolType` vrijednosti.
 >
-> Ako vrijednosti nisu potvrđene:
-> - nemoj ih izmišljati
-> - pokaži mi koje informacije trebamo od stvarnog ZK-1325 alata
-> - predloži možemo li privremeno modelirati `type` kao `String` bez narušavanja arhitekture.
+> Ako nije potvrđen:
+> - ne izmišljaj vrijednosti
+> - objasni koje informacije trebamo od stvarnog ZK-1325 alata
+> - predloži najmanje složenu privremenu reprezentaciju, npr. `String type`, ali je ne implementiraj kao konačnu odluku dok je ne odobrim.
 >
-> Nakon odluke, `Tool` treba imati:
+> Nakon odluke implementiraj `Tool`:
 > - `Long toolId`
-> - vezu prema `CncMachine`
+> - veza prema `CncMachine`
 > - `int toolNumber`
 > - `String name`
 > - `type` prema potvrđenoj odluci
@@ -757,714 +791,562 @@ Napomena: zbog zadanog redoslijeda prvo gradimo klase koje ne ovise o još-nepos
 > - `int fluteCount`
 > - `boolean active`
 > - `LocalDateTime createdAt`
-> - `LocalDateTime updatedAt`
+> - `LocalDateTime updatedAt`.
 >
-> Nemoj hardkodirati stvarne alate koje još nismo izmjerili/potvrdili.
+> Ne hardkodiraj stvarne alate koje još nismo izmjerili/potvrdili.
 
-## Prompt 4.4 – `MachiningJob`
+## Prompt 4.3 – `MachiningJob` agregat
 
-> PLAN MODE. Sada kada postoje ostali osnovni modeli, implementiraj `MachiningJob`.
+**Način: PLAN → CODE**
+
+> Implementiraj `MachiningJob` tek nakon što postoje ostali osnovni modeli.
 >
 > Potvrđeni podaci/veze:
 > - `Long machiningJobId`
-> - created-by `User`
-> - `CncMachine`
-> - `Tool`
-> - `MaterialSheet`
-> - `MachiningParameters`
-> - `Shape`
+> - `User createdBy`
+> - `CncMachine cncMachine`
+> - `Tool tool`
+> - `MaterialSheet materialSheet`
+> - `MachiningParameters machiningParameters`
+> - `Shape shape`
 > - `String name`
-> - `int quantity` – polje ostaje dio konačnog modela; tijekom Iteracije 1 koristi se vrijednost 1 i još nema korisničkog unosa količine
-> - `String gCode` kao V1 representation spremljenog programa; SQL će biti CLOB
+> - `int quantity`
+> - `String gCode`
 > - `LocalDateTime createdAt`
-> - `LocalDateTime updatedAt`
+> - `LocalDateTime updatedAt`.
 >
-> `quantity` mora u valjanom nalogu biti > 0. U Iteraciji 1 workflow radi samo s `quantity = 1`; korisnički unos količine uvodi se tek nakon GATE 1.
+> `quantity` ostaje dio konačnog modela, ali u Iteraciji 1 workflow koristi samo vrijednost `1`. Korisnički unos quantity ne uvodi se prije GATE 1.
 >
-> Nemoj u ovoj klasi implementirati SQL ni generiranje G-koda.
->
-> Objasni zašto je `MachiningJob` agregat koji povezuje podatke jednog posla.
+> Ne implementiraj SQL ni generiranje G-koda u ovoj klasi. U planu posebno objasni zašto `MachiningJob` povezuje snapshot podatke jednog posla i koje reference očekujemo da već postoje u bazi.
 
 ---
 
 # 5. H2 konfiguracija
 
-## Prompt 5.1 – Dodavanje H2 dependencyja
+## Prompt 5.1 – H2 dependency + `DatabaseConfig` + smoke test
 
-> PLAN MODE. Dodaj H2 kao Maven dependency koristeći aktualnu stabilnu verziju provjerenu iz službene H2 dokumentacije/Maven repozitorija.
->
-> Nemoj instalirati zaseban ORM.
->
-> Objasni:
-> - što znači embedded H2
-> - zašto je JDBC dovoljan za ovaj projekt
-> - gdje će se fizički spremati baza
-> - zašto je H2 Console razvojni alat, a ne dio poslovne logike.
+**Način: PLAN → CODE**
 
-## Prompt 5.2 – `DatabaseConfig` / Connection factory
-
-> PLAN MODE. Implementiraj minimalnu centraliziranu konfiguraciju JDBC veze.
+> U jednom milestoneu uvedi minimalnu H2/JDBC infrastrukturu.
 >
-> Želim:
-> - jedno mjesto za JDBC URL
-> - user/password konfiguraciju
-> - metodu za dobivanje `Connection`
-> - try-with-resources u kodu koji koristi Connection
-> - bez globalno otvorene connection varijable
-> - bez SQL-a u JavaFX controlleru.
+> Napravi:
+> - H2 Maven dependency koristeći aktualnu stabilnu verziju provjerenu iz službenog H2 izvora
+> - `DatabaseConfig` ili ekvivalent u `hr.lukabosnjak.config`
+> - centralno mjesto za JDBC URL, user i password
+> - metodu/factory za dobivanje novog `Connection`
+> - razvojni smoke test koji otvara i zatvara vezu
+> - kratku uputu za pokretanje H2 Consolea kao development alata.
 >
-> Za file-based embedded bazu odaberi jednostavan projektni path i objasni posljedice relativnog patha.
+> Pravila:
+> - embedded H2 + JDBC, bez ORM-a
+> - bez globalno otvorenog `Connection`
+> - kod koji dobije connection kasnije koristi try-with-resources
+> - file-based baza za aplikaciju, in-memory H2 za integration testove
+> - relativni path mora biti objašnjen jer ovisi o working directoryju
+> - Console nije runtime poslovna komponenta
+> - ne kreiraj još tablice i ne dodaj SQL u JavaFX controller.
 >
-> Ne kreiraj još tablice.
-
-## Prompt 5.3 – H2 connection smoke test i Console
-
-> PLAN MODE. Dodaj mali razvojni smoke test koji potvrđuje da aplikacija može otvoriti i zatvoriti H2 JDBC vezu.
->
-> Nakon toga predloži najjednostavniji način pokretanja H2 Console za razvoj i pregled podataka.
->
-> Console ne smije postati obvezna runtime komponenta aplikacije.
->
-> Ne piši još finalni DDL.
+> Za build/test prvo provjeri postoji li Maven Wrapper. Ako postoji, na Windowsu koristi `./mvnw.cmd`/`.\\mvnw.cmd`; ne pretpostavljaj da globalni `mvn` postoji.
 
 ---
 
-# 6. SQL schema
+# 6. SQL schema i inicijalizacija baze
 
-Prije DDL-a treba zaključati nekoliko korekcija koje su ranije identificirane.
+## Prompt 6.1 – Pre-DDL audit + User/Role runtime gate
 
-## Prompt 6.1 – Audit modela prije DDL-a
+**Način: ASK / AUDIT**
 
-> PLAN MODE. Ne piši SQL još.
+> Ne piši SQL. Usporedi trenutne Java modele, ER/relacijski model i funkcionalne zahtjeve.
 >
-> Usporedi postojeće Java modele i konačni ER/relacijski model te provjeri sljedeće:
-> - SQL tablica mora biti `APP_USER`, ne `USER`
+> Obavezno provjeri:
+> - tablica `APP_USER`, ne `USER`
 > - `safe_z` postoji samo u `MACHINING_PARAMETERS`
 > - `MACHINING_JOB` ima `shape_id`
-> - `MACHINING_JOB` ima `g_code CLOB`
+> - `MACHINING_JOB` ima `g_code CLOB` u Iteraciji 1
 > - `UNIQUE(cnc_machine_id, tool_number)`
-> - `MATERIAL_SHEET`, `MACHINING_PARAMETERS` i `SHAPE` su 1:1 prema jobu u V1 i zato odgovarajući FK-ovi u jobu trebaju UNIQUE
-> - svi BIGINT PK-ovi imaju jasno definiranu identity strategiju
+> - `MATERIAL_SHEET`, `MACHINING_PARAMETERS` i `SHAPE` su snapshot 1:1 prema jobu u V1
+> - identity strategiju BIGINT PK-ova
 > - Tool pripada CncMachineu
-> - job sadrži i machine i tool te će poslovna logika provjeravati njihovu usklađenost.
+> - job sadrži i machine i tool; poslovna logika provjerava usklađenost.
 >
-> Prikaži mi samo audit tablicu: stavka / stanje / potrebna korekcija.
-
-## Prompt 6.2 – User/Role scope gate
-
-> PLAN MODE. Prije konačnog DDL-a analiziraj problem:
-> baza sadrži `ROLE`, `APP_USER` i `MACHINING_JOB.created_by_user_id`, ali funkcionalni zahtjevi još ne definiraju login ni RBAC.
+> Posebno riješi postojeći gap: baza sadrži `ROLE`, `APP_USER` i `created_by_user_id`, ali login/RBAC nije potvrđen funkcionalnim zahtjevima. Prikaži minimalne opcije:
+> 1. `ROLE`/`APP_USER` ostaju u V1 bez login UI-a, uz jasno definiran bootstrap/seed lokalnog korisnika koji omogućuje stvarno spremanje `MachiningJob` zapisa
+> 2. autentikacija/RBAC službeno se dodaje u scope kao novi funkcionalni zahtjev.
 >
-> Nemoj implementirati autentikaciju.
->
-> Prikaži mi dvije minimalne opcije za V1:
-> 1. korisnički model ostaje u bazi, ali bez login UI-ja
-> 2. autentikacija se službeno dodaje u scope kao novi funkcionalni zahtjev.
->
-> Usporedi utjecaj na završni rad i količinu implementacije. Zaustavi se i čekaj moju odluku prije konačnog DDL-a ako odluka još nije evidentirana u repozitoriju.
+> Usporedi utjecaj na kod i završni rad. Zaustavi se prije DDL-a dok odluka nije unesena u `00_odluke.md`.
 
-## Prompt 6.3 – `schema.sql`, prvi dio
+## Prompt 6.2 – Kompletni `schema.sql` + schema integration test
 
-> PLAN MODE. Kreiraj prvi dio `schema.sql` samo za stabilne/roditeljske tablice:
+**Način: PLAN → CODE**
+
+> Nakon zaključene odluke iz 6.1 kreiraj kompletni V1 `schema.sql` u jednom milestoneu za:
 > - ROLE
 > - APP_USER
 > - MATERIAL_TYPE
 > - CNC_MACHINE
->
-> Koristi H2 syntax kompatibilan s verzijom dependencyja.
->
-> PK:
-> - `BIGINT GENERATED ... AS IDENTITY` ili odgovarajuću standardnu H2 identity sintaksu koju prvo provjeri u dokumentaciji.
->
-> Dodaj:
-> - NOT NULL
-> - UNIQUE gdje je potvrđeno
-> - FK `APP_USER.role_id -> ROLE.role_id`.
->
-> Nemoj još kreirati ostale tablice.
-
-## Prompt 6.4 – `schema.sql`, drugi dio
-
-> PLAN MODE. Proširi postojeći `schema.sql` samo s:
 > - TOOL
 > - MATERIAL_SHEET
 > - MACHINING_PARAMETERS
 > - SHAPE
+> - MACHINING_JOB.
 >
-> Obavezno:
-> - Tool FK na CNC_MACHINE
+> Zahtjevi:
+> - H2 sintaksa usklađena sa stvarnom dependency verzijom
+> - BIGINT identity PK-ovi
+> - NOT NULL i UNIQUE samo gdje su opravdani
+> - svi potvrđeni FK-ovi
 > - `UNIQUE(cnc_machine_id, tool_number)`
-> - MaterialSheet FK na MATERIAL_TYPE
-> - `deleted_at` samo tamo gdje je model predvidio
-> - enum vrijednosti pohranjuj kao VARCHAR, bez H2-specifičnog ENUM tipa, kako Java enum mapping ostane jednostavan.
+> - enum vrijednosti kao `VARCHAR`
+> - `MACHINING_JOB.g_code CLOB`
+> - UNIQUE na `material_sheet_id`, `machining_parameters_id`, `shape_id` za V1 snapshot 1:1 veze
+> - `quantity INTEGER NOT NULL` + jednostavan `CHECK (quantity > 0)`
+> - nemoj duplicirati svu poslovnu validaciju u SQL.
 >
-> Ne kreiraj MACHINING_JOB u ovom promptu.
+> Ako odluka iz 6.1 zahtijeva bootstrap user/role, dodaj samo minimalni seed mehanizam koji je odobren; ne izmišljaj autentikaciju.
+>
+> Dodaj integration test koji pokrene schema na čistoj in-memory H2 bazi i potvrdi da se sve tablice kreiraju.
 
-## Prompt 6.5 – `MACHINING_JOB` i schema integration test
+## Prompt 6.3 – `DatabaseInitializer` / first-run schema initialization
 
-> PLAN MODE. Dodaj `MACHINING_JOB` u `schema.sql`.
+**Način: PLAN → CODE**
+
+> Aplikacija mora moći otvoriti praznu file-based H2 bazu na novom računalu bez ručnog kreiranja tablica u Consoleu.
 >
-> Atributi:
-> - identity PK
-> - FK prema APP_USER prema potvrđenoj odluci
-> - FK `cnc_machine_id`
-> - FK `tool_id`
-> - FK `material_sheet_id`
-> - FK `machining_parameters_id`
-> - FK `shape_id`
-> - `name VARCHAR NOT NULL`
-> - `quantity INTEGER NOT NULL` – u Iteraciji 1 sprema se vrijednost 1; korisnički unos količine dolazi tek u Iteraciji 2
-> - `g_code CLOB`
-> - timestamps
+> Predloži i implementiraj najmanje složen, eksplicitan način da se `schema.sql` izvrši pri inicijalizaciji aplikacije, npr. mali `DatabaseInitializer` u config/persistence infrastrukturi.
 >
-> Za V1 dodaj UNIQUE na FK-ove koji predstavljaju stvarne 1:1 veze:
-> - material_sheet_id
-> - machining_parameters_id
-> - shape_id
+> Ne skrivaj cijelu inicijalizaciju u teško objašnjivom JDBC URL magic stringu ako jednostavan Java initializer daje čitljivije rješenje.
 >
-> Dodaj CHECK gdje je H2 rješenje jednostavno i jasno, npr. `quantity > 0`, ali nemoj duplirati svu poslovnu logiku u SQL.
->
-> Nakon implementacije napravi integration test koji pokrene schema na čistoj in-memory H2 bazi i potvrdi da se sve tablice mogu kreirati.
+> Dodaj test koji otvara novu privremenu file-based H2 bazu, pokreće initializer i potvrđuje da očekivane tablice postoje. Initializer ne smije brisati postojeće podatke pri običnom pokretanju aplikacije.
 
 ---
 
 # 7. Repository / DAO sloj
 
-Pravilo za cijeli sloj:
+Za cijeli sloj vrijedi:
 
 - JDBC
-- PreparedStatement
+- `PreparedStatement`
 - try-with-resources
 - SQL ostaje u persistence sloju
-- controller nikada ne dobiva Connection
-- iznimke se pretvaraju u jasne persistence iznimke ili propagiraju na kontroliran način
+- controller nikada ne dobiva `Connection`
+- nema generičkog mega-`CrudRepository` samo radi patterna
+- testovi koriste H2 i stvarnu schema definiciju.
 
-## Prompt 7.1 – Repository konvencije
+## Prompt 7.1 – Simple repositories milestone
 
-> PLAN MODE. Prije implementacije DAO-a predloži konvenciju za repository sloj.
->
-> Odluči:
-> - interface u `persistence.repository`
-> - JDBC implementacija u `persistence.jdbc`
-> - naming: `MaterialTypeRepository` + `JdbcMaterialTypeRepository`
-> - koje osnovne metode stvarno trebamo.
->
-> Nemoj uvoditi generički mega-`CrudRepository` ako će više zakomplicirati studentski projekt.
->
-> Za V1 tipične metode su `save`, `findById`, `findAll`, a `delete` samo gdje je funkcionalno potreban.
+**Način: PLAN → CODE**
 
-## Prompt 7.2 – `MaterialTypeRepository` i `CncMachineRepository`
+> U jednom milestoneu definiraj repository konvenciju i implementiraj jednostavne repositoryje koji ne spremaju cijeli `MachiningJob` agregat.
+>
+> Struktura:
+> - interface u `hr.lukabosnjak.persistence.repository`
+> - JDBC implementacija u `hr.lukabosnjak.persistence.jdbc`
+> - naming `XRepository` + `JdbcXRepository`.
+>
+> Obuhvati:
+> - `MaterialType`
+> - `CncMachine`
+> - `Tool`
+> - `MaterialSheet`
+> - `MachiningParameters`
+> - `Shape`
+> - `Role`/`User` samo u minimalnom opsegu koji stvarno zahtijeva odluka iz 6.1.
+>
+> Nemoj svakom repositoryju automatski dodati puni CRUD. Dodaj samo `save`, `findById`, `findAll` ili specifične upite koji su potrebni stvarnom workflowu. Za `Tool` trebamo barem `findAllByMachineId` i po potrebi `findByMachineIdAndToolNumber`.
+>
+> Dodaj integration testove koji pokrivaju stvarno mapiranje `ResultSet -> domain`, round-trip spremanje/čitanje i DB constraint da isti `tool_number` nije dopušten dvaput na istom stroju, ali jest na drugom stroju.
 
-> PLAN MODE. Implementiraj repository interface i JDBC implementaciju samo za:
-> - MaterialType
-> - CncMachine
->
-> Koristi PreparedStatement i eksplicitno mapiranje `ResultSet -> domain`.
->
-> Dodaj H2 integration testove za:
-> - insert
-> - findById
-> - findAll.
->
-> Ne implementiraj Tool niti job u ovom promptu.
+## Prompt 7.2 – `MachiningJobRepository` + transakcijski round-trip
 
-## Prompt 7.3 – `ToolRepository`
+**Način: PLAN → CODE**
 
-> PLAN MODE. Implementiraj `ToolRepository` i `JdbcToolRepository`.
+> Implementiraj `MachiningJobRepository` i JDBC implementaciju.
 >
-> Minimalne potrebe:
-> - save
-> - findById
-> - findAllByMachineId
-> - po potrebi findByMachineIdAndToolNumber.
+> Spremanje jednog joba mora biti transakcijsko za snapshot podatke koje job posjeduje:
+> - `Shape`
+> - `MaterialSheet`
+> - `MachiningParameters`
+> - `MachiningJob` s `g_code`.
 >
-> Testiraj da DB odbija dupli `tool_number` na istom stroju, ali dopušta isti broj alata na drugom stroju.
+> Reference poput `CncMachine`, `Tool`, `MaterialType` i `User` moraju već postojati prema stvarnom odabranom workflowu; nemoj ih tiho duplicirati pri svakom spremanju joba.
 >
-> Ne implementiraj machining job.
-
-## Prompt 7.4 – Snapshot repositoryji
-
-> PLAN MODE. Implementiraj repository sloj za:
-> - MaterialSheet
-> - MachiningParameters
-> - Shape
+> Prije koda objasni:
+> - gdje transakcija počinje i završava
+> - što se rollbacka ako insert ne uspije
+> - kako se ponovno učitava cijeli job bez SQL-a u service/controller sloju.
 >
-> Ove zapise u V1 tretiramo kao podatke konkretnog posla/snapshot, ne kao globalne kataloge koje korisnik stalno uređuje.
+> Minimalno:
+> - `save`
+> - `findById`
+> - `findAll`
+> - `update` samo ako quick-access workflow stvarno zahtijeva izmjenu postojećeg zapisa.
 >
-> Za svaki repository napravi samo metode koje su potrebne za save/load job workflow.
->
-> Dodaj integration test barem za round-trip spremanje i čitanje svakog tipa.
-
-## Prompt 7.5 – `MachiningJobRepository`
-
-> PLAN MODE. Implementiraj `MachiningJobRepository` i JDBC implementaciju.
->
-> Ovo je važan korak. Spremanje kompletnog joba mora biti transakcijsko:
-> - shape
-> - material sheet
-> - machining parameters
-> - machining job s `g_code`.
->
-> Ako jedan insert ne uspije, ne smije ostati pola spremljenog joba.
->
-> Minimalne metode:
-> - save
-> - findById
-> - findAll
-> - eventualno update ako je stvarno potreban za quick access.
->
-> Prije koda mi objasni gdje počinje i završava transakcija.
+> Dodaj integration test koji potvrđuje rollback i fresh-context round-trip za single-element job s `quantity = 1`.
 
 ---
 
-# 8. Service / poslovna logika + Geometry/ToolPath
+# 8. Validation + Geometry / ToolPath + single-shape fit
 
-Ovaj korak uključuje i Geometry/ToolPath jer je taj sloj potvrđen arhitekturom, a mora postojati prije layouta i G-code generatora.
+## Prompt 8.1 – Validation milestone
 
-## Prompt 8.1 – Model validacije
+**Način: PLAN → CODE**
 
-> PLAN MODE. Dizajniraj minimalni validation pristup bez frameworka.
+> Dizajniraj i implementiraj minimalan validation pristup bez frameworka.
 >
-> Želim jasne poruke poput:
-> - „Duljina stranice mora biti veća od 0 mm.“
-> - „Količina mora biti cijeli broj veći od 0.“
+> Validiraj:
+> - `Shape`
+> - `MaterialSheet`
+> - `MachiningParameters`
+> - `MachiningJob.quantity`
+> - `Tool` pripada odabranom `CncMachine`
+> - tool je active
+> - `feedRate <= machine.maxFeedRate`
+> - `spindleSpeed` unutar machine min/max raspona.
 >
-> Predloži jednostavan `ValidationResult` ili kontrolirane exceptione. Nemoj stvarati kompleksan validation framework.
->
-> Validation ne smije biti u JavaFX controlleru.
-
-## Prompt 8.2 – Validatori domenskih podataka
-
-> PLAN MODE. Implementiraj zasebnu validaciju za:
-> - Shape
-> - MaterialSheet
-> - MachiningParameters
-> - MachiningJob quantity – model-level pravilo; tijekom Iteracije 1 praktično se provjerava fiksna vrijednost 1, a korisnički unos dolazi tek u Iteraciji 2.
->
-> Shape pravila:
+> Pravila shapea:
 > - Square: A > 0
 > - Rectangle: A > 0 i B > 0
 > - Circle: A(promjer) > 0
-> - Triangle/EQUILATERAL: A > 0
+> - Triangle/EQUILATERAL: A > 0.
 >
-> Material:
-> - width, height, thickness > 0.
+> Material: width, height, thickness > 0.
 >
-> Machining:
-> - spindleSpeed, feedRate, plungeRate, cutDepth, stepDown, safeZ > 0.
+> Machining parametri: spindleSpeed, feedRate, plungeRate, cutDepth, stepDown i safeZ > 0 kao pozitivne domenske veličine. Nemoj iz toga zaključiti fizički znak Z koordinate na stroju.
 >
-> Dodaj unit testove za normalne, granične i nevaljane vrijednosti.
+> Poruke trebaju biti konkretne, npr. „Duljina stranice mora biti veća od 0 mm.“
+>
+> Dodaj unit testove za valjane, granične i nevaljane vrijednosti. U Iteraciji 1 quantity validator postoji, ali workflow mu predaje samo `1`.
 
-## Prompt 8.3 – Usklađivanje Machine ↔ Tool i machine limits
+## Prompt 8.2 – Geometry + ToolPath milestone za sva 4 oblika
 
-> PLAN MODE. Implementiraj poslovnu provjeru:
-> - odabrani Tool mora pripadati odabranom CncMachine
-> - tool mora biti active
-> - feedRate ne smije prelaziti machine maxFeedRate
-> - spindleSpeed mora biti unutar podržanog raspona stroja.
->
-> Ne izmišljaj vrijednosti konkretnog stroja; provjera radi s podacima iz objekta/baze.
->
-> Dodaj unit testove.
+**Način: PLAN → CODE**
 
-## Prompt 8.4 – Geometry primitives
-
-> PLAN MODE. Kreiraj minimalni model geometrijske putanje koji nije vezan uz JavaFX i nije G-kod.
+> Implementiraj controller-agnostic geometry sloj u `hr.lukabosnjak.geometry`.
 >
 > Potrebe:
 > - vlastita 2D točka, npr. `Point2`
 > - `ToolPath`
-> - reprezentacija line segmenta
-> - reprezentacija arc segmenta ako je potrebna za krug
-> - putanja mora se moći translirati za layout offset.
+> - `PathSegment`
+> - `LineSegment`
+> - `ArcSegment` ili druga jasna geometrijska reprezentacija kružnog luka
+> - translacija ToolPatha za budući layout
+> - `ToolPathService`
+> - shape-specific generatori samo ako stvarno poboljšavaju čitljivost.
 >
-> Nemoj koristiti JavaFX `Point2D` u domain/geometry sloju jer geometrija ne treba ovisiti o UI frameworku.
+> Ne koristiti JavaFX `Point2D`. Geometrija ne proizvodi `G00/G01/G02/G03` stringove.
 >
-> Prije implementacije nacrtaj mi mali primjer: trokut A→B→C→A kao ToolPath.
-
-## Prompt 8.5 – ToolPath generatori za Square/Rectangle/Triangle
-
-> PLAN MODE. Implementiraj ToolPath generiranje samo za:
-> - Square
-> - Rectangle
-> - Equilateral Triangle.
+> Lokalni shape koordinatni sustav u V1 polazi od `(0,0)`.
 >
-> Lokalni koordinatni sustav neka polazi od dogovorene lokalne točke oblika, npr. `(0,0)`.
+> Square/Rectangle: zatvorena linearna putanja.
 >
-> Za jednakostranični trokut koristi:
+> Equilateral Triangle:
 > - A(0,0)
 > - B(a,0)
 > - C(a/2, sqrt(3)/2 * a)
 > - povratak na A.
 >
-> Ne generiraj G01 stringove.
+> Circle: geometrijski model mora ostati neovisan o RichAuto output formatu. Ako je za pouzdan prikaz kružnice bolje koristiti dva luka/polukruga umjesto jednog full-circle segmenta, objasni odluku.
 >
-> Unit test mora provjeriti numeričke koordinate s tolerancijom.
+> Dodaj numeričke unit testove s tolerancijom za sva 4 V1 oblika.
 
-## Prompt 8.6 – Circle ToolPath i `ToolPathService`
+## Prompt 8.3 – Bounds + single-shape fit
 
-> PLAN MODE. Implementiraj geometrijsku putanju kruga odvojeno od G-koda.
+**Način: DIRECT CODE**
+
+> Implementiraj malu, odvojenu provjeru granica geometrijske putanje za Iteraciju 1.
 >
-> RichAuto obitelj podržava kružnu interpolaciju G02/G03 prema dokumentaciji, ali stvarno ponašanje našeg A11 mora biti testirano. Zato ToolPath treba predstavljati kružnu geometriju bez vezanja uz konačni output format.
+> Cilj:
+> - iz `ToolPath` izračunati XY bounds
+> - provjeriti stane li jedan oblik u `MaterialSheet`
+> - provjeriti da dimenzije/planirani XY opseg ne prelaze radno područje odabranog stroja
+> - vratiti jasnu poslovnu grešku ako shape ne stane.
 >
-> Nakon toga implementiraj `ToolPathService` koji na temelju `ShapeType` poziva odgovarajući geometry generator.
+> Ne dupliciraj formule trokuta/kruga u validatoru ako ih već možemo dobiti iz stvarnog ToolPatha/bounds kalkulatora.
 >
-> Dodaj testove za sve 4 V1 geometrije.
->
-> Ne generiraj još RichAuto G-code.
+> Ne uvodi margin/spacing ni layout logiku; to dolazi tek u Iteraciji 2.
 
 ---
 
-
 # 9. RichAuto A11 G-code generator – ITERACIJA 1
 
-RichAuto dokumentacija za A11/A11plus obitelj navodi standardne naredbe poput G00, G01, G02, G03, G17, G21, G54–G59, G90/G91 te M03/M05/M30. Posebno je važno da kontroler ima postavke kojima se `F`, `S` i `G54` mogu čitati ili ignorirati. Zbog toga generator mora imati konfigurabilan profil i ne smije unaprijed pretpostaviti da ih naš fizički kontroler obrađuje na određeni način.
+RichAuto dokumentacija potvrđuje relevantne G/M naredbe i postavke čitanja `F`, `S` i `G54`, ali konkretni ZK-1325 mora se fizički provjeriti. Generator zato mora biti konfigurabilan i testovi teksta nisu dokaz kompatibilnosti sa strojem.
 
-**U ovoj iteraciji generator radi isključivo za jedan element. Layout i batch generiranje namjerno još ne postoje.**
+## Prompt 9.1 – G-code ugovori + RichAuto profil + formatter
 
-## Prompt 9.1 – `GCodeGenerator` interface i RichAuto A11 profil
+**Način: PLAN → CODE**
 
-> PLAN MODE. Implementiraj:
+> U jednom milestoneu implementiraj:
+> - `GCodeProgram`
 > - `GCodeGenerator` interface
-> - mali `RichAutoA11Profile` model/config.
+> - `RichAutoA11Profile`
+> - `GCodeFormatter`.
 >
-> Profile treba imati eksplicitne opcije relevantne za naš test, npr.:
-> - emit/use feed rate
-> - emit/use spindle speed
-> - emit/use G54
-> - measurement units
+> Profil treba eksplicitno razlikovati što generator emitira od onoga što je fizički potvrđeno na kontroleru. Potrebne su konfigurabilne odluke poput:
+> - emit feed rate (`F`)
+> - emit spindle speed (`S`)
+> - emit `G54`
+> - emit spindle commands
+> - units
 > - absolute positioning
-> - numeric precision.
+> - numeric precision
+> - eksplicitna konvencija pretvaranja pozitivnih domenskih dubina/safeZ vrijednosti u Z koordinate G-koda.
 >
-> Ne hardkodiraj „stroj sigurno čita F/S/G54“. To ostaje konfiguracija koja će se potvrditi na stroju.
+> Ne hardkodiraj tvrdnju da naš A11 čita `F`, `S` ili `G54`. Z-smjer/work zero također nije TESTIRAN prije fizičke provjere.
 >
-> Nemoj implementirati layout niti batch G-code.
+> Formatter:
+> - decimalna točka neovisna o hrvatskom Localeu
+> - bez scientific notation
+> - determinističan output
+> - konfigurabilan broj decimala.
 
-## Prompt 9.2 – Formatter G-code brojeva i linija
+## Prompt 9.2 – Header/footer + pass-depth logika
 
-> PLAN MODE. Implementiraj mali formatter za G-code numeričke vrijednosti.
+**Način: PLAN → CODE**
+
+> Prvo pokaži predloženi programski redoslijed i značenje svake naredbe koju namjeravaš emitirati.
+>
+> Kandidati koje dokumentacija podržava uključuju `G21`, `G17`, `G90`, `G54` prema profilu, `M03`, `M05`, `M30`, ali ne emitiraj naredbu samo zato što postoji u manualu.
+>
+> U istom milestoneu implementiraj čistu logiku izračuna step-down prolaza iz pozitivnih veličina `cutDepth` i `stepDown` tako da završni prolaz dosegne točnu ciljnu dubinu i ne napravi dodatni prolaz.
+>
+> Znak/koordinata fizičkog Z pomaka mora dolaziti iz eksplicitne profile/work-coordinate konvencije, ne iz skrivene pretpostavke u `MachiningParameters`.
+>
+> Dodaj unit testove header/footer varijanti i pass-depth izračuna.
+
+## Prompt 9.3 – Linearni ToolPath → single-element G-code
+
+**Način: PLAN → CODE**
+
+> Implementiraj pretvaranje line-segment ToolPatha u G-code za samo jedan oblik.
+>
+> Tok mora osigurati:
+> - siguran Z položaj prije XY repositioninga prema definiranoj profile konvenciji
+> - rapid do početnog XY
+> - kontrolirani plunge
+> - G01 rezanje po već postojećem ToolPathu
+> - step-down prolaze
+> - retract na safe Z između prolaza / na kraju.
+>
+> Generator ne računa geometriju shapea i ne provjerava SQL/persistence.
+>
+> Dodaj string-level unit testove s testnim profile vrijednostima koje su jasno označene kao softverske testne vrijednosti, ne stvarni machining parametri ZK-1325.
+
+## Prompt 9.4 – Arc output za Circle
+
+**Način: PLAN → CODE**
+
+> Implementiraj RichAuto G02/G03 output iz postojeće `ArcSegment` geometrije.
+>
+> Ne računaj krug u GCodeGeneratoru.
+>
+> Prije koda potvrdi način reprezentacije I/J centra prema našoj geometriji i profilnoj konvenciji. Ako full-circle start=end može biti osjetljiv, koristi dvije jasne polukružnice ako je to stabilnije i lakše testirati.
+>
+> Dodaj string-level testove I/J vrijednosti i smjera luka.
+>
+> Status nakon ovoga: IMPLEMENTIRANO i SOFTVERSKI TESTIRANO; NIJE TESTIRANO NA STROJU.
+
+## Prompt 9.5 – `.nc` export service
+
+**Način: DIRECT CODE**
+
+> Implementiraj odvojeni `.nc` export service.
 >
 > Zahtjevi:
-> - decimalna točka ne smije ovisiti o hrvatskom Localeu
-> - nema decimalnog zareza
-> - nema scientific notation
-> - broj decimala je eksplicitno definiran/configurable
-> - rezultat je determinističan za testove.
+> - validiraj `.nc` ekstenziju
+> - plain text
+> - eksplicitni charset prikladan ASCII G-kodu
+> - ne koristi default Locale za brojeve
+> - ne zapisuj automatski na USB
+> - test zapisuje privremenu `.nc` datoteku i čita je natrag.
 >
-> Ne biraj proizvoljno konačnu preciznost fizičkog stroja bez objašnjenja; napravi konfigurabilno i kasnije zaključaj nakon testa.
-
-## Prompt 9.3 – Header/footer bez rezanja
-
-> PLAN MODE. Implementiraj samo generiranje programskog header/footer kostura prema RichAuto profilu.
->
-> Kandidati koje dokumentacija podržava uključuju:
-> - G21 za mm
-> - G17 za XY plane
-> - G90 za absolute
-> - G54 samo ako profil kaže da ga emitiramo
-> - M03 za spindle CW samo kada je stvarno uključeno u profil/workflow
-> - M05 za spindle stop
-> - M30 za kraj programa.
->
-> Prije implementacije pokaži mi točan redoslijed koji predlažeš i objasni svaku naredbu.
->
-> Ne generiraj još shape movement.
-
-## Prompt 9.4 – Jedan linearni ToolPath u G-code
-
-> PLAN MODE. Implementiraj pretvaranje line-segment ToolPatha u G-code za **jedan oblik**.
->
-> Logika:
-> - rapid move do XY starta na safe Z
-> - kontrolirani plunge prema prvoj dubini
-> - G01 po linearnoj putanji
-> - retract na safe Z.
->
-> Dubinu ne reži odjednom ako `cutDepth > stepDown`.
->
-> Napravi funkciju koja iz `cutDepth` i `stepDown` računa stvarne dubine prolaza tako da zadnji prolaz završi točno na ciljnoj dubini.
->
-> Dodaj unit testove samo za generirani tekst, bez stroja.
->
-> Ne dodaj quantity/layout logiku.
-
-## Prompt 9.5 – Arc output za krug
-
-> PLAN MODE. Implementiraj RichAuto output za kružne `ArcSegment` naredbe koristeći G02/G03 samo na temelju već postojeće geometrijske reprezentacije.
->
-> Ne računaj krug u generatoru.
->
-> Ako je puna kružnica sa start=end potencijalno osjetljiva, predloži stabilniju reprezentaciju s dva polukruga i objasni zašto.
->
-> Dodaj string-level testove I/J parametara.
->
-> Označi ovu podršku kao IMPLEMENTIRANO, ali ne TESTIRANO NA STROJU.
-
-## Prompt 9.6 – `.nc` export service
-
-> PLAN MODE. Implementiraj odvojeni servis za spremanje generiranog `GCodeProgram` sadržaja u `.nc` datoteku.
->
-> Zahtjevi:
-> - validiraj ekstenziju
-> - plain-text format
-> - eksplicitni charset prikladan za ASCII G-code
-> - nemoj koristiti default system Locale za brojeve
-> - ne zapisuj automatski na USB bez korisničkog odabira
-> - UI će kasnije odabrati destination.
->
-> Dodaj test koji zapisuje privremenu `.nc` datoteku i pročita je natrag.
+> UI će kasnije odabrati destination path.
 
 ---
 
 # 10. JavaFX UI – ITERACIJA 1, jedan element
 
-UI prve iteracije služi tome da možemo napraviti cijeli single-element tok i što prije doći do stvarnog testa. **Ne prikazujemo quantity, capacity per sheet ni required sheets.**
-
 ## Prompt 10.1 – FXML decision gate
 
-> PLAN MODE. Usporedi dvije opcije za ovaj projekt:
-> 1. JavaFX UI programatski u Javi
-> 2. FXML + controller.
+**Način: ASK / AUDIT**
+
+> Usporedi programatski JavaFX UI i FXML + controller za stvarni trenutni projekt.
 >
 > Kriteriji:
 > - studentski projekt
 > - održivost
-> - odvajanje viewa i controllera
-> - koliko je lako objasniti na obrani
-> - koliko novih dependency/config koraka uvodi.
+> - odvajanje view/controller
+> - jednostavnost obrane
+> - postojeći package kostur
+> - količina dodatne konfiguracije.
 >
-> Ne mijenjaj kod prije odluke.
+> Ne mijenjaj kod prije odluke. Ako se odabere FXML, `javafx.fxml` dodaj tek tada. FXML datoteke idu u `src/main/resources/hr/lukabosnjak/ui/view/` ili drugi jasno dokumentiran resource path; ne trebamo Java `ui.view` klasu samo zato što postoji taj naziv.
 >
-> Ako odaberemo FXML, tek tada dodaj `javafx.fxml` dependency i potrebnu module/config podršku.
+> Ne uvoditi `module-info.java` samo radi FXML-a ako je projekt već svjesno non-modularan i nema stvarne potrebe za modulima.
 
-## Prompt 10.2 – Glavni ekran prve iteracije
+## Prompt 10.2 – Single-element forma + dinamička shape polja
 
-> PLAN MODE. Implementiraj samo vizualni kostur glavnog ekrana za rad s **jednim elementom**, bez poslovne logike.
+**Način: PLAN → CODE**
+
+> Implementiraj vizualni kostur i ponašanje glavne forme bez spajanja na G-code/persistence.
 >
-> Ekran treba imati:
-> - odabir ShapeType
-> - dinamička polja dimenzija
+> Forma:
+> - ShapeType
+> - dinamička shape polja
 > - MaterialSheet width/height/thickness
-> - odabir machine
-> - odabir tool
+> - machine
+> - tool
 > - machining parameters
 > - Generate
-> - G-code preview TextArea
+> - G-code preview
 > - Save
 > - Export `.nc`
 > - Saved Programs navigation.
 >
-> **Nemoj dodavati quantity, capacity per sheet, required sheets ni layout prikaz.**
->
-> Ne spajaj još gumbe na servise.
-
-## Prompt 10.3 – Dinamička shape polja + parsiranje inputa
-
-> PLAN MODE. Implementiraj samo ponašanje forme prema odabranom shapeu:
+> Dinamička polja:
 > - Square → stranica
 > - Rectangle → width + height
 > - Circle → promjer
 > - Equilateral Triangle → stranica.
 >
-> UI ne smije korisniku pokazivati `dimensionA/B/C`.
+> UI ne prikazuje `dimensionA/B/C`.
 >
-> Dodaj centralizirano parsiranje numeričkih vrijednosti tako da controller ne duplira isti try/catch za svako polje.
+> Dodaj centralizirano parsiranje numeričkih inputa da controller ne ponavlja isti try/catch.
 >
-> Još nemoj generirati G-code.
+> **Ne dodavati quantity, capacity, requiredSheets ni layout prikaz.**
 
-## Prompt 10.4 – UI validacija preko service/validation sloja
+## Prompt 10.3 – Generate workflow za jedan element
 
-> PLAN MODE. Spoji formu s postojećim validatorima.
->
-> Controller smije:
-> - pročitati input
-> - napraviti request/domain objekte
-> - pozvati validator/service
-> - prikazati korisniku poruku.
->
-> Controller ne smije:
-> - računati trokut
-> - raditi SQL
-> - slagati G-code string.
->
-> U ovoj iteraciji nema quantity/layout validacije na UI-u.
->
-> Testiraj nekoliko nevaljanih inputa ručno ili controller testom ako je razumno.
+**Način: PLAN → CODE**
 
-## Prompt 10.5 – Generate workflow za jedan element
+> Spoji `Generate` s postojećim service/validation/geometry/gcode slojevima.
+>
+> Tok:
+> `UI input -> DTO/request po potrebi -> validation -> single-shape ToolPath -> bounds/fit -> GCodeGenerator -> preview`.
+>
+> Ako `MachiningJob` ima quantity, u Iteraciji 1 koristi vrijednost `1` bez UI polja.
+>
+> Controller smije čitati input, pozvati service i prikazati rezultat/pogrešku. Ne računa trokut, ne radi SQL i ne slaže G-code string.
+>
+> Ako još ne postoji `ProgramGenerationService`, uvedi ga samo ako stvarno koordinira ovaj use-case; ne stvaraj mega-service.
 
-> PLAN MODE. Spoji `Generate` gumb s postojećim service slojem.
->
-> Nakon klika želim:
-> - validaciju
-> - provjeru stane li **jedan** oblik na ploču
-> - generiranje ToolPatha
-> - generiranje G-koda
-> - prikaz G-koda u TextArea.
->
-> Workflow mora koristiti jedan element. Ako `MachiningJob` već ima `quantity`, za ovu iteraciju koristi vrijednost `1` bez korisničkog polja.
->
-> Controller treba ostati tanak.
->
-> Nemoj implementirati layout, capacity ni requiredSheets.
+## Prompt 10.4 – Save / reopen / export workflow
 
-## Prompt 10.6 – Save + Saved Programs screen
+**Način: PLAN → CODE**
 
-> PLAN MODE. Implementiraj:
-> - spremanje trenutačno generiranog single-element joba preko service/repository sloja
-> - ekran/listu spremljenih jobova
-> - otvaranje odabranog joba
-> - prikaz spremljenog G-koda.
+> Implementiraj u jednom milestoneu:
+> - spremanje generiranog single-element joba preko service/repository sloja
+> - pregled spremljenih jobova
+> - otvaranje joba
+> - quick access: ponovno učitavanje spremljenih parametara u formu
+> - prikaz spremljenog G-koda
+> - Export gumb preko postojećeg `.nc` export servicea i JavaFX file choosera.
 >
-> Nemoj raditi SELECT/INSERT u controlleru.
+> Controller ne sadrži SELECT/INSERT niti file-writing logiku.
 >
-> Quick access znači ponovno učitati spremljene parametre u formu, ne samo pokazati tekst G-koda.
->
-> Ako se `quantity` sprema u bazu, u ovoj iteraciji vrijednost je 1.
-
-## Prompt 10.7 – Export `.nc` iz UI-a
-
-> PLAN MODE. Spoji Export gumb s postojećim `.nc` export serviceom.
->
-> Koristi JavaFX file chooser ili ekvivalent koji odgovara odabranom UI pristupu.
->
-> Controller samo:
-> - pita korisnika gdje spremiti
-> - preda Path i GCodeProgram export serviceu
-> - prikaže rezultat/pogrešku.
->
-> Ne implementiraj automatsko slanje na stroj niti USB protokol.
+> Quantity u ovoj iteraciji ostaje `1`.
 
 ---
 
 # 11. Integracija – ITERACIJA 1
 
-## Prompt 11.1 – Composition root / dependency wiring
+## Prompt 11.1 – Composition root + end-to-end milestone
 
-> PLAN MODE. Pregledaj postojeće slojeve i predloži jedno jasno mjesto gdje se stvaraju i povezuju:
-> - DatabaseConfig
+**Način: PLAN → CODE**
+
+> Pregledaj sve postojeće slojeve i uvedi jedno jasno composition-root mjesto u `hr.lukabosnjak.app` gdje se ručno povezuju ovisnosti bez Springa/DI frameworka.
+>
+> Poveži samo komponente koje već postoje:
+> - database config/initializer
 > - repository implementacije
 > - validators
-> - geometry generators
-> - GCodeGenerator
-> - ProgramGenerationService
+> - geometry generators / ToolPathService
+> - single-shape fit/bounds
+> - RichAuto generator/profile
+> - application/service sloj
 > - controller dependencies.
 >
-> **LayoutService još ne postoji i ne smije se uvoditi prije GATE 1.**
+> `LayoutService` još ne postoji.
 >
-> Nemoj uvoditi Spring ili drugi dependency injection framework.
+> Dodaj/proširi integration testove za tok:
+> `input -> validation -> ToolPath -> fit -> G-code -> preview/result -> persistence -> reload`.
 >
-> Za studentski projekt želim jednostavno ručno dependency wiring rješenje koje mogu objasniti.
-
-## Prompt 11.2 – End-to-end Iteracija 1
-
-> PLAN MODE. Spoji i provjeri cijeli tok za **jedan oblik bez batch layouta**:
->
-> `UI input -> validation -> single-shape fit -> ToolPath -> RichAuto generator -> preview -> .nc export`
->
-> Koristi testni primjer iz dokumentacije projekta:
+> Testni primjer:
 > - ploča 500 × 500 mm
 > - jednakostranični trokut
 > - stranica 30 mm
-> - quantity = 1.
+> - quantity = 1
+> - testni machining parametri jasno označeni kao softverske vrijednosti.
 >
-> Machining parametre nemoj izmišljati ako još nisu potvrđeni; u automatiziranom testu koristi jasno označene testne vrijednosti koje nisu deklarirane kao stvarni strojni parametri.
+> Fresh repository context mora ponovno učitati shape, material, machining parameters, quantity=1 i gCode.
 >
-> Rezultat ovog koraka je softverski test, ne fizički test.
-
-## Prompt 11.3 – Persistence round-trip za single-element job
-
-> PLAN MODE. Napravi end-to-end test:
-> - generiraj single-element job
-> - spremi ga
-> - otvori fresh repository context
-> - ponovno učitaj job
-> - potvrdi da su shape, material, machining parameters i gCode isti
-> - ako model sadrži quantity, potvrdi da je spremljeno `1`.
->
-> To je ključni test za FR-9, FR-10 i FR-11.
->
-> Nemoj još tvrditi ništa o fizičkom stroju.
+> Ovo je softverski end-to-end test, ne fizička potvrda RichAuto kompatibilnosti.
 
 ---
 
 # 12. PRVI TEST – ZK-1325 / RichAuto A11, jedan element
 
-Ovo je **obvezna kontrolna točka prije quantity/layout implementacije**.
+Ovo je obvezna kontrolna točka prije quantity/layout implementacije.
 
-Prvi fizički test ne dokazuje da je cijela aplikacija završena. Njegova je svrha potvrditi da osnovni generacijski lanac može proizvesti program koji se na ciljnom stroju ponaša očekivano za jedan jednostavan element.
+## Prompt 12.1 – Pre-machine checklist
 
-## Prompt 12.1 – Pre-machine test checklist
+**Način: ASK / AUDIT**
 
-> PLAN MODE. Na temelju implementiranog single-element generatora napravi checklist za provjeru prije fizičkog testa.
+> Na temelju stvarno implementiranog single-element generatora napravi checklist prije fizičkog testa.
 >
-> Mora uključivati:
+> Mora uključiti:
 > - verziju aplikacije/commit
-> - točan model stroja
-> - kontroler RichAuto A11
+> - točan stroj i kontroler
 > - work area X/Y/Z
 > - orientation osi
-> - work coordinate system
-> - work zero
-> - postavku čitanja F
-> - postavku čitanja S
-> - postavku čitanja G54
+> - WCS/work zero
+> - F/S/G54 read/ignore postavke
+> - spindle ponašanje
 > - tool podatke
 > - safe Z
-> - cut depth
-> - step down
+> - cut depth / step down
 > - feed/plunge/spindle
-> - pregled `.nc` datoteke prije učitavanja.
+> - pregled `.nc` datoteke.
 >
-> Ne predlaži proizvoljne brzine ili dubine rezanja. Te vrijednosti mora dati stvarni alat/materijal/operator.
+> Ne predlaži proizvoljne machining vrijednosti.
 
-## Prompt 12.2 – Static G-code audit za testni trokut
+## Prompt 12.2 – Statički audit stvarnog `.nc` testa
 
-> PLAN MODE. Za generirani testni program:
-> - ploča 500 × 500
-> - trokut 30 mm
-> - quantity = 1
->
-> napravi statičku analizu `.nc` sadržaja bez pokretanja stroja.
+**Način: ASK / AUDIT**
+
+> Uzmi stvarno generiranu `.nc` datoteku za testni trokut i napravi statički audit bez pokretanja stroja.
 >
 > Provjeri:
-> - G21 / mm
-> - G90
-> - G17
-> - G54 samo prema profilu
+> - mm / G21 prema profilu
+> - G90/G17 prema profilu
+> - G54 samo ako je uključeno
+> - Z-konvenciju prema potvrđenom planu testa
 > - safe Z prije XY premještanja
-> - ispravne XYZ granice
-> - točan step-down
+> - step-down
+> - koordinate i granice
+> - F/S prema profilu
 > - M03/M05 prema profilu
-> - M30 na kraju
+> - M30
 > - decimalni format.
 >
 > Ne mijenjaj kod ako nema konkretno pronađenog problema.
 
-## Prompt 12.3 – Kontrolirani prvi test bez obrade materijala
+## Prompt 12.3 – Kontrolirani fizički test + test-case predložak
 
-> PLAN MODE. Pripremi plan prvog kontroliranog testa na fizičkom ZK-1325 koji prvenstveno provjerava koordinatni sustav i smjer putanje prije stvarnog rezanja.
+**Način: ASK / AUDIT**
+
+> Nakon statičkog audita pripremi kontrolirani testni protokol koji mora odobriti iskusni operator konkretnog stroja.
 >
-> Plan mora naglasiti:
-> - koristiti postupak koji odobri iskusni operator stroja
-> - provjeriti emergency stop i machine state
-> - ne koristiti neprovjerene machining parametre
-> - prvo potvrditi XY orijentaciju, work zero i safe Z
-> - zabilježiti ponašanje F/S/G54 na konkretnom kontroleru.
+> Prvo potvrditi XY orijentaciju, work zero, Z-smjer/safe položaj i ponašanje F/S/G54 prije stvarne obrade materijala. Ne izmišljaj strojne/sigurnosne postavke.
 >
-> Ne izmišljaj sigurnosne ili strojne postavke koje ne znamo.
-
-## Prompt 12.4 – Prvi stvarni test jednog trokuta
-
-> PLAN MODE. Nakon što je prethodni kontrolirani test prošao i operator je potvrdio machining parametre, pripremi test-case zapis za stvarni primjer:
+> Nakon što operator potvrdi machining parametre, pripremi test-case za:
 > - material sheet 500 × 500 mm
 > - equilateral triangle side 30 mm
 > - quantity = 1
-> - tool: stvarno korišteni tool zapis
-> - machining parameters: stvarno potvrđene vrijednosti
+> - stvarni tool
+> - stvarno potvrđene machining parametre
 > - generated `.nc`.
 >
-> Test-case mora imati polja:
+> Test-case mora imati prazna polja:
 > - expected path
 > - actual result
 > - measured dimensions
@@ -1473,265 +1355,195 @@ Prvi fizički test ne dokazuje da je cijela aplikacija završena. Njegova je svr
 > - pass/fail
 > - notes.
 >
-> Nemoj unaprijed popuniti rezultate.
+> Ne popunjavaj rezultate unaprijed.
 
 ## GATE 1 – odluka nakon prvog testa
 
-Prije nastavka na Korak 13 mora se pregledati bilješka prvog testa.
+Ne počinjati Iteraciju 2 dok nije dokumentirano:
 
-Nastavljamo na quantity/layout ako je potvrđeno da:
-
-- `.nc` datoteka se može učitati u ciljnom workflowu
-- koordinatna orijentacija je razumljiva i dokumentirana
-- work zero / WCS ponašanje je dovoljno jasno za nastavak
+- `.nc` se može učitati u ciljnom workflowu
+- koordinatna orijentacija i work zero dovoljno su jasni
+- Z-smjer/safe ponašanje je zabilježeno
 - single-element putanja odgovara očekivanom obliku
-- safe Z / plunge / step-down ponašanje nema poznatu prepreku za nastavak
-- relevantno ponašanje `F`, `S` i `G54` je zabilježeno
-- eventualne korekcije generatora nakon testa su implementirane i ponovno provjerene.
+- step-down nema poznatu prepreku
+- ponašanje `F`, `S`, `G54` i spindle naredbi je zabilježeno
+- eventualne korekcije su implementirane i ponovno softverski provjerene.
 
-**Ako single-element test ne prođe, ne počinjati layout. Prvo popraviti i ponovno testirati osnovni generator.**
+Ako test ne prođe, popravlja se Iteracija 1. Layout se ne koristi kao zaobilazno rješenje.
 
 ---
 
 # 13. Quantity – početak ITERACIJE 2
 
-Tek nakon prolaska kroz GATE 1 aktivira se funkcionalni zahtjev za više jednakih elemenata.
+## Prompt 13.1 – Aktivacija quantity kroz model/service workflow
 
-## Prompt 13.1 – Audit postojećeg `quantity` modela
+**Način: PLAN → CODE**
 
-> PLAN MODE. Ne dodaj još UI.
+> Pregledaj gdje `quantity` već postoji (`MachiningJob`, SQL, repository, test fixtures) i aktiviraj ga kao stvarni korisnički poslovni podatak bez dupliciranja polja.
 >
-> Pregledaj postojeći kod i utvrdi gdje `quantity` već postoji:
-> - `MachiningJob`
-> - SQL schema
-> - repository mapping
-> - test fixtures.
+> U ovom milestoneu:
+> - quantity mora biti `int`
+> - > 0
+> - dodaj/aktiviraj validation testove za 1, veću vrijednost, 0 i negativnu vrijednost
+> - prenesi quantity kroz service DTO/request sloj ako postoji
+> - persistence mora round-tripati quantity > 1.
 >
-> Ne dupliciraj postojeće polje.
->
-> Objasni što treba promijeniti da `quantity`, koji je u Iteraciji 1 bio praktično fiksiran na 1, postane stvarni korisnički podatak u Iteraciji 2.
-
-## Prompt 13.2 – Poslovna validacija količine
-
-> PLAN MODE. Implementiraj ili aktiviraj poslovnu validaciju quantity vrijednosti:
-> - mora biti cijeli broj
-> - mora biti > 0
-> - ne smije se tretirati kao decimalna vrijednost.
->
-> Dodaj unit testove za:
-> - 1
-> - veću valjanu količinu
-> - 0
-> - negativnu vrijednost.
->
-> Još nemoj implementirati layout.
-
-## Prompt 13.3 – Request/service podrška za quantity
-
-> PLAN MODE. Proširi request/service workflow tako da može prenijeti korisnički zadanu quantity vrijednost kroz poslovni sloj.
->
-> U ovom koraku quantity se samo prenosi i validira.
->
-> Ne računaj još gdje će elementi biti postavljeni i ne generiraj batch G-code.
+> Još ne implementiraj layout ni batch G-code i ne dodaj UI ako bi to zahtijevalo lažni layout rezultat.
 
 ---
 
 # 14. Algoritam raspoređivanja više jednakih elemenata
 
-Cilj V1 nije dokaz matematičke optimalnosti. Prvi algoritam mora dati valjan, deterministički i objašnjiv raspored te može birati bolju od nekoliko jednostavnih varijanti.
+Cilj V1 je deterministički, valjan i objašnjiv raspored. Ne tvrdi se matematička optimalnost.
 
-## Prompt 14.1 – Formalizacija layout ulaza
+## Prompt 14.1 – Layout contract: settings + result modeli
 
-> PLAN MODE. Prije algoritma definiraj podatke koji layout mora dobiti.
+**Način: PLAN → CODE**
+
+> Definiraj ulaze i rezultate layout sloja prije algoritma.
 >
-> Potvrđeno:
+> Input:
 > - sheet width/height
-> - shape
+> - Shape
 > - quantity
+> - eksplicitni `LayoutSettings`.
 >
-> Još nije potvrđeno:
-> - edge margin
-> - part spacing
-> - dopuštena rotacija pravokutnika
-> - treba li part spacing automatski uključivati promjer alata.
+> `LayoutSettings` treba imati vrijednosti poput edge margin, part spacing i policy dopuštene rotacije, ali bez skrivenih magic defaulta. Ne pretpostavljaj da spacing automatski uključuje promjer alata dok to nije odlučeno.
 >
-> Ne izmišljaj te vrijednosti.
->
-> Predloži mali `LayoutSettings` model s eksplicitnim vrijednostima umjesto skrivenih magic defaulta. Objasni koje postavke moraju biti potvrđene prije stvarnog rezanja.
-
-## Prompt 14.2 – Layout output modeli
-
-> PLAN MODE. Implementiraj samo modele rezultata raspoređivanja:
+> Output modeli:
 > - `PlacedShape`
 > - `SheetLayout`
-> - `LayoutResult`
+> - `LayoutResult`.
 >
-> Rezultat treba moći reći:
-> - položaj svakog komada
-> - eventualnu rotaciju/orijentaciju
-> - na kojoj je ploči
-> - koliko komada stane na jednu ploču
-> - koliko je ploča potrebno za zadanu količinu.
+> Rezultat mora moći izraziti:
+> - položaj/orijentaciju svakog komada
+> - sheet index
+> - capacity per sheet
+> - required sheets
+> - placements za traženu quantity vrijednost.
 >
-> Ne implementiraj algoritam još.
+> Ne implementiraj algoritam raspoređivanja u ovom promptu.
 
-## Prompt 14.3 – Baseline grid za Square/Rectangle
+## Prompt 14.2 – Baseline layout: Square / Rectangle / Circle
 
-> PLAN MODE. Implementiraj prvi deterministički grid layout za Square i Rectangle.
->
-> Pravila:
-> - nijedan bounding box ne smije izaći iz ploče
-> - poštuj LayoutSettings margin/spacing
-> - za rectangle usporedi barem orijentaciju 0° i 90° ako je rotacija dopuštena
-> - odaberi varijantu koja smješta više elemenata
-> - nemoj rezultat nazivati globalno optimalnim.
->
-> Dodaj unit testove za:
-> - oblik koji stane
-> - oblik koji ne stane
-> - količinu 1
-> - više redova/stupaca
-> - slučaj gdje rotacija daje bolji kapacitet.
+**Način: PLAN → CODE**
 
-## Prompt 14.4 – Baseline layout za Circle
+> Implementiraj jednostavne determinističke baseline strategije:
+>
+> Square/Rectangle:
+> - grid
+> - poštuj margin/spacing
+> - nijedan bounding box ne izlazi iz ploče
+> - za rectangle usporedi 0° i 90° samo ako `LayoutSettings` dopušta rotaciju
+> - odaberi bolju od tih jednostavnih varijanti; ne nazivati globalno optimalnom.
+>
+> Circle:
+> - pravilan grid temeljen na promjeru + spacingu
+> - bez hexagonal close packing u baselineu
+> - cijeli krug mora ostati unutar ploče.
+>
+> Dodaj unit testove za shape koji stane/ne stane, quantity=1, više redova/stupaca i rectangle slučaj gdje rotacija daje veći kapacitet.
 
-> PLAN MODE. Implementiraj jednostavan, objašnjiv layout za krugove.
->
-> Za prvu implementaciju koristi pravilan grid temeljen na promjeru i spacingu.
->
-> Ne uvodi hexagonal close packing u ovom koraku.
->
-> Cilj je ispravan baseline koji možemo kasnije usporediti s poboljšanjem.
->
-> Dodaj test da svi centri/krugovi ostaju unutar granica ploče.
+## Prompt 14.3 – Triangle layout + `LayoutService` + capacity/requiredSheets
 
-## Prompt 14.5 – Layout za Equilateral Triangle
+**Način: PLAN → CODE**
 
-> PLAN MODE. Implementiraj prvi valjani layout za jednakostranične trokute.
+> Implementiraj prvi valjani layout za jednakostranične trokute. Kreni od jednostavne lako provjerljive varijante; alterniranje orijentacije dodaj samo ako ostaje mali i testabilan scope.
 >
-> Prvo napravi jednostavnu varijantu koju možemo lako testirati. Zatim, ako je unutar malog scopea, usporedi s alterniranjem orijentacije trokuta koje može poboljšati iskorištenost.
+> Zatim uvedi `LayoutService`/strategy selector koji:
+> - bira algoritam prema ShapeType
+> - računa capacity per sheet
+> - odbija capacity=0
+> - računa `requiredSheets = ceil(quantity / capacity)`
+> - vraća placements raspoređene po `SheetLayout` objektima.
 >
-> Ne tvrdi matematičku optimalnost.
->
-> Unit test mora provjeriti da nijedna točka trokuta ne izlazi iz ploče.
-
-## Prompt 14.6 – Strategy selector + kapacitet + broj ploča
-
-> PLAN MODE. Spoji postojeće shape-specific layout algoritme kroz mali `LayoutService` ili strategy pristup.
->
-> `LayoutService` treba:
-> - odabrati algoritam prema ShapeType
-> - izračunati capacity per sheet
-> - izračunati requiredSheets = ceil(quantity / capacity)
-> - vratiti placement za traženu količinu
-> - jasno odbiti slučaj capacity = 0.
->
-> Dodaj unit testove za sva 4 oblika.
->
-> Ne generiraj G-code u ovom servisu.
+> Unit test mora provjeriti da nijedna točka trokuta ni placement bilo kojeg shapea ne izlazi iz dopuštene ploče.
 
 ---
 
 # 15. Batch G-code – ITERACIJA 2
 
-## Prompt 15.1 – Translacija ToolPatha na placement
+## Prompt 15.1 – Multi-sheet output / persistence decision gate
 
-> PLAN MODE. Prije generiranja batch programa implementiraj i testiraj samo translaciju lokalnog `ToolPath` objekta na XY offset jednog `PlacedShape`.
->
-> Cilj je ponovno koristiti single-element ToolPath koji je već prošao prvu iteraciju, a ne ponovno računati geometriju u GCodeGeneratoru.
->
-> Dodaj unit test s jednostavnim oblikom i poznatim offsetom.
+**Način: ASK / AUDIT**
 
-## Prompt 15.2 – G-code za više raspoređenih elemenata
+> Prije batch G-koda analiziraj slučaj `requiredSheets > 1`.
+>
+> Iteracija 1 sprema jedan `g_code CLOB` u `MACHINING_JOB`, što je dovoljno dok postoji jedan machine program po jobu. Nakon layouta jedan job može zahtijevati više `SheetLayout` programa, a zadnja ploča može imati drukčiji broj placementa.
+>
+> Ne guraj više odvojenih machine programa u jedan `.nc` string bez jasnog razloga.
+>
+> Predloži minimalne V1 opcije, npr.:
+> 1. jedan `GCodeProgram` po `SheetLayout` i uvođenje `GCODE_PROGRAM` 1:N tablice tek sada kada je potreba stvarno nastala
+> 2. druga jednostavna reprezentacija samo ako čuva jasnu vezu job → sheet → machine program i omogućuje ispravan save/reopen/export.
+>
+> Usporedi utjecaj na postojeći `MachiningJob.gCode`, SQL schema, repository i završni rad. Zaustavi se dok se odluka ne zapiše u `00_odluke.md`.
 
-> PLAN MODE. Proširi generator tako da primi `LayoutResult` / placement listu i za svaki element:
-> - translira lokalni ToolPath na XY placement
-> - primijeni istu machining logiku koja je već korištena za single-element test
-> - između elemenata se sigurno vrati na safe Z
-> - ne izlazi iz dopuštenih koordinata.
+## Prompt 15.2 – ToolPath translation + batch generator
+
+**Način: PLAN → CODE**
+
+> Nakon odluke iz 15.1 proširi generator za jedan `SheetLayout` koristeći postojeću single-element logiku.
 >
-> G-code generator ne smije sam računati layout.
+> Za svaki `PlacedShape`:
+> - transliraj lokalni ToolPath na XY placement
+> - ponovno koristi već provjerenu step-down/machining logiku
+> - sigurno se vrati na safe Z između elemenata prema potvrđenoj profile konvenciji
+> - ne računaj layout u GCodeGeneratoru.
 >
-> Dodaj unit test s dva jednostavna kvadrata na različitim offsetima.
+> Dodaj test s dva jednostavna shapea na poznatim offsetima i test da generirane XY koordinate ostaju unutar sheet granica.
 >
-> Posebno objasni koji dio koda je ponovno korišten iz TESTIRANE single-element logike, a koji je nov i još NIJE TESTIRAN NA STROJU.
+> Ako odluka 15.1 uvodi više GCodeProgram zapisa ili novu tablicu, u ovom milestoneu implementiraj samo potrebnu minimalnu schema/repository evoluciju i integration test; ne ostavljaj persistence model u nekonzistentnom stanju.
+>
+> Jasno dokumentiraj koji dio generatora je ponovno korišten iz single-element workflowa, a koji je novi i još NIJE TESTIRAN NA STROJU.
 
 ---
 
-# 16. JavaFX UI – proširenje za quantity i layout
+# 16. JavaFX UI – quantity i layout proširenje
 
-## Prompt 16.1 – Dodavanje quantity polja
+## Prompt 16.1 – Batch UI milestone
 
-> PLAN MODE. Proširi postojeći single-element ekran samo s korisničkim unosom `quantity`.
+**Način: PLAN → CODE**
+
+> Proširi postojeći UI tek nakon što quantity/layout/batch service sloj stvarno postoji.
 >
-> Zahtjevi:
-> - cijeli broj > 0
-> - jasna poruka za nevaljani unos
-> - postojeći single-element workflow za quantity=1 mora i dalje raditi.
->
-> Nemoj još prikazivati capacity/requiredSheets dok layout nije spojen.
-
-## Prompt 16.2 – Prikaz layout rezultata
-
-> PLAN MODE. Nakon što `LayoutService` postoji, dodaj prikaz:
+> Dodaj:
+> - quantity input, cijeli broj > 0
 > - capacity per sheet
 > - required sheets
-> - stvarno raspoređena quantity vrijednost.
+> - broj stvarno raspoređenih elemenata
+> - ako postoji više SheetLayout/GCodeProgram rezultata, jasan odabir/pregled pojedine ploče/programa prema odluci iz 15.1.
 >
-> Ako još nemamo grafički prikaz ploče, nemoj ga uvoditi samo zbog ovog prompta. Tekstualni rezultat je dovoljan za prvi batch workflow.
-
-## Prompt 16.3 – Generate workflow za više elemenata
-
-> PLAN MODE. Proširi postojeći `Generate` workflow:
+> Workflow:
+> `input -> validation -> quantity -> layout -> capacity/requiredSheets -> ToolPaths -> batch G-code -> preview`.
 >
-> `input -> validation -> quantity -> layout -> capacity/requiredSheets -> ToolPaths -> batch G-code -> preview`
+> Controller ne računa layout niti generira batch stringove.
 >
-> Controller treba ostati tanak.
+> Quantity=1 mora ostati regresijski valjan slučaj.
 >
-> Controller ne smije računati layout niti slagati batch G-code.
->
-> Single-element quantity=1 mora ostati valjan slučaj.
+> Grafički prikaz ploče nije obvezan za V1; nemoj ga uvoditi samo zato što bi izgledao atraktivno ako tekstualni rezultat zadovoljava funkcionalni zahtjev.
 
 ---
 
 # 17. Integracija – ITERACIJA 2
 
-## Prompt 17.1 – Composition root proširenje
+## Prompt 17.1 – Batch end-to-end milestone
 
-> PLAN MODE. Proširi postojeći dependency wiring samo onim što je sada potrebno za Iteraciju 2:
-> - `LayoutSettings`
-> - layout strategije
-> - `LayoutService`
-> - batch generation dependencies.
->
-> Ne mijenjaj postojeće single-element komponente ako za to nema stvarnog razloga.
+**Način: PLAN → CODE**
 
-## Prompt 17.2 – End-to-end Iteracija 2
-
-> PLAN MODE. Spoji tok za više jednakih elemenata:
+> Proširi composition root samo novim Iteracija 2 dependencyjima i provjeri cijeli tok:
 >
-> `input quantity -> layout -> capacity -> requiredSheets -> translated ToolPaths -> G-code za placements`
+> `input quantity -> validation -> layout -> capacity/requiredSheets -> translated ToolPaths -> G-code program(i) -> persistence -> reload`.
 >
-> Provjeri da:
-> - layout ne prelazi sheet granice
-> - generirani XY ne prelazi sheet granice
-> - sheet dimenzije ne prelaze machine work area
-> - svaki element koristi postojeću machining/step-down logiku.
+> Provjeri:
+> - placements unutar sheet granica
+> - sheet dimenzije unutar machine XY work area
+> - svaki element koristi postojeću machining/step-down logiku
+> - safe Z tranzicije između elemenata
+> - quantity > 1 round-trip
+> - prema odluci iz 15.1 svi machine programi/sheetovi se ponovno učitavaju ili deterministički regeneriraju na dokumentiran način.
 >
-> Dodaj integration test s malim brojem elemenata čiji expected rezultat možemo ručno provjeriti.
-
-## Prompt 17.3 – Persistence round-trip nakon uvođenja quantity
-
-> PLAN MODE. Ponovi persistence round-trip sada s quantity > 1.
->
-> Potvrdi da se nakon ponovnog učitavanja čuvaju:
-> - shape
-> - material
-> - machining parameters
-> - quantity
-> - gCode.
->
-> Ako layout placementi nisu predviđeni za trajnu pohranu, nemoj stvarati novu tablicu samo zbog ovog testa. Dokumentiraj da se layout ponovno izračunava iz spremljenih ulaza, ako je to stvarni odabrani dizajn.
+> Dodaj integration test s malom quantity vrijednošću čiji expected rezultat možemo ručno provjeriti.
 
 ---
 
@@ -1739,41 +1551,47 @@ Cilj V1 nije dokaz matematičke optimalnosti. Prvi algoritam mora dati valjan, d
 
 ## Prompt 18.1 – Statički audit batch programa
 
-> PLAN MODE. Prije fizičkog batch testa napravi statičku analizu generiranog programa za malu quantity vrijednost.
+**Način: ASK / AUDIT**
+
+> Prije fizičkog batch testa auditiraj stvarno generirani program ili programe za malu quantity vrijednost.
 >
 > Provjeri:
-> - sve placement koordinate
+> - placement koordinate
 > - sheet granice
-> - machine work-area granice
+> - machine XY work area
 > - safe Z između elemenata
 > - step-down za svaki element
-> - početak i kraj programa
-> - ponašanje profila F/S/G54 prema stvarno potvrđenim postavkama prvog testa.
+> - početak/kraj svakog programa
+> - F/S/G54/Z profile ponašanje prema stvarno potvrđenim postavkama prvog testa
+> - multi-sheet mapping ako postoji.
 >
-> Ne mijenjaj kod bez konkretno pronađenog problema.
+> Ne mijenjaj kod bez konkretnog pronađenog problema.
 
-## Prompt 18.2 – Test više jednakih elemenata
+## Prompt 18.2 – Kontrolirani batch test
 
-> PLAN MODE. Nakon uspješnog single-shape testa i statičkog batch audita pripremi test za više jednakih elemenata.
+**Način: ASK / AUDIT**
+
+> Nakon uspješnog single-element testa i statičkog batch audita pripremi test male količine koja se može vizualno i ručno provjeriti.
 >
 > Cilj:
-> - provjeriti placement
+> - placement
 > - capacity per sheet
 > - required sheets
-> - sigurnu tranziciju između elemenata
-> - da nijedan XY move ne prelazi definirani sheet/work-area.
+> - sigurna tranzicija između elemenata
+> - granice XY
+> - ponašanje više programa/sheetova ako je primjenjivo.
 >
-> Odaberi malu testnu količinu koju možemo vizualno i ručno provjeriti prije većeg batcha.
->
-> Ne proglašavaj layout optimalnim; mjeri samo stvarni rezultat implementiranog algoritma.
+> Test mora koristiti stvarno potvrđene alate i machining parametre te proceduru koju odobri operator. Ne proglašavaj layout optimalnim; mjeri samo rezultat implementiranog algoritma.
 
 ---
 
 # 19. Finalni test report
 
-## Prompt 19.1 – Finalni status IMPLEMENTIRANO/TESTIRANO
+## Prompt 19.1 – Finalni status IMPLEMENTIRANO / TESTIRANO
 
-> PLAN MODE. Nakon što unesemo stvarne rezultate svih provedenih testova, sastavi tehnički sažetak implementacije.
+**Način: ASK / REPORT**
+
+> Nakon što unesemo stvarne rezultate testova, sastavi tehnički sažetak implementacije koristeći samo kod i zabilježene rezultate.
 >
 > Za svaku funkcionalnost označi:
 > - IMPLEMENTIRANO
@@ -1787,16 +1605,18 @@ Cilj V1 nije dokaz matematičke optimalnosti. Prvi algoritam mora dati valjan, d
 > - single-element fizički test
 > - quantity
 > - layout
-> - kapacitet / broj ploča
+> - capacity / required sheets
 > - batch G-code
 > - persistence
+> - multi-sheet program persistence ako postoji
 > - `.nc` export
 > - RichAuto A11 profil
 > - batch fizički test.
 >
-> Ne izmišljaj mjerne rezultate. Koristi samo stvarno zabilježene podatke.
+> Ne izmišljaj mjerne rezultate.
 
 ---
+
 # Dokumentacijska struktura projekta
 
 Ova struktura nije dio Java package arhitekture, nego prati razvoj radi završnog rada:
@@ -1809,7 +1629,7 @@ Ova struktura nije dio Java package arhitekture, nego prati razvoj radi završno
 │       ├── 00_predlozak_biljeske.md
 │       ├── 00_odluke.md
 │       ├── 01-02-maven-projekt.md
-│       ├── 03-03-cnc-machine.md
+│       ├── 03-01-domain-core.md
 │       ├── ...
 │       └── 19-01-finalni-test-report.md
 ├── src
@@ -1821,34 +1641,36 @@ Naziv pojedine bilješke treba sadržavati oznaku prompta kako bi se kasnije mog
 
 ---
 
-# Predložena konačna package struktura
-
-Ovo je planirana struktura; stvarni base package upisuje se tek nakon kreiranja projekta.
+# Potvrđena konačna package struktura
 
 ```text
-<base-package>
+hr.lukabosnjak
 ├── app
 ├── config
 ├── domain
+│   ├── model
 │   └── enums
 ├── validation
 ├── geometry
 ├── layout
 ├── gcode
 ├── service
+│   └── dto
 ├── persistence
 │   ├── repository
 │   └── jdbc
-├── ui
-│   └── controller
-└── exception        # samo ako se pokaže korisnim
+└── ui
+    ├── controller
+    └── view
 ```
+
+Napomena: `ui.view` kao Java package koristi se samo ako stvarno postoje Java view klase. Ako se odabere FXML, datoteke pripadaju `src/main/resources/hr/lukabosnjak/ui/view/` ili drugom dokumentiranom resource pathu. `layout` se funkcionalno koristi tek nakon GATE 1.
 
 ---
 
 # Planirane ključne klase
 
-## Domain
+## `domain.model`
 
 ### `MaterialType`
 
@@ -1972,7 +1794,7 @@ LocalDateTime createdAt
 LocalDateTime updatedAt
 ```
 
-## Geometry
+## `geometry`
 
 Planirane support klase, ako se kroz implementaciju potvrdi da su dovoljne:
 
@@ -1989,7 +1811,7 @@ TriangleToolPathGenerator
 CircleToolPathGenerator
 ```
 
-## Layout – ITERACIJA 2, tek nakon GATE 1
+## `layout` – ITERACIJA 2, tek nakon GATE 1
 
 ```text
 LayoutSettings
@@ -2004,7 +1826,7 @@ TriangleLayoutStrategy
 
 Nazivi strategy klasa se mogu prilagoditi nakon što vidimo koliko će algoritam stvarno biti generičan. Ne stvarati interface/klasu samo radi patterna ako ne donosi čitljivost.
 
-## G-code
+## `gcode`
 
 Single-element generator pripada Iteraciji 1; batch proširenje tek Iteraciji 2.
 
@@ -2017,7 +1839,7 @@ GCodeFormatter
 NcFileExportService
 ```
 
-## Service
+## `service`
 
 Moguće klase, samo ako odgovaraju stvarno implementiranom toku:
 
@@ -2028,7 +1850,7 @@ ToolPathService
 LayoutService
 ```
 
-Ne stvarati jedan `ApplicationService` koji radi sve.
+Ne stvarati jedan `ApplicationService` koji radi sve. `service.dto` koristiti samo za request/result modele koji stvarno pojednostavljuju UI → service granicu; ne duplicirati domain modele bez potrebe.
 
 ---
 
@@ -2062,7 +1884,7 @@ UNIQUE(MACHINING_JOB.machining_parameters_id)
 UNIQUE(MACHINING_JOB.shape_id)
 ```
 
-`GCODE_PROGRAM` se u V1 ne uvodi kao zasebna SQL tablica dok postoji samo jedan spremljeni output po jobu. Ako se kasnije uvede verzioniranje, regeneriranje ili više izlaznih programa po jobu, tada se može izdvojiti.
+`GCODE_PROGRAM` se u Iteraciji 1 ne uvodi kao zasebna SQL tablica jer postoji jedan spremljeni output po jobu. U Iteraciji 2, nakon što layout može vratiti `requiredSheets > 1`, obvezan je decision gate 15.1. Ako jedan job stvarno treba više zasebnih machine programa, tada se model i schema smiju proširiti s `GCODE_PROGRAM` 1:N umjesto spremanja više programa u jedan nejasan CLOB.
 
 ---
 
@@ -2092,6 +1914,7 @@ Završeno kada:
 Završeno kada:
 
 - schema se kreira na praznoj H2 bazi
+- first-run initializer može inicijalizirati novu file-based bazu
 - repository integration testovi prolaze
 - single-element `MachiningJob` se može save/loadati
 - persistence nije kriterij kojim se proglašava RichAuto kompatibilnost.
@@ -2103,7 +1926,8 @@ Završeno kada:
 - sva 4 oblika daju očekivani ToolPath
 - nevaljani unosi se odbijaju
 - geometrija ne proizvodi G-code tekst
-- jedan oblik se može provjeriti prema dimenzijama ploče.
+- jedan oblik se može provjeriti prema dimenzijama ploče
+- ToolPath bounds i machine XY work-area provjera postoje bez layout logike.
 
 ## Milestone E – single-element G-code radi softverski
 
@@ -2157,7 +1981,8 @@ Završeno kada:
 Završeno kada:
 
 - već provjereni single-element ToolPath/generation pristup koristi se za više placementa
-- batch G-code se generira
+- batch G-code se generira po SheetLayoutu prema odluci iz 15.1
+- multi-sheet output/persistence ima eksplicitno dokumentiran model ako `requiredSheets > 1`
 - safe Z se koristi između elemenata
 - UI prikazuje quantity, capacity i requiredSheets
 - integration test za više elemenata prolazi
@@ -2176,20 +2001,36 @@ Završeno kada:
 
 # Web-provjerene tehničke napomene korištene za ovaj plan
 
-1. OpenJFX službene upute podržavaju Maven workflow za JavaFX, uključujući automatsko dohvaćanje platformskih JavaFX dependencyja.
-2. H2 službena dokumentacija potvrđuje embedded JDBC način rada i H2 Console.
-3. H2 `USER` je keyword, zato SQL tablica ostaje `APP_USER`.
-4. H2 podržava CLOB i standardna SQL ograničenja potrebna ovom modelu.
-5. RichAuto A11 dokumentacija pokazuje da se postavke za `F`, `S` i `G54` mogu konfigurirati kao read/ignore, zato generator mora biti profiliran, a ne hardkodiran.
-6. RichAuto A11/A11plus dokumentacija navodi G00/G01/G02/G03, G17, G21, G54–G59, G90/G91 i tipične M03/M05/M30 naredbe, ali stvarni output za konkretni ZK-1325 mora se potvrditi fizičkim testom.
-7. OpenAI Codex best practices preporučuju prvo planiranje u Ask/Plan načinu, dobro scoped zadatke, persistent project context preko `AGENTS.md` i iterativnu implementaciju umjesto jednog velikog zadatka.
-8. OpenAI smjernice za rad s Codexom navode `AGENTS.md` kao mehanizam za trajne projektne upute, a smjernice za AI-native engineering posebno preporučuju uključivanje pravila za dokumentaciju u `AGENTS.md`, automatsko generiranje dokumentacije gdje ima smisla te ljudski pregled važnih dokumenata. Zato se bilješke generiraju automatski, ali ih student mora pregledati prije korištenja u završnom radu.
-9. Aktualne OpenAI preporuke za Codex naglašavaju Ask/Plan pristup, dobro ograničene zadatke i iterativni rad. Ovaj plan zato uvodi GATE 1: prvo se završava i provjerava mali end-to-end single-element tok, a tek zatim se otvara složeniji quantity/layout/batch dio.
+1. OpenAI Codex best practices preporučuju **Ask/Plan prvenstveno za velike promjene**, a ne kao obvezan dodatni turn za svaku malu izmjenu. Dobro ograničen zadatak tipično treba imati jasan issue-like scope, očekivane datoteke i provjeru rezultata.
+2. OpenAI navodi da Codex usage nije fiksan „po promptu“: ovisi o veličini i složenosti zadatka, modelu, kontekstu, mjestu izvršavanja i alatima. Zato grupiranje šest jednostavnih POJO klasa može smanjiti nepotrebni overhead, ali jedan nekontrolirano velik zadatak može potrošiti više od nekoliko malih.
+3. OpenAI preporučuje `AGENTS.md` za trajni repo kontekst. Novije agent-first smjernice dodatno upozoravaju da golemi instruction fileovi troše kontekst; bolje je dati agentu mapu i indeksirane projektne dokumente nego kopirati cijeli projektni opis u svaki prompt.
+4. OpenJFX službene Maven upute potvrđuju da Maven može dohvatiti JavaFX module i platformske native dependencyje te da `javafx.fxml` treba dodati tek ako aplikacija stvarno koristi FXML. Non-modularni JavaFX projekt ne mora imati `module-info.java` samo zato što koristi Maven.
+5. H2 službena dokumentacija potvrđuje embedded JDBC način rada, file-based i in-memory baze, transakcije i H2 Console. Relativni file path računa se od current working directoryja, zato path mora biti svjesno odabran i dokumentiran.
+6. H2 `USER` je keyword, zato SQL tablica ostaje `APP_USER`.
+7. RichAuto A11 dokumentacija pokazuje da se `F`, `S` i `G54` mogu postaviti na read/ignore. Službeni RichAuto materijali za A1X obitelj navode G00/G01/G02/G03, G17, G21, G54–G59, G90/G91 te M03/M05/M30, ali konkretno ponašanje našeg ZK-1325/A11 mora biti potvrđeno fizičkim testom.
+8. Z-smjer, work zero, safe Z i stvarni machining parametri ne smiju se zaključiti samo iz općeg G-code primjera. Interni model može koristiti pozitivne veličine, dok generator mora imati eksplicitnu konvenciju pretvorbe u strojne koordinate koja se potvrđuje prije rezanja.
+9. Iteracija 2 uvodi novi arhitektonski rizik: `requiredSheets > 1` može značiti više zasebnih machine programa. Zato se `GCODE_PROGRAM` ne uvodi prerano, ali se obvezno ponovno razmatra u decision gateu 15.1 kada potreba postane stvarna.
+
+Korišteni službeni/primarni izvori za provjeru plana:
+
+- OpenAI – How OpenAI uses Codex: https://openai.com/business/guides-and-resources/how-openai-uses-codex/
+- OpenAI Help – Using Codex with your ChatGPT plan: https://help.openai.com/en/articles/11369540/
+- OpenAI – Harness engineering: https://openai.com/index/harness-engineering/
+- OpenJFX Maven documentation: https://openjfx.io/openjfx-docs/maven
+- OpenJFX Getting Started: https://openjfx.io/openjfx-docs/
+- H2 Features: https://h2database.github.io/html/features.html
+- H2 Quickstart: https://h2database.github.io/html/quickstart.html
+- H2 Keywords: https://h2database.github.io/html/advanced.html#keywords
+- RichAuto official manual/download material: https://www.richnc.com.cn/download/file/135
 
 ---
 
 # Što NE raditi
 
+- Ne koristiti zaseban Plan turn za svaki getter/setter/POJO samo zato što dokument ima broj prompta.
+- Ne spajati previše nepovezanih slojeva u jedan golemi Codex zadatak samo radi uštede usagea.
+- Ne pretpostavljati da broj promptova linearno odgovara Codex potrošnji; složenost i kontekst su važni.
+- Ne pretpostavljati da globalni `mvn` mora postojati ako projekt radi preko IntelliJ Mavena ili Maven Wrappera.
 - Ne tražiti od Codexa: „napravi cijelu aplikaciju“.
 - Ne generirati UI prije poslovne logike.
 - Ne pisati SQL u controlleru.
