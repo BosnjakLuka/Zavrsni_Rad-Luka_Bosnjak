@@ -4,6 +4,21 @@ Ovdje se zapisuju samo potvrđene odluke koje mijenjaju arhitekturu, tehnologiju
 
 Ne zapisuj obične implementacijske detalje, privremene eksperimente ni nepotvrđene pretpostavke. Postojeće odluke iz `AGENTS.md` ne kopiraj bez nove potrebe; ovdje se bilježi njihov nastanak ili kasnija promjena.
 
+## Lokalna autentikacija, uloge i vlasništvo nad poslovima u V1
+
+**Datum:** 2026-08-25
+**Status:** ODLUČENO / NIJE IMPLEMENTIRANO / NIJE TESTIRANO
+
+**Odluka:** V1 uključuje klasičnu lokalnu registraciju i prijavu bez OAutha i vanjskih identity providera. Postoje uloge `USER` i `ADMIN`. Javna registracija stvara aktivan `USER` račun. Pri prvom pokretanju, prije redovnog login toka, poseban first-run setup omogućuje stvaranje prvog `ADMIN` računa i unos njegove lozinke; zadana administratorska lozinka ne smije biti hardkodirana ni spremljena u repozitoriju. Lozinke se nikada ne spremaju kao čisti tekst, nego samo kao sigurni hash s podacima potrebnima za provjeru. `MACHINING_JOB.created_by_user_id` identificira prijavljenog autora: `USER` vidi i upravlja svojim poslovima, a `ADMIN` vidi sve poslove i upravlja osnovnim referentnim podacima.
+
+**Razlog:** Funkcionalni zahtjevi prethodno nisu definirali runtime izvor za `created_by_user_id`, iako domenski i relacijski modeli već sadrže `ROLE` i `APP_USER`. Lokalna autentikacija daje tom odnosu stvarno značenje, omogućuje vlasništvo nad spremljenim poslovima i zadržava sigurnosni opseg dovoljno malim za desktop V1.
+
+**Razmotrene alternative:** Razmotren je jedan seedani lokalni korisnik bez login UI-a, ali nije odabran jer je potvrđena potreba za registracijom i prijavom. Razmotrena je samo jedna uloga, ali su odabrane `USER` i `ADMIN`. OAuth, Google prijava, vanjski identity servisi i opsežan enterprise RBAC nisu odabrani.
+
+**Utjecaj na implementaciju:** Budući auth milestone mora obuhvatiti registraciju, prijavu, sigurno hashiranje i provjeru lozinki, current-user/session stanje, first-run administratorski tok i autorizacijske testove. JavaFX controller samo koordinira UI; provjera vjerodajnica, pravila pristupa i persistence ostaju izvan controllera. DDL se ne izrađuje u ovoj odluci i smije se planirati tek nakon ovog pre-DDL audita.
+
+---
+
 ## Minimalna H2/JDBC infrastruktura
 
 **Datum:** 2026-08-25
