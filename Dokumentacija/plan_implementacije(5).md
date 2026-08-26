@@ -6,7 +6,9 @@ Ovaj dokument je izvedbeni plan za razvoj aplikacije završnog rada **„Razvoj 
 
 Glavni redoslijed više nije jedan linearni niz do završnog fizičkog testa. Razvoj je podijeljen u **dvije implementacijske iteracije** s obveznim prolazom kroz prvi stvarni test između njih.
 
-## ITERACIJA 1 – dokaz da osnovni generator radi za jedan element
+## ITERACIJA 1 – dovršena single-element aplikacija prije prvog testa na stroju
+
+Koraci **1–11** ostaju povijest već odrađene implementacije. Nakon pregleda stanja aplikacije na početku starog Koraka 12 uvedena je korektivna faza: prije prvog fizičkog testa aplikacija mora biti funkcionalno i vizualno dovršena za sve V1 funkcionalnosti koje **ne ovise o quantity/layout algoritmu**.
 
 1. Kreiranje Java projekta
 2. Struktura paketa
@@ -18,33 +20,38 @@ Glavni redoslijed više nije jedan linearni niz do završnog fizičkog testa. Ra
 8. Service / validacija / Geometry / ToolPath
 9. RichAuto A11 G-code generator za **jedan element**
 10. JavaFX UI za **jedan element**
-11. Integracija prve iteracije
-12. Prvi test na ZK-1325 / RichAuto A11 za **jedan element**
+11. Integracija prve iteracije – dosadašnje stanje / razvojni kostur
+12. Korektivni audit baze, modela i bootstrap/seed podataka
+13. Login, registracija, session i uloge korisnika
+14. Dovršavanje JavaFX korisničkog sučelja i administracijskih/kataloških ekrana
+15. Pojednostavljenje operatorskog workflowa i upravljanje machining postavkama bez obveznog ručnog unosa svih tehničkih parametara
+16. Usklađivanje RichAuto A11 generatora s referentnim `.nc` programom i kompenzacijom alata
+17. Release-candidate integracija Iteracije 1 – sve osim quantity/layouta mora raditi
+18. Prvi kontrolirani test na ZK-1325 / RichAuto A11 za **jedan element**
 
 ### GATE 1 – obvezna kontrolna točka
 
-**Ne implementirati korisnički unos količine, algoritam raspoređivanja, izračun kapaciteta ploče, broj potrebnih ploča ni batch G-code prije nego što je prvi single-element workflow dovoljno provjeren da možemo nastaviti.**
+**Ne implementirati korisnički unos količine, algoritam raspoređivanja, izračun kapaciteta ploče, broj potrebnih ploča ni batch G-code prije nego što je dovršena Iteracija 1 i prvi single-element test dovoljno provjeren da možemo nastaviti.**
 
-Prvi cilj je potvrditi cijeli lanac:
+Prije fizičkog testa očekuje se cijeli aplikacijski tok:
 
-`Shape -> ToolPath -> RichAutoA11GCodeGenerator -> .nc -> ZK-1325 -> jedan element`
+`Login -> UI -> odabir/unos -> validacija -> ToolPath -> kompenzacija/alati -> RichAutoA11GCodeGenerator -> preview -> Save/Reopen -> .nc export`
 
-Testni primjer ostaje:
+Fizički test zatim potvrđuje dio:
 
-- ploča 500 × 500 mm
-- jednakostranični trokut
-- stranica 30 mm
-- količina u prvoj iteraciji: **1**
+`generirani .nc -> ZK-1325 / RichAuto A11 -> jedan element`
+
+Količina u Iteraciji 1 ostaje interno **1** i nije korisničko polje.
 
 ## ITERACIJA 2 – više jednakih elemenata i raspoređivanje
 
-13. Aktivacija korisničkog unosa količine
-14. Algoritam raspoređivanja više jednakih elemenata
-15. Batch G-code za raspoređene elemente
-16. Proširenje JavaFX UI-a za quantity/layout rezultate
-17. Integracija druge iteracije
-18. Batch test na ZK-1325
-19. Završni testni izvještaj
+19. Quantity – aktivacija korisničkog unosa količine
+20. Algoritam raspoređivanja više jednakih elemenata
+21. Batch G-code za raspoređene elemente
+22. Proširenje JavaFX UI-a za quantity/layout rezultate
+23. Integracija druge iteracije
+24. Batch test na ZK-1325
+25. Završni testni izvještaj
 
 Prije toga postoji samo **korak 0 – priprema Codexa**, jer je za ovaj način rada korisno imati trajne projektne upute, project-specific Skill i sustav razvojnih bilješki.
 
@@ -181,20 +188,54 @@ Base package projekta je:
 
 Dogovorena struktura koristi `domain.model`, `domain.enums`, `service.dto`, `persistence.repository`, `persistence.jdbc`, `ui.controller` i `ui.view` kao jasne podjele odgovornosti. `layout` postoji kao paket, ali se funkcionalno aktivira tek nakon GATE 1. FXML datoteke, ako FXML bude odabran, pripadaju `src/main/resources`, a ne Java source paketu samo zato što postoji naziv `ui.view`.
 
-## 0.8. JDK status i još uvijek otvorene odluke
+## 0.8. JDK status i aktualne odluke nakon pregleda aplikacije prije prvog testa
 
-JDK je već odabran u stvarnom IntelliJ/Maven projektu. Ovaj plan ne izmišlja broj verzije: ako još nije zapisan u `00_odluke.md`, treba ga samo pročitati iz postojećeg projekta (`pom.xml`, IntelliJ Project SDK ili stvarni build output) i evidentirati. Ne treba ponovno trošiti poseban Codex milestone na provjeru razvojnog okruženja ako je to već napravljeno.
+JDK je već odabran u stvarnom IntelliJ/Maven projektu. Ovaj plan ne izmišlja broj verzije: ako još nije zapisan u `00_odluke.md`, treba ga samo pročitati iz postojećeg projekta (`pom.xml`, IntelliJ Project SDK ili stvarni build output) i evidentirati.
 
-Sljedeće stavke se još uvijek ne smiju izmišljati:
+Od ovog ažuriranja vrijede sljedeće nove potvrđene odluke:
 
-- hoće li UI koristiti FXML ili će biti građen programatski
-- konkretne vrijednosti `ToolType` enuma
-- treba li `RoleType` enum i ide li autentikacija/RBAC u završni scope
-- stvarne vrijednosti alata na ZK-1325
-- stvarni machining parametri za materijale
-- konkretne postavke `F`, `S`, `G54` na fizičkom RichAuto A11
-- precizan smjer osi i work zero na stroju
-- minimalni razmak među komadima i rubni odmak koji će se koristiti pri stvarnom rezanju
+- autentikacija i osnovni RBAC **ulaze u V1 scope**
+- uloge su `ADMIN`, `ENGINEER` i `OPERATOR`
+- aplikacija mora imati login, registraciju, logout i aktivnu korisničku sesiju prije prvog fizičkog testa
+- korisnički model ponašanjem se može ugledati na raniji ASP.NET MVC projekt, ali se **ne kopira ASP.NET Identity tehnologija**; implementira se jednostavno Java/JDBC rješenje
+- lozinke se ne pohranjuju kao čisti tekst
+- prije prvog fizičkog testa glavni JavaFX ekran više ne smije biti samo „UI kostur“
+- glavna forma ne treba prisiljavati operatora da pri svakom poslu ručno upisuje sve tehničke machining parametre ako ih aplikacija može dobiti iz potvrđenog profila/preseta i odabranog alata
+- `MachiningParameters` ostaje domenski/persistence snapshot dok se ne dokaže da je neki atribut suvišan; **skrivanje polja iz UI-a nije isto što i brisanje podatka iz modela/baze**
+- dostavljeni referentni program za pravokutnik 100 × 200 mm sadrži `F150` za plunge i `F500` za rezanje, stoga se ne smije zaključiti da feed vrijednosti nisu potrebne; cilj je maknuti nepotreban **ručni unos**, a ne naslijepo ukloniti tehničke podatke iz generatora
+- stručna povratna informacija za referentni program je da geometrijski smjer izgleda prihvatljivo, ali nedostaje kompenzacija alata
+- kao kandidati stvarnih alata spomenuti su promjeri **Ø6 mm i Ø8 mm**; to još nije dovoljno za izmišljanje `TOOL` seed zapisa bez potvrde koji alat, broj alata i ostali stvarni podaci pripadaju stroju
+- kompenzacija alata mora se riješiti prije prvog stvarnog reza; RichAuto/standardna G-code terminologija koristi `G41` za lijevu i `G42` za desnu kompenzaciju, uz `G40` za poništavanje, ali konačni način rada na našem A11 mora se provjeriti na konkretnom kontroleru
+- prvi fizički test je pomaknut s starog Koraka 12 na novi **Korak 18**.
+
+### Potvrđeni seed/bootstrap podaci za V1
+
+| Tablica | Pravilo |
+|---|---|
+| `ROLE` | seedati `ADMIN`, `ENGINEER`, `OPERATOR` |
+| `APP_USER` | 3–5 development/test korisnika, bez plaintext lozinki |
+| `MATERIAL_TYPE` | 5 testnih/stvarnih vrsta materijala |
+| `CNC_MACHINE` | jedan stvarni `ZK-1325 / RichAuto A11`, bez izmišljanja nepoznatih specifikacija |
+| `TOOL` | seedati tek stvarno potvrđene alate |
+| `MATERIAL_SHEET` | ne seedati; nastaje za konkretan posao |
+| `SHAPE` | ne seedati; nastaje iz korisničkog unosa |
+| `MACHINING_PARAMETERS` | ne seedati nasumične vrijednosti |
+| `MACHINING_JOB` | ne seedati u normalnom runtimeu; eventualni demo podaci samo u jasno odvojenom development/test modu |
+
+Seeder mora biti **idempotentan**: ponovno pokretanje aplikacije ne smije duplicirati uloge, stroj, materijale ili testne korisnike.
+
+### Još otvorene odluke koje se ne smiju izmišljati
+
+- točna matrica prava `ADMIN` / `ENGINEER` / `OPERATOR`
+- default rola samostalno registriranog korisnika
+- konačan password-hashing pristup i parametri na temelju stvarnog JDK-a/dependencyja
+- stvarni broj/naziv i svi podaci alata Ø6 mm / Ø8 mm
+- koristi li naš konkretni A11 controller-side cutter compensation s očekivanim tool-offset registrom ili ćemo kompenzaciju računati geometrijski u aplikaciji
+- točan lead-in/lead-out potreban za aktivaciju/deaktivaciju `G41/G42` na našem kontroleru
+- konkretne postavke `F`, `S`, `G54`, `G40` read/ignore na fizičkom RichAuto A11
+- precizan smjer osi, work zero i WCS na stroju
+- stvarna dubina rezanja, step-down i sigurna Z-visina za prvi materijal/test
+- minimalni razmak među komadima i rubni odmak za Iteraciju 2.
 
 ---
 
@@ -659,7 +700,7 @@ Ovaj korak je namjerno grupiran. Jednostavne POJO/model klase ne trebaju zaseban
 
 **Način: PLAN → CODE**
 
-> Pregledaj postojeći projekt i u jednom milestoneu isplaniraj i implementiraj osnovne domenske modele u `hr.lukabosnjak.domain.entities`:
+> Pregledaj postojeći projekt i u jednom milestoneu isplaniraj i implementiraj osnovne domenske modele u `hr.lukabosnjak.domain.model`:
 >
 > **`MaterialType`**
 > - `Long materialTypeId`
@@ -738,7 +779,7 @@ Ovaj korak je namjerno grupiran. Jednostavne POJO/model klase ne trebaju zaseban
 
 **Način: DIRECT CODE**
 
-> Pregledaj trenutni domain model i implementiraj potvrđene geometrijske enumove u `hr.lukabosnjak.domain.enums` te `Shape` u `hr.lukabosnjak.domain.entities`.
+> Pregledaj trenutni domain model i implementiraj potvrđene geometrijske enumove u `hr.lukabosnjak.domain.enums` te `Shape` u `hr.lukabosnjak.domain.model`.
 >
 > `ShapeType`:
 > - `SQUARE`
@@ -1283,315 +1324,809 @@ RichAuto dokumentacija potvrđuje relevantne G/M naredbe i postavke čitanja `F`
 
 ---
 
-# 12. PRVI TEST – ZK-1325 / RichAuto A11, jedan element
+# 12. Korektivni audit baze, modela i bootstrap podataka – PRIJE prvog testa
 
-Ovo je obvezna kontrolna točka prije quantity/layout implementacije.
+**Kontekst:** korisnik je došao do starog Koraka 12, ali pregled stvarnog UI-a i baze pokazao je da je aplikacija još razvojni kostur. Ovaj korak ne vraća projekt na početak: koristi postojeći kod iz Koraka 1–11 i ispravlja samo ono što je potrebno da Iteracija 1 postane cjelovita aplikacija.
 
-## Prompt 12.1 – Pre-machine checklist
+## Prompt 12.1 – Audit trenutačnog stanja i gap analiza
 
 **Način: ASK / AUDIT**
 
-> Na temelju stvarno implementiranog single-element generatora napravi checklist prije fizičkog testa.
+> Pregledaj stvarni repozitorij nakon završenog starog Koraka 11. Ne mijenjaj kod.
+>
+> Usporedi stvarno IMPLEMENTIRANO stanje s novim acceptance kriterijem Iteracije 1: prije prvog fizičkog testa sve V1 funkcionalnosti osim quantity/layout/batch dijela moraju biti funkcionalne.
+>
+> Posebno provjeri:
+> - pokreće li se file-based H2 baza i inicijalizira li schema automatski
+> - koje tablice imaju podatke
+> - postoje li `ROLE`, `APP_USER`, `MATERIAL_TYPE`, `CNC_MACHINE` i `TOOL` repositoryji i metode potrebne za UI
+> - rade li Save / Saved Programs / reopen / export stvarno ili su samo UI gumbi
+> - je li trenutačni glavni ekran još označen kao „UI kostur“
+> - jesu li `MachiningParameters` obvezna ručna UI polja samo zato što su bila u ranijem planu
+> - gdje su u kodu hardkodirane ili testne machine/profile vrijednosti
+> - što u koracima 1–11 treba minimalno refaktorirati zbog novih odluka o loginu, seedu i operatorskom workflowu.
+>
+> Rezultat mora biti tablica: `Funkcionalnost | IMPLEMENTIRANO | TESTIRANO | Nedostaje | Predloženi novi korak`.
+>
+> Ne implementiraj quantity/layout/batch.
+
+## Prompt 12.2 – Usklađivanje modela stroja s poznatim/nepoznatim podacima
+
+**Način: PLAN → CODE**
+
+> Pregledaj `CncMachine`, `schema.sql`, repository mapping i validaciju.
+>
+> Želimo moći spremiti naš stvarni stroj bez izmišljanja tehničkih specifikacija:
+> - name/model: `ZK-1325`
+> - controller: `RichAuto A11`
+> - workAreaX: `1250 mm`
+> - workAreaY: `2500 mm`
+> - workAreaZ: približno `80 mm` je informacija iz razgovora, ali je nemoj koristiti kao strogi safety limit ako u projektu nije potvrđena mjerenjem/dokumentacijom
+> - manufacturer: nepoznat
+> - maxFeedRate: nepoznat
+> - minSpindleSpeed: nepoznat
+> - maxSpindleSpeed: nepoznat.
+>
+> Ako su nepoznati podaci danas primitive `double` + SQL `NOT NULL`, predloži minimalnu migraciju na nullable reprezentaciju (`Double` / SQL `NULL`) samo za atribute koji stvarno mogu biti nepoznati. Nemoj unositi `0` kao lažnu zamjenu za „nepoznato“.
+>
+> Ažuriraj repository mapping i validaciju tako da nepoznata tehnička granica ne blokira aplikaciju, ali potvrđena granica i dalje bude provjerena kada postoji.
+>
+> Dodaj integration testove i dokumentiraj promjenu modela.
+
+## Prompt 12.3 – Idempotentni V1 bootstrap / seed
+
+**Način: PLAN → CODE**
+
+> Implementiraj jasan i idempotentan development/bootstrap seeder koji se izvršava nakon `DatabaseInitializer`a.
+>
+> Seed pravila su zaključana:
+> - `ROLE`: `ADMIN`, `ENGINEER`, `OPERATOR`
+> - `MATERIAL_TYPE`: ukupno 5 seed zapisa; stvarne nazive koristi samo ako su potvrđeni, inače koristi jasno označene development vrijednosti (`TEST_MATERIAL_*`) umjesto izmišljanja da su to stvarni materijali
+> - `CNC_MACHINE`: točno jedan potvrđeni `ZK-1325 / RichAuto A11` s poznatim vrijednostima i `NULL` za stvarno nepoznate
+> - `TOOL`: trenutno **ne izmišljati** zapise; dodati tek stvarno potvrđeni alat Ø6 ili Ø8 mm kada znamo koji je stvarni alat i potrebne atribute
+> - `MATERIAL_SHEET`, `SHAPE`, `MACHINING_PARAMETERS`, `MACHINING_JOB`: ne seedati u normalnoj bazi; to su podaci konkretnih poslova/snapshotovi.
+>
+> `APP_USER` seed pripada Koraku 13 nakon implementacije stvarnog password hashera. Nemoj privremeno spremiti čiste lozinke samo da bi baza bila popunjena.
+>
+> Seed mora biti siguran za višestruko pokretanje: drugi start aplikacije ne smije napraviti duplikate.
+>
+> Dodaj test koji pokrene ovaj dio seedera dvaput i potvrdi isti broj bootstrap zapisa.
+
+## Prompt 12.4 – Database/UI lookup smoke test
+
+**Način: DIRECT CODE**
+
+> Dodaj ili proširi integration test kojim se potvrđuje da nakon inicijalizacije i seeda aplikacijski service/repository sloj može dohvatiti:
+> - tri role
+> - pet material type zapisa
+> - jedan ZK-1325 stroj.
+>
+> Development korisnike ovdje još ne očekuj; oni se seedaju u Koraku 13 nakon što postoji stvarni password hasher.
+>
+> Ne očekuj Tool zapis dok stvarni alat nije potvrđen.
+>
+> Ažuriraj bilješke i stani.
+
+---
+
+# 13. Login, registracija, session i uloge korisnika – ITERACIJA 1
+
+Ovaj dio sada je **potvrđeni V1 scope**. Ponašanjem se može ugledati na raniji ASP.NET MVC projekt: korisnici se prijavljuju, postoje role, postoji bootstrap korisnika/uloga i autorizacija određenih funkcionalnosti. Ne kopira se ASP.NET Identity framework; radi se čitljivo Java/JavaFX/JDBC rješenje primjereno studentskom desktop projektu.
+
+## Prompt 13.1 – Role/RBAC decision gate
+
+**Način: ASK / AUDIT**
+
+> Potvrđene role su:
+> - `ADMIN`
+> - `ENGINEER`
+> - `OPERATOR`.
+>
+> Pregledaj postojeći UI i funkcionalnosti te predloži minimalnu matricu prava bez enterprise-kompleksnosti.
+>
+> Obavezno riješi:
+> - koja rola je default za samostalnu registraciju
+> - tko smije upravljati korisnicima i mijenjati role
+> - tko smije dodavati/uređivati `CNC_MACHINE`, `TOOL`, `MATERIAL_TYPE`
+> - tko smije generirati, spremati, otvarati i exportati programe.
+>
+> Sigurnosno pravilo: korisnik se pri registraciji ne smije sam proglasiti `ADMIN`om.
+>
+> Ne mijenjaj kod dok matricu ne odobrim i dok odluka nije zapisana u `00_odluke.md`.
+
+## Prompt 13.2 – Password hashing + AuthService + SessionContext
+
+**Način: PLAN → CODE**
+
+> Implementiraj jednostavan lokalni authentication sloj bez Spring Securityja i bez ASP.NET Identityja.
+>
+> Potrebe:
+> - `PasswordHasher` ili ekvivalent s modernim salted password-hashing pristupom; ne koristiti plain SHA-256 i ne spremati plaintext
+> - stvarni algoritam/parametre odabrati prema dostupnom JDK-u/dependencyjima i zabilježiti odluku
+> - `AuthService.login(username, password)`
+> - `AuthService.register(...)` prema potvrđenom modelu `User`
+> - `SessionContext` ili sličan mali objekt koji drži samo trenutno prijavljenog korisnika
+> - logout
+> - odbijanje inactive korisnika
+> - korisničko ime mora biti jedinstveno prema stvarnoj schemi.
+>
+> Ne dodaj email samo zato što ga je imao ASP.NET projekt ako email nije dio našeg potvrđenog `User` modela.
+>
+> Nakon što hasher postoji, proširi idempotentni seeder s **3–5 development/test korisnika** i dodijeli im role prema potvrđenoj matrici. Seed lozinke moraju proći kroz isti hasher kao i registrirani korisnici; baza nikada ne sadrži plaintext lozinke.
+>
+> Dodaj unit/integration testove za dobru i lošu lozinku, nepostojećeg korisnika, inactive korisnika, registraciju, dupli username i dvostruko pokretanje user seeda bez duplikata.
+
+## Prompt 13.3 – Login / Registration JavaFX ekrani
+
+**Način: PLAN → CODE**
+
+> Implementiraj početni login ekran i registration ekran u istom UI pristupu koji stvarni projekt već koristi.
+>
+> Login:
+> - username
+> - password
+> - Login
+> - navigacija na Registration.
+>
+> Registration koristi samo potvrđena polja `User` modela i potvrđenu default rolu iz 13.1. Lozinka i potvrda lozinke su UI inputi; u bazu ide samo hash.
+>
+> Nakon uspješnog logina otvara se glavni aplikacijski ekran. Glavni ekran mora prikazati barem identitet/username prijavljenog korisnika i omogućiti Logout.
+>
+> Controller ne radi SQL niti hashing.
+
+## Prompt 13.4 – Autorizacija i upravljanje korisnicima
+
+**Način: PLAN → CODE**
+
+> Implementiraj minimalnu autorizaciju prema odobrenoj role matrici iz 13.1.
+>
+> Za administratorski dio implementiraj funkcionalnosti koje su stvarno potrebne:
+> - pregled korisnika
+> - aktivacija/deaktivacija
+> - promjena role ako je odobrena matricom
+> - po potrebi kreiranje korisnika od strane admina.
+>
+> Ne radi složeni permission framework. Jedna centralizirana provjera role/prava je bolja od dupliciranih `if (role...)` provjera po svim controllerima.
+>
+> Testiraj da neovlaštena rola ne može otvoriti/izvršiti administratorsku akciju.
+
+---
+
+# 14. Dovršavanje JavaFX korisničkog sučelja – ITERACIJA 1
+
+Cilj ovog koraka je da prije strojnog testa aplikacija **više ne izgleda i ne ponaša se kao „Single-element program — UI kostur“**. Ne uvodi se quantity/layout.
+
+## Prompt 14.1 – UI/UX audit trenutnog glavnog ekrana
+
+**Način: ASK / AUDIT**
+
+> Pregledaj stvarni screenshot i trenutačni JavaFX kod.
+>
+> Trenutačni ekran ima sve elemente u jednom velikom obrascu i ručno pokazuje šest `Machining parameters` polja. Napravi prijedlog završnog desktop rasporeda za Iteraciju 1.
+>
+> Ciljevi:
+> - jasno hrvatsko korisničko sučelje
+> - ukloniti tekstove tipa „UI kostur“
+> - vizualno odvojiti osnovni posao od administracije/kataloga
+> - ostaviti dovoljno prostora za G-code preview, ali Saved Programs ne mora trajno zauzimati donju polovicu glavnog ekrana ako je zaseban ekran pregledniji
+> - machine/tool/material odabiri dolaze iz baze
+> - `Dodaj...` akcije vode na stvarne forme samo ako ih rola smije koristiti
+> - bez quantity/layout elemenata do GATE 1.
+>
+> Ne mijenjaj kod u ovom promptu. Pokaži predloženu navigaciju i ekrane.
+
+## Prompt 14.2 – Application shell + navigacija
+
+**Način: PLAN → CODE**
+
+> Implementiraj odobreni application shell/navigaciju.
+>
+> Minimalno:
+> - glavni generator ekran
+> - Saved Programs ekran
+> - User/Admin ekran prema roli
+> - Catalog/Settings ekran ili dijalozi za `MaterialType`, `CncMachine`, `Tool` prema role matrici
+> - prikaz prijavljenog korisnika/role i Logout.
+>
+> Nemoj raditi SPA/router framework; koristi jednostavan JavaFX način prikladan postojećem projektu.
+
+## Prompt 14.3 – Kataloški CRUD koji stvarno treba UI-u
+
+**Način: PLAN → CODE**
+
+> Dovrši stvarne forme i service/repository tokove za kataloge koje korisnik treba prije generiranja:
+> - `MaterialType`
+> - `CncMachine`
+> - `Tool`.
+>
+> Nemoj forsirati puni CRUD ako nije potreban. Minimalno omogući pregled/dohvat i dodavanje/uređivanje onih zapisa za koje je to odobreno role matricom.
+>
+> `Tool` se ne smije stvarati s lažnim podacima. Za stvarni Ø6/Ø8 alat dopusti unos tek kada korisnik ima potvrđene vrijednosti.
+>
+> UI controller ne smije pisati SQL.
+
+## Prompt 14.4 – Saved Programs / quick access finalizacija
+
+**Način: PLAN → CODE**
+
+> Dovrši `Saved Programs` kao stvarnu funkcionalnost:
+> - lista spremljenih jobova
+> - naziv, datum, korisnik i osnovni podaci potrebni za prepoznavanje
+> - odabir programa
+> - prikaz spremljenog G-koda
+> - ponovno učitavanje parametara u generator formu (quick access)
+> - export odabranog `.nc` programa.
+>
+> Test mora dokazati fresh-context round-trip preko H2 baze.
+
+## Prompt 14.5 – Završno oblikovanje Iteracije 1
+
+**Način: DIRECT CODE**
+
+> Uskladi spacing, veličine kontrola, poruke, disable/enable stanja i stilove da ekran bude uredan desktop alat, a ne razvojni kostur.
+>
+> Ne uvodi dekorativne animacije niti kompleksan CSS samo radi izgleda. Prioritet su čitljivost, konzistentnost i jasan glavni workflow.
+>
+> Provjeri ručno minimalno: login -> glavni ekran -> izbor baze -> generate -> preview -> save -> saved programs -> reopen -> export -> logout.
+
+---
+
+# 15. Pojednostavljenje operatorskog workflowa i machining postavki
+
+## Važna nova činjenica iz referentnog `.nc` programa
+
+Dostavljeni referentni program za pravokutnik 100 × 200 mm je:
+
+```gcode
+G90 G54
+M03
+G00 Z5.000
+G00 X0.000 Y0.000
+G01 Z-1.000 F150.000
+G01 X100.000 Y0.000 F500.000
+G01 X100.000 Y200.000
+G01 X0.000 Y200.000
+G01 X0.000 Y0.000
+G00 Z5.000
+M05
+M30
+```
+
+Iz ovoga **ne slijedi** da brzine nisu potrebne: program sadrži `F150` i `F500`. Ono što želimo promijeniti jest da operator ne mora nužno svaki put ručno upisivati tehničke vrijednosti u glavnu formu.
+
+RichAuto A11 dokumentacija pokazuje da kontroler ima vlastite processing postavke te G-code atribute kojima se `F`, `S`, `G54` i `G40` mogu čitati ili ignorirati. Zato UI i generator moraju biti projektirani oko stvarnog profila kontrolera, a ne oko šest obveznih praznih TextFieldova.
+
+## Prompt 15.1 – Audit što zaista mora biti korisnički input
+
+**Način: ASK / AUDIT**
+
+> Pregledaj `MachiningParameters`, `RichAutoA11Profile`, trenutačni UI, service sloj i dostavljeni referentni `.nc`.
+>
+> Za svaki podatak klasificiraj:
+> 1. mora ga korisnik zadavati za svaki posao
+> 2. treba dolaziti iz odabranog Tool/Machine/profile/preseta
+> 3. controller može ignorirati/odrediti sam
+> 4. još nije potvrđeno na našem stroju.
+>
+> Analiziraj najmanje:
+> - spindleSpeed
+> - feedRate
+> - plungeRate
+> - cutDepth
+> - stepDown
+> - safeZ
+> - machine
+> - tool/diameter
+> - material type/sheet dimensions.
+>
+> Nemoj brisati `MachiningParameters` iz modela samo zato što ga želimo maknuti iz glavnog UI-a.
+
+## Prompt 15.2 – Process/profile settings bez ručnog unosa svih parametara
+
+**Način: PLAN → CODE**
+
+> Na temelju odobrene analize iz 15.1 implementiraj najmanje složen način da glavni operatorski ekran ne traži svih šest machining vrijednosti pri svakom poslu.
+>
+> Preferiraj postojeći `RichAutoA11Profile` i mali process/default settings objekt/preset ako je dovoljan. Ne stvaraj veliki novi subsystem.
+>
+> Za prvi test vrijednosti smiju biti:
+> - potvrđene iz stvarnog workflowa/operatora, ili
+> - jasno označene kao test/reference vrijednosti koje još nisu fizički potvrđene.
+>
+> Aplikacija mora i dalje moći spremiti korištene vrijednosti u `MachiningParameters` snapshot kako bi se kasnije moglo objasniti s kojim je postavkama job generiran.
+>
+> Main UI treba prikazati samo ono što je korisniku stvarno potrebno. Eventualni „Advanced/Technical settings“ ekran može postojati ako je potreban, ali ne smije biti obvezan dio svakog Generate toka.
+
+## Prompt 15.3 – Stvarni tool unos i veza s promjerom
+
+**Način: PLAN → CODE**
+
+> U projektnoj dokumentaciji postoji nova terenska informacija da se na stroju koriste/razmatraju glodala Ø6 mm ili Ø8 mm.
+>
+> Nemoj automatski seedati oba kao činjenicu. Omogući da se stvarni `Tool` zapis unese kroz odobreni katalog kada znamo:
+> - tool number/oznaku ako postoji
+> - naziv
+> - diameter: 6 ili 8 mm prema stvarno odabranom alatu
+> - ostale atribute samo ako su stvarno poznati ili model dopušta da budu nepoznati.
+>
+> Promjer mora biti dostupan generatoru/kompenzacijskom sloju; korisnik ga ne treba ponovno tipkati ako je već pohranjen uz alat.
+
+---
+
+# 16. RichAuto A11 generator – referentni `.nc` + kompenzacija alata
+
+**Status izvora:** dostavljeni `.nc` je referentni program koji je osoba upoznata s tim strojem ocijenila kao prihvatljiv za pravokutnik 200 × 100 mm, uz napomenu da nedostaje kompenzacija alata. To je vrijedan real-world reference, ali još nije dokaz fizičkog testa naše aplikacije.
+
+## Prompt 16.1 – Referentni `.nc` kao regression fixture
+
+**Način: PLAN → CODE**
+
+> U `src/test/resources` ili `dokumentacija/reference/` spremi referentni program 100 × 200 mm kao testni artefakt, uz bilješku o porijeklu i statusu: stručni pregled/referenca, **NIJE TESTIRANO kao output naše aplikacije na stroju**.
+>
+> Usporedi postojeći `RichAutoA11GCodeGenerator` s referencom:
+> - `G90 G54`
+> - `M03`
+> - safe Z 5.000
+> - XY start 0,0
+> - plunge Z-1.000 uz `F150`
+> - rezanje uz `F500`
+> - retract
+> - `M05`
+> - `M30`.
+>
+> Nemoj slijepo mijenjati generator da byte-for-byte kopira referencu ako postoje opravdane profile opcije. Zapiši svaku razliku i odluči je li:
+> - namjerna i konfigurabilna
+> - nepotrebna
+> - potencijalna nekompatibilnost za prvi test.
+>
+> Dodaj regression test za naš generator koristeći iste geometrijske dimenzije i eksplicitne reference postavke.
+
+## Prompt 16.2 – Cutter compensation decision gate: G41/G42 ili geometrijski offset
+
+**Način: ASK / AUDIT**
+
+> Nova potvrđena potreba: generirana putanja mora uzeti u obzir promjer alata. Terenska povratna informacija izričito navodi lijevu/desnu kompenzaciju `G41` / `G42` i alat Ø6 ili Ø8 mm.
+>
+> RichAuto dokumentacija potvrđuje G-code postavku `Read G40`, a standardna G-code semantika je:
+> - `G40` cancel cutter compensation
+> - `G41` cutter compensation left
+> - `G42` cutter compensation right.
+>
+> Ali nemoj pretpostaviti da RichAuto A11 koristi isti `D`/tool-offset workflow kao Haas/LinuxCNC bez provjere konkretnog kontrolera.
+>
+> Usporedi dvije V1 opcije:
+> 1. controller-side compensation (`G41/G42/G40`) uz potvrđen način zadavanja radijusa/offseta i odgovarajući lead-in/lead-out
+> 2. aplikacija unaprijed računa offsetirani ToolPath prema radijusu alata, a G-code ostaje bez controller compensation naredbi.
+>
+> Usporedi:
+> - složenost za sva 4 shapea
+> - pouzdanost na našem A11
+> - potrebu za D/tool-table podacima
+> - lead-in/lead-out
+> - unutarnji/vanjski rez
+> - utjecaj na layout Iteraciju 2.
+>
+> Zaustavi se dok ne odobrim strategiju i dok se odluka ne upiše u `00_odluke.md`.
+
+## Prompt 16.3 – Implementacija odabrane kompenzacijske strategije
+
+**Način: PLAN → CODE**
+
+> Implementiraj samo strategiju odobrenu u 16.2.
+>
+> Obavezni zahtjevi bez obzira na strategiju:
+> - koristi stvarni `Tool.diameter`
+> - radius = diameter / 2
+> - jasno razlikuj programiranu konturu komada od putanje centra alata
+> - unutarnja/vanjska strana mora biti eksplicitna; ne pogađaj `G41/G42` samo iz naziva shapea
+> - smjer putanje mora biti determinističan i dokumentiran
+> - dodaj testove za Ø6 i Ø8 mm na jednostavnom pravokutniku, ali te promjere označi kao tehničke testne slučajeve dok konkretni tool zapis nije fizički potvrđen
+> - kompenzaciju resetirati/ugasiti na dokumentiran način prije završetka programa
+> - ne dopustiti da kompenzirana putanja izađe iz sheet/machine granica.
+>
+> Za controller-side varijantu obavezno testiraj lead-in/lead-out strukturu i ne emitiraj neprovjeren `D` format.
+
+## Prompt 16.4 – Finalno pravilo za F/S/G54 i UI
+
+**Način: PLAN → CODE**
+
+> Uskladi generator i `RichAutoA11Profile` s onime što trenutno znamo:
+> - referentni program koristi `G54`
+> - referentni program koristi `F150` i `F500`
+> - referentni program ne sadrži `S`
+> - RichAuto A11 može imati F/S/G54 read/ignore konfiguraciju.
+>
+> Cilj nije ukloniti F/feed iz koda, nego ukloniti nepotreban ručni unos iz glavnog UI-a.
+>
+> Generator mora moći reproducirati potvrđeni reference-profile oblik outputa, a profile opcije moraju ostati dovoljno jasne da nakon fizičkog testa zabilježimo točno ponašanje konkretnog A11.
+>
+> `MachiningParameters` snapshot mora odražavati vrijednosti s kojima je program stvarno generiran, čak i kada ih korisnik nije ručno upisao.
+
+## Prompt 16.5 – Software audit sva 4 single-element shapea
+
+**Način: PLAN → CODE**
+
+> Nakon kompenzacije i profile promjena provjeri sva četiri V1 oblika:
+> - square
+> - rectangle
+> - circle
+> - equilateral triangle.
+>
+> Za svaki testiraj:
+> - validaciju
+> - originalni ToolPath
+> - kompenzirani path/kompenzacijske naredbe prema odabranoj strategiji
+> - granice ploče i machine XY
+> - Z/pass logiku
+> - deterministic `.nc` output.
+>
+> To je SOFTVERSKO TESTIRANJE, ne fizička potvrda stroja.
+
+---
+
+# 17. Release-candidate integracija – ITERACIJA 1
+
+Ovo je zadnji softverski korak prije prvog fizičkog testa. Acceptance kriterij nije „generator se kompilira“, nego da je aplikacija praktično dovršena za **single-element workflow**.
+
+## Prompt 17.1 – Full end-to-end Iteracija 1
+
+**Način: PLAN → CODE**
+
+> Provjeri i popravi samo integracijske nedostatke cijelog toka:
+>
+> `start -> DB init/seed -> login/register -> session/role -> main UI -> load machine/material/tool -> shape input -> validation -> generation -> compensation -> preview -> save -> Saved Programs -> reopen -> export .nc -> logout`.
+>
+> Quantity je interno 1. Nema layouta, capacityja ni requiredSheets.
+>
+> Obavezno provjeri da nakon restarta aplikacije:
+> - bootstrap podaci nisu duplicirani
+> - korisnik se može ponovno prijaviti
+> - spremljeni program ostaje dostupan
+> - quick access ponovno učitava job
+> - `.nc` se može ponovno exportati.
+
+## Prompt 17.2 – UI release-candidate checklist
+
+**Način: ASK / AUDIT**
+
+> Pregledaj aplikaciju kao krajnji korisnik i napravi PASS/FAIL checklist:
+> - nema placeholder/„UI kostur“ tekstova
+> - hrvatski nazivi i poruke su konzistentni
+> - obavezna polja su jasna
+> - stroj/material/tool ComboBoxovi rade iz baze
+> - neovlaštene admin akcije nisu dostupne
+> - raw machining polja nisu obvezna na glavnom ekranu osim ako je prethodna odluka dokazala da neko polje mora ostati
+> - Generate, Save, Saved Programs, Reopen, Export i Logout rade
+> - greške se prikazuju razumljivo bez rušenja aplikacije
+> - quantity/layout funkcionalnosti nisu prerano prikazane.
+>
+> Ako nešto pada, vrati se samo na odgovarajući korak i popravi prije strojnog testa.
+
+## Prompt 17.3 – Referentni pravokutnik 100 × 200 mm: static release audit
+
+**Način: ASK / AUDIT**
+
+> Generiraj pravokutnik 100 × 200 mm s točno odabranim testnim Tool/profile postavkama i usporedi rezultat s dostavljenim referentnim `.nc` programom.
+>
+> Posebno provjeri:
+> - geometrijske dimenzije
+> - početak/kraj programa
+> - G90/G54
+> - M03/M05/M30
+> - safe Z i Z dubinu
+> - F vrijednosti prema profilu
+> - cutter compensation prema odluci iz 16.2
+> - granice XY nakon kompenzacije.
+>
+> Razlike dokumentiraj. Ne označavaj fizički TESTIRANO.
+
+---
+
+# 18. PRVI TEST – ZK-1325 / RichAuto A11, jedan element
+
+**Ovo je stari Korak 12 pomaknut tek nakon dovršetka baze, korisnika, UI-a, operatorskog workflowa i generatora.**
+
+## Prompt 18.1 – Pre-machine checklist
+
+**Način: ASK / AUDIT**
+
+> Na temelju stvarno implementiranog release-candidate generatora napravi checklist prije fizičkog testa.
 >
 > Mora uključiti:
 > - verziju aplikacije/commit
-> - točan stroj i kontroler
-> - work area X/Y/Z
-> - orientation osi
+> - točan stroj `ZK-1325`
+> - kontroler `RichAuto A11`
+> - potvrđeno radno područje
+> - orientation X/Y/Z osi
 > - WCS/work zero
-> - F/S/G54 read/ignore postavke
+> - stvarne F/S/G54/G40 read/ignore postavke kontrolera
 > - spindle ponašanje
-> - tool podatke
+> - stvarni Tool zapis i diameter
+> - odabranu cutter-compensation strategiju
+> - lead-in/lead-out ako se koristi G41/G42
 > - safe Z
-> - cut depth / step down
-> - feed/plunge/spindle
+> - cut depth / step-down
+> - feed/plunge/spindle vrijednosti koje će se stvarno koristiti
 > - pregled `.nc` datoteke.
 >
-> Ne predlaži proizvoljne machining vrijednosti.
+> Ne predlaži proizvoljne machining vrijednosti. Sve fizičke parametre prije rezanja mora potvrditi operator konkretnog stroja.
 
-## Prompt 12.2 – Statički audit stvarnog `.nc` testa
+## Prompt 18.2 – Statički audit stvarnog `.nc` testa
 
 **Način: ASK / AUDIT**
 
-> Uzmi stvarno generiranu `.nc` datoteku za testni trokut i napravi statički audit bez pokretanja stroja.
+> Auditiraj **točno onu `.nc` datoteku koja će biti prenesena na stroj**.
 >
 > Provjeri:
-> - mm / G21 prema profilu
-> - G90/G17 prema profilu
-> - G54 samo ako je uključeno
-> - Z-konvenciju prema potvrđenom planu testa
+> - koordinatni mod / G90
+> - G54 samo prema potvrđenoj konfiguraciji
+> - spindle start/stop
 > - safe Z prije XY premještanja
-> - step-down
-> - koordinate i granice
-> - F/S prema profilu
-> - M03/M05 prema profilu
-> - M30
-> - decimalni format.
+> - Z target i step-down
+> - feed/plunge ponašanje
+> - cutter compensation / geometrijski offset
+> - lead-in/lead-out i G40 ako je primjenjivo
+> - sve XY granice nakon kompenzacije
+> - decimalni format
+> - završetak programa.
 >
 > Ne mijenjaj kod ako nema konkretno pronađenog problema.
 
-## Prompt 12.3 – Kontrolirani fizički test + test-case predložak
+## Prompt 18.3 – Kontrolirani test bez rezanja / dry-run prema operatoru
 
 **Način: ASK / AUDIT**
 
-> Nakon statičkog audita pripremi kontrolirani testni protokol koji mora odobriti iskusni operator konkretnog stroja.
+> Pripremi testni protokol koji prvo provjerava koordinatni sustav i putanju bez stvarnog reza, prema proceduri koju odobri iskusni operator.
 >
-> Prvo potvrditi XY orijentaciju, work zero, Z-smjer/safe položaj i ponašanje F/S/G54 prije stvarne obrade materijala. Ne izmišljaj strojne/sigurnosne postavke.
+> Potvrditi:
+> - emergency stop / machine state
+> - XY orijentaciju
+> - work zero
+> - smjer Z i safe Z
+> - ponašanje programa s G54
+> - ponašanje F/S prema stvarnoj konfiguraciji
+> - aktivaciju/deaktivaciju cutter compensation ako se koristi controller-side G41/G42
+> - da očekivana putanja ne izlazi iz materijala/stola.
 >
-> Nakon što operator potvrdi machining parametre, pripremi test-case za:
-> - material sheet 500 × 500 mm
-> - equilateral triangle side 30 mm
-> - quantity = 1
-> - stvarni tool
-> - stvarno potvrđene machining parametre
-> - generated `.nc`.
+> Ne izmišljaj strojne sigurnosne korake; operator ima zadnju riječ za fizičku proceduru.
+
+## Prompt 18.4 – Prvi stvarni single-element test
+
+**Način: ASK / AUDIT**
+
+> Tek nakon uspješnog 18.3 pripremi test-case za prvi stvarni rez.
 >
-> Test-case mora imati prazna polja:
+> Preporučeni prvi geometrijski test može ostati:
+> - ploča 500 × 500 mm
+> - jednakostranični trokut 30 mm
+> - quantity = 1,
+>
+> ali ako operator za prvo rezanje preferira jednostavniji pravokutnik 100 × 200 mm zbog postojećeg referentnog programa, to zabilježi kao opravdanu promjenu test-casea; ne mijenjaj unaprijed rezultat.
+>
+> Test-case mora zapisati:
+> - stvarni material
+> - stvarni tool i diameter
+> - korištene machining/profile vrijednosti
+> - compensation mode
 > - expected path
 > - actual result
-> - measured dimensions
+> - izmjerene dimenzije
 > - deviations
 > - controller behavior
 > - pass/fail
 > - notes.
 >
-> Ne popunjavaj rezultate unaprijed.
+> Rezultate ostavi praznima dok se test stvarno ne izvrši.
 
 ## GATE 1 – odluka nakon prvog testa
 
-Ne počinjati Iteraciju 2 dok nije dokumentirano:
+Iteracija 2 smije početi tek kada je dokumentirano da:
 
-- `.nc` se može učitati u ciljnom workflowu
-- koordinatna orijentacija i work zero dovoljno su jasni
-- Z-smjer/safe ponašanje je zabilježeno
-- single-element putanja odgovara očekivanom obliku
-- step-down nema poznatu prepreku
-- ponašanje `F`, `S`, `G54` i spindle naredbi je zabilježeno
-- eventualne korekcije su implementirane i ponovno softverski provjerene.
+- `.nc` se može učitati na ciljni ZK-1325 / RichAuto A11
+- work zero/WCS i smjer osi su razumljivi
+- single-element putanja prati očekivanu geometriju
+- kompenzacija alata daje očekivanu dimenziju ili je identificiran i popravljen problem
+- safe Z / Z dubina / step-down nemaju poznatu prepreku
+- relevantno F/S/G54/G40 ponašanje je zabilježeno
+- stvarni Tool zapis odgovara korištenom alatu
+- eventualne korekcije generatora nakon testa ponovno prolaze software regression testove.
 
-Ako test ne prođe, popravlja se Iteracija 1. Layout se ne koristi kao zaobilazno rješenje.
-
----
-
-# 13. Quantity – početak ITERACIJE 2
-
-## Prompt 13.1 – Aktivacija quantity kroz model/service workflow
-
-**Način: PLAN → CODE**
-
-> Pregledaj gdje `quantity` već postoji (`MachiningJob`, SQL, repository, test fixtures) i aktiviraj ga kao stvarni korisnički poslovni podatak bez dupliciranja polja.
->
-> U ovom milestoneu:
-> - quantity mora biti `int`
-> - > 0
-> - dodaj/aktiviraj validation testove za 1, veću vrijednost, 0 i negativnu vrijednost
-> - prenesi quantity kroz service DTO/request sloj ako postoji
-> - persistence mora round-tripati quantity > 1.
->
-> Još ne implementiraj layout ni batch G-code i ne dodaj UI ako bi to zahtijevalo lažni layout rezultat.
+**Ako test ne prođe, ne počinjati quantity/layout. Popraviti osnovni generator i ponoviti Gate 1.**
 
 ---
 
-# 14. Algoritam raspoređivanja više jednakih elemenata
+# 19. Quantity – početak ITERACIJE 2
 
-Cilj V1 je deterministički, valjan i objašnjiv raspored. Ne tvrdi se matematička optimalnost.
+Tek nakon prolaska kroz GATE 1 aktivira se korisnički unos količine.
 
-## Prompt 14.1 – Layout contract: settings + result modeli
-
-**Način: PLAN → CODE**
-
-> Definiraj ulaze i rezultate layout sloja prije algoritma.
->
-> Input:
-> - sheet width/height
-> - Shape
-> - quantity
-> - eksplicitni `LayoutSettings`.
->
-> `LayoutSettings` treba imati vrijednosti poput edge margin, part spacing i policy dopuštene rotacije, ali bez skrivenih magic defaulta. Ne pretpostavljaj da spacing automatski uključuje promjer alata dok to nije odlučeno.
->
-> Output modeli:
-> - `PlacedShape`
-> - `SheetLayout`
-> - `LayoutResult`.
->
-> Rezultat mora moći izraziti:
-> - položaj/orijentaciju svakog komada
-> - sheet index
-> - capacity per sheet
-> - required sheets
-> - placements za traženu quantity vrijednost.
->
-> Ne implementiraj algoritam raspoređivanja u ovom promptu.
-
-## Prompt 14.2 – Baseline layout: Square / Rectangle / Circle
-
-**Način: PLAN → CODE**
-
-> Implementiraj jednostavne determinističke baseline strategije:
->
-> Square/Rectangle:
-> - grid
-> - poštuj margin/spacing
-> - nijedan bounding box ne izlazi iz ploče
-> - za rectangle usporedi 0° i 90° samo ako `LayoutSettings` dopušta rotaciju
-> - odaberi bolju od tih jednostavnih varijanti; ne nazivati globalno optimalnom.
->
-> Circle:
-> - pravilan grid temeljen na promjeru + spacingu
-> - bez hexagonal close packing u baselineu
-> - cijeli krug mora ostati unutar ploče.
->
-> Dodaj unit testove za shape koji stane/ne stane, quantity=1, više redova/stupaca i rectangle slučaj gdje rotacija daje veći kapacitet.
-
-## Prompt 14.3 – Triangle layout + `LayoutService` + capacity/requiredSheets
-
-**Način: PLAN → CODE**
-
-> Implementiraj prvi valjani layout za jednakostranične trokute. Kreni od jednostavne lako provjerljive varijante; alterniranje orijentacije dodaj samo ako ostaje mali i testabilan scope.
->
-> Zatim uvedi `LayoutService`/strategy selector koji:
-> - bira algoritam prema ShapeType
-> - računa capacity per sheet
-> - odbija capacity=0
-> - računa `requiredSheets = ceil(quantity / capacity)`
-> - vraća placements raspoređene po `SheetLayout` objektima.
->
-> Unit test mora provjeriti da nijedna točka trokuta ni placement bilo kojeg shapea ne izlazi iz dopuštene ploče.
-
----
-
-# 15. Batch G-code – ITERACIJA 2
-
-## Prompt 15.1 – Multi-sheet output / persistence decision gate
+## Prompt 19.1 – Audit postojećeg `quantity` modela
 
 **Način: ASK / AUDIT**
 
-> Prije batch G-koda analiziraj slučaj `requiredSheets > 1`.
+> Pregledaj gdje `quantity` već postoji u `MachiningJob`, SQL schemi, repository mappingu i testovima. Ne dupliciraj polje.
 >
-> Iteracija 1 sprema jedan `g_code CLOB` u `MACHINING_JOB`, što je dovoljno dok postoji jedan machine program po jobu. Nakon layouta jedan job može zahtijevati više `SheetLayout` programa, a zadnja ploča može imati drukčiji broj placementa.
->
-> Ne guraj više odvojenih machine programa u jedan `.nc` string bez jasnog razloga.
->
-> Predloži minimalne V1 opcije, npr.:
-> 1. jedan `GCodeProgram` po `SheetLayout` i uvođenje `GCODE_PROGRAM` 1:N tablice tek sada kada je potreba stvarno nastala
-> 2. druga jednostavna reprezentacija samo ako čuva jasnu vezu job → sheet → machine program i omogućuje ispravan save/reopen/export.
->
-> Usporedi utjecaj na postojeći `MachiningJob.gCode`, SQL schema, repository i završni rad. Zaustavi se dok se odluka ne zapiše u `00_odluke.md`.
+> Objasni što treba promijeniti da vrijednost koja je u Iteraciji 1 bila interno 1 postane korisnički input.
 
-## Prompt 15.2 – ToolPath translation + batch generator
+## Prompt 19.2 – Quantity validacija + UI
 
 **Način: PLAN → CODE**
 
-> Nakon odluke iz 15.1 proširi generator za jedan `SheetLayout` koristeći postojeću single-element logiku.
+> Aktiviraj korisnički unos quantity:
+> - cijeli broj
+> - > 0
+> - jasna validacijska poruka.
+>
+> Dodaj polje u postojeći dovršeni UI bez narušavanja single-element workflowa. `quantity = 1` mora ostati regresijski valjan slučaj.
+>
+> Još ne implementiraj layout.
+
+---
+
+# 20. Algoritam raspoređivanja više jednakih elemenata
+
+Cilj nije dokazati matematičku optimalnost nego dati valjan, deterministički i objašnjiv raspored s boljom iskorištenošću materijala.
+
+## Prompt 20.1 – Layout settings decision gate
+
+**Način: ASK / AUDIT**
+
+> Prije algoritma zaključi:
+> - edge margin
+> - part spacing
+> - dopuštenu rotaciju pravokutnika
+> - kako stvarni tool diameter/kompenzacija utječe na minimalni razmak.
+>
+> Nemoj koristiti skrivene magic default vrijednosti. Predloži mali `LayoutSettings` model i zaustavi se dok odluke nisu potvrđene.
+
+## Prompt 20.2 – Layout modeli
+
+**Način: DIRECT CODE**
+
+> Implementiraj samo rezultatne modele potrebne layoutu, npr. `PlacedShape`, `SheetLayout`, `LayoutResult`, bez algoritma.
+>
+> Rezultat mora sadržavati placement, rotaciju/orijentaciju, indeks ploče, capacity per sheet i required sheets.
+
+## Prompt 20.3 – Square / Rectangle / Circle baseline
+
+**Način: PLAN → CODE**
+
+> Implementiraj deterministički baseline:
+> - Square/Rectangle grid uz margin/spacing
+> - za Rectangle usporedi 0°/90° kada je rotacija dopuštena
+> - Circle grid temeljen na stvarnom potrebnom footprintu i spacingu
+> - cijeli komad/kompenzirana putanja mora ostati unutar ploče.
+>
+> Ne nazivati rezultat globalno optimalnim.
+
+## Prompt 20.4 – Triangle layout + capacity/requiredSheets
+
+**Način: PLAN → CODE**
+
+> Implementiraj valjan layout jednakostraničnih trokuta, zatim `LayoutService` koji bira strategiju i računa:
+> - placements
+> - capacity per sheet
+> - `requiredSheets = ceil(quantity / capacity)`
+> - više `SheetLayout` rezultata kada je potrebno.
+>
+> Testiraj da nijedna stvarna putanja nakon tool-kompenzacije ne izlazi iz sheet granica.
+
+---
+
+# 21. Batch G-code – ITERACIJA 2
+
+## Prompt 21.1 – Multi-sheet persistence decision gate
+
+**Način: ASK / AUDIT**
+
+> Sada stvarna potreba može biti `requiredSheets > 1`.
+>
+> Analiziraj treba li:
+> 1. `GCODE_PROGRAM` 1:N prema jobu, jedan program po `SheetLayout`, ili
+> 2. determinističko regeneriranje programa uz spremanje layouta, ako je jednostavnije i pouzdano.
+>
+> Ne spremaj više fizički odvojenih programa u jedan nejasan CLOB samo radi izbjegavanja schema promjene.
+>
+> Odluku zapiši u `00_odluke.md` prije implementacije.
+
+## Prompt 21.2 – Batch generator
+
+**Način: PLAN → CODE**
+
+> Reuseaj **strojno potvrđenu single-element logiku** iz Iteracije 1.
 >
 > Za svaki `PlacedShape`:
-> - transliraj lokalni ToolPath na XY placement
-> - ponovno koristi već provjerenu step-down/machining logiku
-> - sigurno se vrati na safe Z između elemenata prema potvrđenoj profile konvenciji
-> - ne računaj layout u GCodeGeneratoru.
+> - transliraj ToolPath
+> - primijeni istu compensation strategiju
+> - koristi potvrđeni RichAuto profil
+> - osiguraj safe Z između elemenata
+> - provjeri sheet/machine granice.
 >
-> Dodaj test s dva jednostavna shapea na poznatim offsetima i test da generirane XY koordinate ostaju unutar sheet granica.
->
-> Ako odluka 15.1 uvodi više GCodeProgram zapisa ili novu tablicu, u ovom milestoneu implementiraj samo potrebnu minimalnu schema/repository evoluciju i integration test; ne ostavljaj persistence model u nekonzistentnom stanju.
->
-> Jasno dokumentiraj koji dio generatora je ponovno korišten iz single-element workflowa, a koji je novi i još NIJE TESTIRAN NA STROJU.
+> Ne dupliciraj geometry algoritme u batch generatoru.
 
----
-
-# 16. JavaFX UI – quantity i layout proširenje
-
-## Prompt 16.1 – Batch UI milestone
+## Prompt 21.3 – Multi-sheet output + export/persistence
 
 **Način: PLAN → CODE**
 
-> Proširi postojeći UI tek nakon što quantity/layout/batch service sloj stvarno postoji.
+> Implementiraj odluku iz 21.1 tako da svaki sheet ima jasan machine program i da Save/Reopen/Export zna kojem sheetu program pripada.
 >
-> Dodaj:
-> - quantity input, cijeli broj > 0
+> Dodaj integration test za najmanje dva sheeta ako ga deterministički testni slučaj može proizvesti.
+
+---
+
+# 22. JavaFX UI – quantity i layout proširenje
+
+## Prompt 22.1 – Batch UI milestone
+
+**Način: PLAN → CODE**
+
+> Proširi već dovršeni UI:
+> - quantity input
 > - capacity per sheet
 > - required sheets
-> - broj stvarno raspoređenih elemenata
-> - ako postoji više SheetLayout/GCodeProgram rezultata, jasan odabir/pregled pojedine ploče/programa prema odluci iz 15.1.
+> - broj raspoređenih elemenata
+> - odabir/pregled pojedinog sheeta/programa kada ih je više.
 >
-> Workflow:
-> `input -> validation -> quantity -> layout -> capacity/requiredSheets -> ToolPaths -> batch G-code -> preview`.
+> Controller ne računa layout ni batch G-code.
 >
-> Controller ne računa layout niti generira batch stringove.
->
-> Quantity=1 mora ostati regresijski valjan slučaj.
->
-> Grafički prikaz ploče nije obvezan za V1; nemoj ga uvoditi samo zato što bi izgledao atraktivno ako tekstualni rezultat zadovoljava funkcionalni zahtjev.
+> Grafički prikaz ploče nije obvezan za V1 ako tekstualni rezultat jasno zadovoljava zahtjev.
 
 ---
 
-# 17. Integracija – ITERACIJA 2
+# 23. Integracija – ITERACIJA 2
 
-## Prompt 17.1 – Batch end-to-end milestone
+## Prompt 23.1 – Batch end-to-end
 
 **Način: PLAN → CODE**
 
-> Proširi composition root samo novim Iteracija 2 dependencyjima i provjeri cijeli tok:
+> Provjeri cijeli tok:
 >
-> `input quantity -> validation -> layout -> capacity/requiredSheets -> translated ToolPaths -> G-code program(i) -> persistence -> reload`.
+> `login -> input quantity -> validation -> layout -> capacity/requiredSheets -> compensated ToolPaths -> G-code program(i) -> preview -> persistence -> reload -> export`.
 >
-> Provjeri:
+> Test mora uključiti:
+> - quantity 1 kao regression
+> - malu quantity > 1
 > - placements unutar sheet granica
-> - sheet dimenzije unutar machine XY work area
-> - svaki element koristi postojeću machining/step-down logiku
-> - safe Z tranzicije između elemenata
-> - quantity > 1 round-trip
-> - prema odluci iz 15.1 svi machine programi/sheetovi se ponovno učitavaju ili deterministički regeneriraju na dokumentiran način.
->
-> Dodaj integration test s malom quantity vrijednošću čiji expected rezultat možemo ručno provjeriti.
+> - machine work-area granice
+> - multi-sheet slučaj ako postoji
+> - isti tool/profile/compensation model potvrđen u Gate 1.
 
 ---
 
-# 18. Batch test na ZK-1325
+# 24. Batch test na ZK-1325
 
-## Prompt 18.1 – Statički audit batch programa
+## Prompt 24.1 – Statički audit batch programa
 
 **Način: ASK / AUDIT**
 
-> Prije fizičkog batch testa auditiraj stvarno generirani program ili programe za malu quantity vrijednost.
->
-> Provjeri:
+> Prije stroja auditiraj stvarno generirani batch program/program(e):
 > - placement koordinate
-> - sheet granice
-> - machine XY work area
+> - tool compensation
+> - sheet/machine granice
 > - safe Z između elemenata
-> - step-down za svaki element
+> - Z/pass logiku
+> - potvrđeni F/S/G54/G40 profil
 > - početak/kraj svakog programa
-> - F/S/G54/Z profile ponašanje prema stvarno potvrđenim postavkama prvog testa
-> - multi-sheet mapping ako postoji.
->
-> Ne mijenjaj kod bez konkretnog pronađenog problema.
+> - mapping program -> sheet.
 
-## Prompt 18.2 – Kontrolirani batch test
+## Prompt 24.2 – Kontrolirani batch test
 
 **Način: ASK / AUDIT**
 
-> Nakon uspješnog single-element testa i statičkog batch audita pripremi test male količine koja se može vizualno i ručno provjeriti.
+> Nakon uspješnog static audita koristi malu quantity vrijednost koju operator može lako vizualno provjeriti.
 >
-> Cilj:
-> - placement
-> - capacity per sheet
-> - required sheets
-> - sigurna tranzicija između elemenata
-> - granice XY
-> - ponašanje više programa/sheetova ako je primjenjivo.
+> Mjeri stvarni rezultat implementiranog layouta; ne proglašavaj ga matematički optimalnim.
 >
-> Test mora koristiti stvarno potvrđene alate i machining parametre te proceduru koju odobri operator. Ne proglašavaj layout optimalnim; mjeri samo rezultat implementiranog algoritma.
+> Zabilježi placement, capacity, required sheets, dimenzijske rezultate i ponašanje prijelaza između elemenata.
 
 ---
 
-# 19. Finalni test report
+# 25. Finalni test report
 
-## Prompt 19.1 – Finalni status IMPLEMENTIRANO / TESTIRANO
+## Prompt 25.1 – Finalni status IMPLEMENTIRANO / TESTIRANO
 
 **Način: ASK / REPORT**
 
-> Nakon što unesemo stvarne rezultate testova, sastavi tehnički sažetak implementacije koristeći samo kod i zabilježene rezultate.
+> Na temelju stvarnog koda i stvarno zabilježenih testova sastavi tehnički sažetak.
 >
 > Za svaku funkcionalnost označi:
 > - IMPLEMENTIRANO
@@ -1600,17 +2135,19 @@ Cilj V1 je deterministički, valjan i objašnjiv raspored. Ne tvrdi se matemati�
 > - BUDUĆI RAZVOJ.
 >
 > Posebno razdvoji:
+> - autentikaciju/role
+> - H2/seed
+> - single-element UI
 > - geometriju
+> - tool compensation
 > - single-element G-code
-> - single-element fizički test
+> - fizički single-element test
 > - quantity
 > - layout
-> - capacity / required sheets
+> - capacity/requiredSheets
 > - batch G-code
-> - persistence
-> - multi-sheet program persistence ako postoji
+> - persistence/multi-sheet
 > - `.nc` export
-> - RichAuto A11 profil
 > - batch fizički test.
 >
 > Ne izmišljaj mjerne rezultate.
@@ -1619,29 +2156,29 @@ Cilj V1 je deterministički, valjan i objašnjiv raspored. Ne tvrdi se matemati�
 
 # Dokumentacijska struktura projekta
 
-Ova struktura nije dio Java package arhitekture, nego prati razvoj radi završnog rada:
-
 ```text
 <project-root>
 ├── dokumentacija
+│   ├── reference
+│   │   └── pravokutnik_100x200_RichAuto_A11_primjer.nc
 │   └── biljeske
 │       ├── 00_indeks.md
 │       ├── 00_predlozak_biljeske.md
 │       ├── 00_odluke.md
-│       ├── 01-02-maven-projekt.md
-│       ├── 03-01-domain-core.md
 │       ├── ...
-│       └── 19-01-finalni-test-report.md
+│       └── 25-01-finalni-test-report.md
 ├── src
 ├── pom.xml
 └── AGENTS.md
 ```
 
-Naziv pojedine bilješke treba sadržavati oznaku prompta kako bi se kasnije mogla izravno povezati s fazom implementacije.
+Referentna `.nc` datoteka u repozitoriju mora biti označena kao **referenca dobivena iz stvarnog radnog konteksta**, a ne kao dokaz da ju je naša aplikacija generirala ili da je output naše aplikacije već fizički testiran.
 
 ---
 
-# Potvrđena konačna package struktura
+# Potvrđena package struktura – ažurirana za autentikaciju
+
+Postojeća slojevita struktura ostaje. Nije potrebno rušiti paketnu arhitekturu samo zbog logina. Po potrebi se uvode male, jasno imenovane klase unutar postojećih slojeva:
 
 ```text
 hr.lukabosnjak
@@ -1652,7 +2189,7 @@ hr.lukabosnjak
 │   └── enums
 ├── validation
 ├── geometry
-├── layout
+├── layout                 # aktivan tek nakon GATE 1
 ├── gcode
 ├── service
 │   └── dto
@@ -1664,199 +2201,44 @@ hr.lukabosnjak
     └── view
 ```
 
-Napomena: `ui.view` kao Java package koristi se samo ako stvarno postoje Java view klase. Ako se odabere FXML, datoteke pripadaju `src/main/resources/hr/lukabosnjak/ui/view/` ili drugom dokumentiranom resource pathu. `layout` se funkcionalno koristi tek nakon GATE 1.
+Moguće nove klase samo ako odgovaraju implementaciji:
+
+```text
+service/AuthService
+service/SessionContext
+service/PasswordHasher (ili zaseban auth podpaket samo ako stvarno povećava čitljivost)
+ui/controller/LoginController
+ui/controller/RegisterController
+ui/controller/UserManagementController
+```
+
+Ne uvoditi Spring/Spring Security samo radi lokalnog desktop logina.
 
 ---
 
-# Planirane ključne klase
+# Ažurirane ključne domenske napomene
 
-## `domain.model`
+## `CncMachine`
 
-### `MaterialType`
+Poznate tehničke granice ostaju vrijednosti; nepoznate granice smiju biti nullable. `0` ne znači „nepoznato“.
 
-```text
-Long materialTypeId
-String name
-String description
-LocalDateTime createdAt
-LocalDateTime updatedAt
-LocalDateTime deletedAt
-```
+## `Tool`
 
-### `MaterialSheet`
+`diameter` je od sada izravno važan za korektnu kompenzaciju putanje. Terenska informacija Ø6/Ø8 mm nije dovoljan razlog za izmišljanje dva runtime zapisa bez potvrde stvarnog toola.
 
-```text
-Long materialSheetId
-MaterialType / materialType reference
-double width
-double height
-double thickness
-LocalDateTime createdAt
-LocalDateTime updatedAt
-```
+## `MachiningParameters`
 
-### `CncMachine`
+Ostaje snapshot korištenih postavki čak i ako više nije skup obveznih TextFieldova na glavnom ekranu.
 
-```text
-Long cncMachineId
-String name
-String manufacturer
-String model
-String controller
-double workAreaX
-double workAreaY
-double workAreaZ
-double maxFeedRate
-double minSpindleSpeed
-double maxSpindleSpeed
-LocalDateTime createdAt
-LocalDateTime updatedAt
-```
+## `User` / `Role`
 
-### `Tool`
-
-```text
-Long toolId
-CncMachine / cncMachine reference
-int toolNumber
-String name
-ToolType ili String – zaključati tek nakon potvrde vrijednosti
-double diameter
-double cuttingLength
-int fluteCount
-boolean active
-LocalDateTime createdAt
-LocalDateTime updatedAt
-```
-
-### `MachiningParameters`
-
-```text
-Long machiningParametersId
-double spindleSpeed
-double feedRate
-double plungeRate
-double cutDepth
-double stepDown
-double safeZ
-```
-
-### `Shape`
-
-```text
-Long shapeId
-ShapeType shapeType
-ShapeSubtype shapeSubtype
-Double dimensionA
-Double dimensionB
-Double dimensionC
-LocalDateTime createdAt
-LocalDateTime updatedAt
-LocalDateTime deletedAt
-```
-
-### `Role`
-
-```text
-Long roleId
-String name
-String description
-```
-
-### `User`
-
-```text
-Long userId
-Role / role reference
-String username
-String passwordHash
-String firstName
-String lastName
-boolean active
-LocalDateTime createdAt
-LocalDateTime updatedAt
-```
-
-### `MachiningJob`
-
-```text
-Long machiningJobId
-User createdBy
-CncMachine cncMachine
-Tool tool
-MaterialSheet materialSheet
-MachiningParameters machiningParameters
-Shape shape
-String name
-int quantity
-String gCode
-LocalDateTime createdAt
-LocalDateTime updatedAt
-```
-
-## `geometry`
-
-Planirane support klase, ako se kroz implementaciju potvrdi da su dovoljne:
-
-```text
-Point2
-ToolPath
-PathSegment
-LineSegment
-ArcSegment
-ToolPathService
-SquareToolPathGenerator
-RectangleToolPathGenerator
-TriangleToolPathGenerator
-CircleToolPathGenerator
-```
-
-## `layout` – ITERACIJA 2, tek nakon GATE 1
-
-```text
-LayoutSettings
-PlacedShape
-SheetLayout
-LayoutResult
-LayoutService
-SquareRectangleGridLayoutStrategy
-CircleGridLayoutStrategy
-TriangleLayoutStrategy
-```
-
-Nazivi strategy klasa se mogu prilagoditi nakon što vidimo koliko će algoritam stvarno biti generičan. Ne stvarati interface/klasu samo radi patterna ako ne donosi čitljivost.
-
-## `gcode`
-
-Single-element generator pripada Iteraciji 1; batch proširenje tek Iteraciji 2.
-
-```text
-GCodeProgram
-GCodeGenerator
-RichAutoA11Profile
-RichAutoA11GCodeGenerator
-GCodeFormatter
-NcFileExportService
-```
-
-## `service`
-
-Moguće klase, samo ako odgovaraju stvarno implementiranom toku:
-
-```text
-ProgramGenerationService
-JobPersistenceService
-ToolPathService
-LayoutService
-```
-
-Ne stvarati jedan `ApplicationService` koji radi sve. `service.dto` koristiti samo za request/result modele koji stvarno pojednostavljuju UI → service granicu; ne duplicirati domain modele bez potrebe.
+Role su potvrđene: `ADMIN`, `ENGINEER`, `OPERATOR`. Login/registration/session/RBAC su V1 funkcionalnosti. Lozinka se ne sprema kao plaintext.
 
 ---
 
-# SQL V1 – ciljana struktura
+# SQL V1 – ciljana korekcija
 
-Tablice:
+Tablice ostaju:
 
 ```text
 ROLE
@@ -1870,185 +2252,121 @@ SHAPE
 MACHINING_JOB
 ```
 
-Ključne korekcije:
+Uz postojeća pravila obavezno:
 
 ```text
-APP_USER umjesto USER
-
-MACHINING_JOB.g_code CLOB
-
-UNIQUE(TOOL.cnc_machine_id, TOOL.tool_number)
-
-UNIQUE(MACHINING_JOB.material_sheet_id)
-UNIQUE(MACHINING_JOB.machining_parameters_id)
-UNIQUE(MACHINING_JOB.shape_id)
+ROLE.name UNIQUE
+APP_USER.username UNIQUE
+TOOL: UNIQUE(cnc_machine_id, tool_number)
 ```
 
-`GCODE_PROGRAM` se u Iteraciji 1 ne uvodi kao zasebna SQL tablica jer postoji jedan spremljeni output po jobu. U Iteraciji 2, nakon što layout može vratiti `requiredSheets > 1`, obvezan je decision gate 15.1. Ako jedan job stvarno treba više zasebnih machine programa, tada se model i schema smiju proširiti s `GCODE_PROGRAM` 1:N umjesto spremanja više programa u jedan nejasan CLOB.
+Bootstrap podaci ne smiju se duplicirati pri restartu.
+
+`GCODE_PROGRAM` se ne uvodi u Iteraciji 1. Ponovno se razmatra u Iteraciji 2 tek ako `requiredSheets > 1` stvarno zahtijeva više fizičkih `.nc` programa.
 
 ---
 
-# Redoslijed milestoneova
+# Ažurirani milestoneovi
 
-Za **svaki milestone** vrijedi dodatni kriterij: odgovarajuće bilješke u `dokumentacija/biljeske/` moraju biti ažurirane i moraju odgovarati stvarnom kodu/testovima.
-
-## Milestone A – projekt se pokreće
+## Milestone F1 – korektivna baza + autentikacija
 
 Završeno kada:
+- H2 first-run radi
+- seed je idempotentan
+- postoje tri role, dev users, 5 material types i ZK-1325
+- login/register/logout/session rade
+- role pravila su centralizirana i testirana.
 
-- Maven build prolazi
-- JavaFX minimalni prozor se otvara
-- stvarna JDK verzija je zapisana.
-
-## Milestone B – domain model postoji
-
-Završeno kada:
-
-- potvrđene domain klase postoje
-- enumovi postoje samo za potvrđene vrijednosti
-- nema JavaFX/JDBC ovisnosti u domainu
-- `quantity` može postojati u konačnom modelu, ali korisnički workflow prve iteracije koristi samo vrijednost 1.
-
-## Milestone C – H2 persistence radi
+## Milestone F2 – dovršeni single-element UI
 
 Završeno kada:
+- UI više nije kostur
+- katalog/stroj/material/tool odabiri rade iz baze
+- Saved Programs i quick access rade
+- korisnik ne mora ručno unositi tehničke parametre koji mogu doći iz profila/preseta
+- nema quantity/layout UI-a.
 
-- schema se kreira na praznoj H2 bazi
-- first-run initializer može inicijalizirati novu file-based bazu
-- repository integration testovi prolaze
-- single-element `MachiningJob` se može save/loadati
-- persistence nije kriterij kojim se proglašava RichAuto kompatibilnost.
-
-## Milestone D – geometrija i validacija za jedan element rade
-
-Završeno kada:
-
-- sva 4 oblika daju očekivani ToolPath
-- nevaljani unosi se odbijaju
-- geometrija ne proizvodi G-code tekst
-- jedan oblik se može provjeriti prema dimenzijama ploče
-- ToolPath bounds i machine XY work-area provjera postoje bez layout logike.
-
-## Milestone E – single-element G-code radi softverski
+## Milestone F3 – generator spreman za Gate 1
 
 Završeno kada:
+- referentni 100 × 200 `.nc` je regression fixture
+- razlike generator/reference su objašnjene
+- tool compensation strategija je zaključana i implementirana
+- tool diameter ulazi u stvarni izračun
+- sva 4 shapea prolaze software testove
+- status je IMPLEMENTIRANO/SOFTVERSKI TESTIRANO, ali još NIJE FIZIČKI TESTIRANO.
 
-- generator radi za jedan oblik
-- step-down radi
-- `.nc` export radi
-- postoje string/unit/integration testovi
-- quantity/layout/batch još nisu implementirani u korisničkom workflowu
-- status je IMPLEMENTIRANO, ali još ne TESTIRANO NA STROJU.
-
-## Milestone F – single-element UI i integracija rade
-
-Završeno kada:
-
-- korisnik može odabrati jedan oblik i njegove dimenzije
-- može unijeti materijal i machining parametre
-- može generirati i pregledati G-code
-- može spremiti/otvoriti program prema stvarno implementiranom persistence workflowu
-- može izvesti `.nc`
-- nema quantity/layout UI-a
-- controller nema poslovnu logiku.
-
-## Milestone G – GATE 1: prvi stvarni test
+## Milestone G – GATE 1 fizički single-element test
 
 Završeno kada:
+- stvarni A11 profil je zabilježen
+- tool/compensation je potvrđen
+- kontrolirani test i stvarni rez su provedeni kada operator odobri
+- rezultat je dokumentiran
+- eventualne korekcije su ponovno regresijski testirane.
 
-- postavke konkretnog RichAuto A11 relevantne za generator su zabilježene
-- single-element kontrolirani test je stvarno proveden
-- stvarni test jednog trokuta je proveden ako su uvjeti sigurni i operator ga odobri
-- rezultat je zapisan bez izmišljanja
-- eventualne korekcije generatora su ponovno softverski provjerene
-- donesena je odluka smije li projekt prijeći na quantity/layout.
-
-**Bez ovog milestonea ne počinje Iteracija 2.**
-
-## Milestone H – quantity i layout rade softverski
+## Milestone H – quantity + layout
 
 Završeno kada:
+- quantity > 0 radi
+- placements, capacity i requiredSheets rade
+- tool compensation/spacing je uzet u obzir
+- nema tvrdnje globalne optimalnosti.
 
-- korisnik može zadati quantity > 0
-- capacity per sheet radi
-- required sheets radi
-- placements su unutar ploče
-- algoritam je deterministički i testiran
-- nema tvrdnje matematičke optimalnosti.
-
-## Milestone I – batch G-code i prošireni UI rade
+## Milestone I – batch workflow
 
 Završeno kada:
+- batch G-code reusea potvrđeni single-element generator
+- multi-sheet output/persistence je jasan
+- UI prikazuje quantity/layout rezultate
+- integration testovi prolaze.
 
-- već provjereni single-element ToolPath/generation pristup koristi se za više placementa
-- batch G-code se generira po SheetLayoutu prema odluci iz 15.1
-- multi-sheet output/persistence ima eksplicitno dokumentiran model ako `requiredSheets > 1`
-- safe Z se koristi između elemenata
-- UI prikazuje quantity, capacity i requiredSheets
-- integration test za više elemenata prolazi
-- batch dio je IMPLEMENTIRAN, ali fizički TESTIRAN tek nakon stvarnog batch testa.
+## Milestone J – batch fizički test + finalni report
 
-## Milestone J – batch test i završni izvještaj
-
-Završeno kada:
-
-- batch program prođe statički audit
-- fizički batch test je proveden ako je sigurno i potrebno
-- stvarni rezultati su zabilježeni
-- konačni izvještaj jasno razlikuje IMPLEMENTIRANO, TESTIRANO, NIJE TESTIRANO i BUDUĆI RAZVOJ.
+Završeno kada su stvarni rezultati uneseni i jasno odvojeni od samo implementiranih/softverski testiranih funkcionalnosti.
 
 ---
 
-# Web-provjerene tehničke napomene korištene za ovaj plan
+# Web-provjerene tehničke napomene za ovo ažuriranje
 
-1. OpenAI Codex best practices preporučuju **Ask/Plan prvenstveno za velike promjene**, a ne kao obvezan dodatni turn za svaku malu izmjenu. Dobro ograničen zadatak tipično treba imati jasan issue-like scope, očekivane datoteke i provjeru rezultata.
-2. OpenAI navodi da Codex usage nije fiksan „po promptu“: ovisi o veličini i složenosti zadatka, modelu, kontekstu, mjestu izvršavanja i alatima. Zato grupiranje šest jednostavnih POJO klasa može smanjiti nepotrebni overhead, ali jedan nekontrolirano velik zadatak može potrošiti više od nekoliko malih.
-3. OpenAI preporučuje `AGENTS.md` za trajni repo kontekst. Novije agent-first smjernice dodatno upozoravaju da golemi instruction fileovi troše kontekst; bolje je dati agentu mapu i indeksirane projektne dokumente nego kopirati cijeli projektni opis u svaki prompt.
-4. OpenJFX službene Maven upute potvrđuju da Maven može dohvatiti JavaFX module i platformske native dependencyje te da `javafx.fxml` treba dodati tek ako aplikacija stvarno koristi FXML. Non-modularni JavaFX projekt ne mora imati `module-info.java` samo zato što koristi Maven.
-5. H2 službena dokumentacija potvrđuje embedded JDBC način rada, file-based i in-memory baze, transakcije i H2 Console. Relativni file path računa se od current working directoryja, zato path mora biti svjesno odabran i dokumentiran.
-6. H2 `USER` je keyword, zato SQL tablica ostaje `APP_USER`.
-7. RichAuto A11 dokumentacija pokazuje da se `F`, `S` i `G54` mogu postaviti na read/ignore. Službeni RichAuto materijali za A1X obitelj navode G00/G01/G02/G03, G17, G21, G54–G59, G90/G91 te M03/M05/M30, ali konkretno ponašanje našeg ZK-1325/A11 mora biti potvrđeno fizičkim testom.
-8. Z-smjer, work zero, safe Z i stvarni machining parametri ne smiju se zaključiti samo iz općeg G-code primjera. Interni model može koristiti pozitivne veličine, dok generator mora imati eksplicitnu konvenciju pretvorbe u strojne koordinate koja se potvrđuje prije rezanja.
-9. Iteracija 2 uvodi novi arhitektonski rizik: `requiredSheets > 1` može značiti više zasebnih machine programa. Zato se `GCODE_PROGRAM` ne uvodi prerano, ali se obvezno ponovno razmatra u decision gateu 15.1 kada potreba postane stvarna.
+1. RichAuto A11 manual opisuje `Auto Pro Setup` s `Work Speed`, `Safe Height`, `Auto Scale`, `Fall Scale` i posebnim `G Code Setup` postavkama. U `G Code Setup` moguće je konfigurirati čitanje/ignoriranje `F`, `S`, `G54` i `G40`. To podržava odluku da glavni UI ne mora izlagati svaki tehnički parametar kao obvezni input, dok generator/profil i dalje mora znati stvarno korištene vrijednosti.
+2. Referentni `.nc` koji je korisnik dostavio ipak sadrži feed vrijednosti: `F150` za plunge i `F500` za XY rezanje. Stoga se u ovom planu **ne uklanja feed logika**, nego se odvaja od obveznog ručnog unosa.
+3. Standardna G-code semantika je `G41 = left cutter compensation`, `G42 = right cutter compensation`, `G40 = cancel`. Strana je relativna na smjer kretanja alata. Za ispravnu kompenzaciju potreban je radijus/promjer alata i odgovarajuća aktivacija/deaktivacija kompenzacije.
+4. Dokumentacija drugog kontrolera (npr. LinuxCNC/Haas) koristi `D`/tool-offset tablice uz G41/G42, ali to se **ne smije automatski preslikati na RichAuto A11** bez provjere konkretnog controller workflowa.
+5. RichAuto A11 manual navodi da je origin X/Y/Z u programu origin obratka, pa WCS/work-zero ostaje obvezna točka fizičkog Gate 1 testa.
+6. Raniji ASP.NET MVC projekt koristi identity + role seed pristup. Ovdje se preuzima samo funkcionalna ideja: login, role, seed i autorizacija; Java desktop aplikacija dobiva vlastiti jednostavan JDBC/auth sloj.
+7. Za lozinke koristiti moderni salted password-hashing/KDF, ne plaintext i ne brzi opći hash bez work factora.
 
-Korišteni službeni/primarni izvori za provjeru plana:
+Primarni/relevantni izvori koje treba sačuvati u projektnoj bilješci:
 
-- OpenAI – How OpenAI uses Codex: https://openai.com/business/guides-and-resources/how-openai-uses-codex/
-- OpenAI Help – Using Codex with your ChatGPT plan: https://help.openai.com/en/articles/11369540/
-- OpenAI – Harness engineering: https://openai.com/index/harness-engineering/
-- OpenJFX Maven documentation: https://openjfx.io/openjfx-docs/maven
-- OpenJFX Getting Started: https://openjfx.io/openjfx-docs/
-- H2 Features: https://h2database.github.io/html/features.html
-- H2 Quickstart: https://h2database.github.io/html/quickstart.html
-- H2 Keywords: https://h2database.github.io/html/advanced.html#keywords
-- RichAuto official manual/download material: https://www.richnc.com.cn/download/file/135
+- RichAuto A11 User Manual, posebno Auto Pro Setup / G Code Setup i workpiece origin poglavlja
+- službeni RichAuto A1X/A11 materijali kada su dostupni
+- LinuxCNC/Haas dokumentacija samo za opću semantiku G41/G42/G40, ne kao dokaz RichAuto-specifičnog `D` ponašanja
+- OWASP Password Storage Cheat Sheet za password hashing odluku
+- korisnikov raniji ASP.NET MVC projekt samo kao UX/role funkcionalna referenca.
 
 ---
 
-# Što NE raditi
+# Što NE raditi – ažurirano
 
-- Ne koristiti zaseban Plan turn za svaki getter/setter/POJO samo zato što dokument ima broj prompta.
-- Ne spajati previše nepovezanih slojeva u jedan golemi Codex zadatak samo radi uštede usagea.
-- Ne pretpostavljati da broj promptova linearno odgovara Codex potrošnji; složenost i kontekst su važni.
-- Ne pretpostavljati da globalni `mvn` mora postojati ako projekt radi preko IntelliJ Mavena ili Maven Wrappera.
-- Ne tražiti od Codexa: „napravi cijelu aplikaciju“.
-- Ne generirati UI prije poslovne logike.
-- Ne pisati SQL u controlleru.
-- Ne raditi geometriju unutar GCodeGeneratora.
-- Ne računati nesting u GCodeGeneratoru.
-- Ne stavljati H2 Connection u domain klase.
-- Ne uvoditi Spring/Hibernate samo zato što postoje.
-- Ne uvoditi `Part`.
-- Ne implementirati pseudojezik.
-- Ne implementirati AI shape generator.
-- Ne izmišljati ToolType vrijednosti.
-- Ne izmišljati machining parametre.
-- Ne hardkodirati RichAuto F/S/G54 ponašanje prije provjere.
-- Ne tvrditi da je layout matematički optimalan.
+- Ne ići na fizički stroj odmah nakon starog Koraka 11; prvo završiti nove Korake 12–17.
+- Ne smatrati UI „gotovim“ samo zato što se kontrole prikazuju.
+- Ne ostavljati login/users/roles kao mrtve tablice ako su sada potvrđeni V1 scope.
+- Ne spremati lozinke u čistom tekstu.
+- Ne dopustiti self-registration korisniku da sam odabere ADMIN rolu.
+- Ne seedati 5 redaka u svaku tablicu samo radi popunjenosti.
+- Ne izmišljati strojne limite ni Tool atribute.
+- Ne unositi `0` kao lažnu vrijednost za „unknown“ machine spec.
+- Ne izbaciti feed/spindle/depth model samo zato što ih ne želimo vidjeti na glavnom ekranu.
+- Ne tvrditi da referentni program nema brzine: sadrži `F150` i `F500`.
+- Ne hardkodirati da A11 sigurno čita/ignorira F, S, G54 ili G40 prije provjere konfiguracije.
+- Ne dodati G41/G42 bez rješavanja tool radiusa, smjera putanje, strane reza i lead-in/lead-out ponašanja.
+- Ne pretpostaviti `D` sintaksu ili tool-offset tablicu iz Haas/LinuxCNC dokumentacije kao RichAuto činjenicu.
+- Ne nazvati Ø6 ili Ø8 „stvarnim aktivnim alatom“ dok nije potvrđeno koji se alat koristi u testu.
+- Ne implementirati quantity/layout/capacity/requiredSheets prije GATE 1.
+- Ne prebaciti machining/profile logiku u JavaFX controller.
+- Ne raditi SQL u controlleru.
+- Ne raditi geometriju ili layout unutar GCodeGeneratora.
+- Ne tvrditi matematičku optimalnost layouta.
 - Ne označiti RichAuto kompatibilnost kao TESTIRANU prije stvarnog testa.
-- Ne implementirati korisnički quantity, layout, capacity, requiredSheets ni batch G-code prije prolaska kroz GATE 1.
-- Ako prvi single-element test otkrije problem u osnovnom generatoru, ne zaobilaziti ga prelaskom na Iteraciju 2.
-- Ne preskakati ažuriranje `dokumentacija/biljeske/` nakon implementacijskih promjena.
-- Ne puniti bilješke trivijalnim getterima/setterima i boilerplateom samo da bi postojao isječak koda.
-- Ne koristiti bilješke kao dokaz TESTIRANOG stanja ako test nije stvarno izvršen.
-- Ne prelaziti na sljedeći prompt dok prethodni korak nije razumljiv, provjeren i dokumentiran.
+- Ne preskakati `dokumentacija/biljeske/`, `00_indeks.md` i relevantne odluke u `00_odluke.md`.
