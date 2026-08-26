@@ -31,6 +31,24 @@ public record RichAutoA11Profile(
         return physicallyConfirmedCapabilities.contains(Objects.requireNonNull(capability, "capability"));
     }
 
+    /**
+     * Output settings matching the supplied reference program.
+     * Emission flags do not claim that the controller has been physically tested.
+     */
+    public static RichAutoA11Profile referenceProgramProfile() {
+        return new RichAutoA11Profile(
+                true,
+                false,
+                true,
+                true,
+                Units.MILLIMETERS,
+                PositioningMode.ABSOLUTE,
+                3,
+                ZCoordinateConvention.MATERIAL_SURFACE_ZERO_NEGATIVE_CUT,
+                ArcCenterMode.RELATIVE_TO_ARC_START,
+                Set.of());
+    }
+
     public enum Units {
         MILLIMETERS
     }

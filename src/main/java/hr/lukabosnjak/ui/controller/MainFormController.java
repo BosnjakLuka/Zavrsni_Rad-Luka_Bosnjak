@@ -9,6 +9,7 @@ import hr.lukabosnjak.domain.entities.Shape;
 import hr.lukabosnjak.domain.entities.Tool;
 import hr.lukabosnjak.domain.enums.ShapeSubtype;
 import hr.lukabosnjak.domain.enums.ShapeType;
+import hr.lukabosnjak.geometry.CutSide;
 import hr.lukabosnjak.gcode.GCodeProgram;
 import hr.lukabosnjak.service.MaterialReferenceDataService;
 import hr.lukabosnjak.service.MachiningParametersPreset;
@@ -407,7 +408,9 @@ public class MainFormController {
                 numeric(spindleSpeedInput, "Brzina vretena"), numeric(feedRateInput, "Brzina posmaka"),
                 numeric(plungeRateInput, "Brzina uranjanja"), numeric(cutDepthInput, "Dubina reza"),
                 numeric(stepDownInput, "Step-down"), numeric(safeZInput, "Safe Z"));
-        return new ProgramGenerationRequest(machineComboBox.getValue(), toolComboBox.getValue(), sheet, parameters, shape);
+        return new ProgramGenerationRequest(
+                machineComboBox.getValue(), toolComboBox.getValue(), sheet, parameters, shape,
+                CutSide.INSIDE);
     }
 
     private void applyMachiningPreset() {

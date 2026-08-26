@@ -21,6 +21,60 @@ Tri development računa koriste unaprijed generirane PBKDF2 zapise i ne spremaju
 
 ---
 
+## Referentni `.nc` kao regression fixture
+
+**Datum:** 2026-08-26
+**Odluka:** Dostavljeni program za pravokutnik 100 × 200 mm sprema se kao
+`Dokumentacija/reference/referentni-pravokutnik-100x200.nc`. Generator se ne
+mijenja radi byte-for-byte kopiranja: `G21` i `G17` ostaju profilni redci,
+`G90` i `G54` zasebni su deterministički retci, `S` ostaje isključen, a
+`F150`/`F500` reproduciraju se kroz feed profil.
+
+**Razlog:** Referentni program daje stvarni format za usporedbu, ali nije dokaz
+fizičke kompatibilnosti. Konfigurabilni profil zadržava mogućnost prilagodbe
+nakon provjere konkretnog RichAuto A11.
+
+**Ograničenje:** Referenca i regression test nisu fizički pokrenuti na
+ZK-1325 / RichAuto A11. Cutter compensation nije dio ove odluke.
+
+`RichAutoA11Profile.referenceProgramProfile()` sada centralizira isti
+reference-profile output (`G54`, feed riječi, `M03`/`M05`, bez `S`), dok
+`physicallyConfirmedCapabilities` ostaje neovisno i prazno do fizičke potvrde.
+
+---
+
+## V1 aplikacijska geometrijska kompenzacija alata
+
+**Datum:** 2026-08-26
+**Status:** IMPLEMENTIRANO / SOFTVERSKI TESTIRANO / NIJE FIZIČKI TESTIRANO
+
+**Odluka:** V1 računa kompenzaciju u aplikaciji prije G-code generatora.
+`Tool.diameter` je izvor promjera, a `radius = diameter / 2`. Nominalna
+programirana kontura ostaje odvojena od putanje centra alata. Strana reza
+prosljeđuje se eksplicitnim `CutSide` podatkom i ne zaključuje se iz naziva
+oblika. Kompenzirana putanja prolazi fit provjeru prije generiranja G-koda.
+G41/G42/G40 i RichAuto `D`/tool-table naredbe ne emitiraju se.
+
+**Razlog:** Nije potvrđeno kako konkretni RichAuto A11 zadaje radijus alata,
+offset registar ili lead-in/lead-out za controller-side kompenzaciju.
+Aplikacijski offset uklanja tu neprovjerenu ovisnost i daje determinističan
+softverski rezultat. Trenutačni V1 operatorski tok eksplicitno koristi
+`CutSide.INSIDE`, jer lokalne konture počinju na `(0,0)` i vanjski offset bi bez
+margine izašao iz granica ploče.
+
+**Razmotrene alternative:** Controller-side `G41/G42/G40` nije odabran zbog
+nepotvrđenog RichAuto `D` workflowa, aktivacije/deaktivacije i lead-in/lead-out
+ponašanja. Nije odabrano ni zaključivanje strane reza iz tipa oblika.
+
+**Utjecaj na implementaciju:** Geometry sloj dobiva mali
+`ToolPathCompensationService` za linijske i kružne konture. Service sloj
+prosljeđuje `Tool` i `CutSide`, a validation sloj provjerava kompenziranu
+putanju. Ø6 i Ø8 ostaju tehnički testni slučajevi dok stvarni alat ne bude
+fizički potvrđen. Layout Iteracije 2 mora uzeti u obzir kompenzirani omotač i
+razmak među elementima.
+
+---
+
 ## Nepoznati tehnički atributi kataloškog alata
 
 **Datum:** 2026-08-26
@@ -83,13 +137,13 @@ Bootstrap nakon stvarnog hashera dobiva po jedan development/test račun za svak
 **Datum:** 2026-08-26
 **Status:** IMPLEMENTIRANO / SOFTVERSKI TESTIRANO / NIJE FIZIČKI TESTIRANO
 
-**Odluka:** Nakon uspješne inicijalizacije H2 sheme aplikacija idempotentno osigurava role `ADMIN`, `ENGINEER` i `OPERATOR`, pet jasno označenih `TEST_MATERIAL_*` vrsta materijala te jedan stroj `ZK-1325` / `RichAuto A11` s X=1250 mm, Y=2500 mm i `NULL` za nepotvrđene tehničke granice. Bootstrap ne umeće `APP_USER`, `TOOL`, `MATERIAL_SHEET`, `MACHINING_PARAMETERS`, `SHAPE` ni `MACHINING_JOB` zapise. Stara rola `USER` uklanja se samo ako nije povezana ni s jednim korisnikom; ako jest povezana, bootstrap prekida rad jasnom SQL greškom bez prešutnog mijenjanja korisničkih uloga.
+**Odluka:** Nakon uspješne inicijalizacije H2 sheme aplikacija idempotentno osigurava role `ADMIN`, `ENGINEER` i `OPERATOR`, pet jasno označenih `TEST_MATERIAL_*` vrsta materijala te jedan stroj `ZK-1325` / `RichAuto A11` s X=1250 mm, Y=2500 mm i `NULL` za nepotvrđene tehničke granice. Bootstrap također osigurava dva jasno označena razvojna testna alata Ø6 i Ø8 mm s development brojevima 9006 i 9008. Ti zapisi nisu potvrđeni stvarni alati stroja; ostali nepoznati atributi ostaju `NULL`. `MATERIAL_SHEET`, `MACHINING_PARAMETERS`, `SHAPE` i `MACHINING_JOB` ne seedaju se u normalnom runtimeu. Stara rola `USER` uklanja se samo ako nije povezana ni s jednim korisnikom; ako jest povezana, bootstrap prekida rad jasnom SQL greškom bez prešutnog mijenjanja korisničkih uloga.
 
 **Razlog:** Plan potvrđuje tri V1 role, ali postojeća razvojna baza naslijedila je `USER`/`ADMIN` seed. Uklanjanje samo neupotrebljene legacy role usklađuje praznu staru bazu bez gubitka korisničkih podataka i bez izmišljanja preslikavanja `USER` u novu rolu.
 
-**Razmotrene alternative:** Nisu odabrani seed korisnika s privremenim ili plaintext lozinkama, seed alata s nepotvrđenim atributima, brisanje povezanih role/user zapisa ni pretpostavljeno automatsko mapiranje stare `USER` role u `OPERATOR` ili `ENGINEER`.
+**Razmotrene alternative:** Nisu odabrani seed stvarnih alata s nepotvrđenim atributima, brisanje povezanih role/user zapisa ni pretpostavljeno automatsko mapiranje stare `USER` role u `OPERATOR` ili `ENGINEER`. Razvojni alati ostaju iznimka jer su eksplicitno označeni kao softverski testni podaci.
 
-**Utjecaj na implementaciju:** `V1BootstrapService` koordinira repositoryje nakon `DatabaseInitializer`a, dok repository sloj izvodi parametrizirani JDBC upis i uvjetno brisanje role. Korak 13 i dalje mora odlučiti matricu prava, default rolu registracije i password hashing prije stvaranja korisnika.
+**Utjecaj na implementaciju:** `V1BootstrapService` koordinira repositoryje nakon `DatabaseInitializer`a, dok repository sloj izvodi parametrizirani JDBC upis i uvjetno brisanje role. Razvojni alati dostupni su u katalogu i Generate toku, ali ne predstavljaju fizičku potvrdu promjera ili oznake alata.
 
 ---
 

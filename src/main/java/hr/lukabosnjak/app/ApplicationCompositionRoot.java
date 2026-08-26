@@ -6,6 +6,7 @@ import hr.lukabosnjak.gcode.NcExportService;
 import hr.lukabosnjak.gcode.RichAutoA11GCodeGenerator;
 import hr.lukabosnjak.gcode.RichAutoA11Profile;
 import hr.lukabosnjak.geometry.ToolPathBoundsCalculator;
+import hr.lukabosnjak.geometry.ToolPathCompensationService;
 import hr.lukabosnjak.geometry.ToolPathService;
 import hr.lukabosnjak.persistence.jdbc.ConnectionProvider;
 import hr.lukabosnjak.persistence.jdbc.JdbcCncMachineRepository;
@@ -101,10 +102,11 @@ final class ApplicationCompositionRoot {
         ToolPathService toolPathService = new ToolPathService(shapeValidator);
         SingleShapeFitValidator singleShapeFitValidator = new SingleShapeFitValidator(
                 new ToolPathBoundsCalculator(), materialSheetValidator);
-        RichAutoA11GCodeGenerator gCodeGenerator = new RichAutoA11GCodeGenerator(conservativePreviewProfile());
+        RichAutoA11GCodeGenerator gCodeGenerator = new RichAutoA11GCodeGenerator(referencePreviewProfile());
 
         programGenerationService = new ProgramGenerationService(
-                machiningJobValidator, toolPathService, singleShapeFitValidator, gCodeGenerator);
+                machiningJobValidator, toolPathService, singleShapeFitValidator,
+                new ToolPathCompensationService(), gCodeGenerator);
         machiningParametersPreset = MachiningParametersPreset.referenceDefaults();
         referenceDataService = new ReferenceDataService(cncMachineRepository, toolRepository);
         materialReferenceDataService = new MaterialReferenceDataService(materialTypeRepository);
@@ -120,7 +122,8 @@ final class ApplicationCompositionRoot {
         userManagementService = new UserManagementService(
                 userRepository, roleRepository, sessionContext, authorizationService);
         v1BootstrapService = new V1BootstrapService(
-                roleRepository, materialTypeRepository, cncMachineRepository, userRepository);
+                roleRepository, materialTypeRepository, cncMachineRepository, userRepository,
+                toolRepository);
     }
 
     static ApplicationCompositionRoot production() {
@@ -217,10 +220,7 @@ final class ApplicationCompositionRoot {
         return authorizationService;
     }
 
-    private RichAutoA11Profile conservativePreviewProfile() {
-        return new RichAutoA11Profile(
-                false, false, false, false,
-                MILLIMETERS, ABSOLUTE, 3,
-                MATERIAL_SURFACE_ZERO_NEGATIVE_CUT, RELATIVE_TO_ARC_START, Set.of());
+    private RichAutoA11Profile referencePreviewProfile() {
+        return RichAutoA11Profile.referenceProgramProfile();
     }
 }

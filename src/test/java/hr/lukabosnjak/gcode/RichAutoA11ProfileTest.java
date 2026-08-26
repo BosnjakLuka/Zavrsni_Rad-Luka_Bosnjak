@@ -30,6 +30,18 @@ class RichAutoA11ProfileTest {
     }
 
     @Test
+    void exposesReferenceProgramEmissionSettingsWithoutPhysicalConfirmation() {
+        RichAutoA11Profile profile = RichAutoA11Profile.referenceProgramProfile();
+
+        assertTrue(profile.emitFeedRate());
+        assertTrue(profile.emitG54());
+        assertFalse(profile.emitSpindleSpeed());
+        assertTrue(profile.emitSpindleCommands());
+        assertFalse(profile.isPhysicallyConfirmed(
+                RichAutoA11Profile.PhysicalCapability.WORK_OFFSET_G54));
+    }
+
+    @Test
     void defensivelyCopiesPhysicalConfirmations() {
         EnumSet<RichAutoA11Profile.PhysicalCapability> confirmations = EnumSet.of(SPINDLE_SPEED_S);
         RichAutoA11Profile profile = profile(false, false, confirmations);

@@ -44,7 +44,7 @@ class V1BootstrapServiceIntegrationTest {
         machines = new JdbcCncMachineRepository(connectionProvider);
         tools = new JdbcToolRepository(connectionProvider);
         users = new JdbcUserRepository(connectionProvider);
-        bootstrapService = new V1BootstrapService(roles, materialTypes, machines, users);
+        bootstrapService = new V1BootstrapService(roles, materialTypes, machines, users, tools);
     }
 
     @Test
@@ -67,7 +67,11 @@ class V1BootstrapServiceIntegrationTest {
         assertNull(machine.getMaxFeedRate());
         assertNull(machine.getMinSpindleSpeed());
         assertNull(machine.getMaxSpindleSpeed());
-        assertTrue(tools.findAllByMachineId(machine.getCncMachineId()).isEmpty());
+        assertEquals(List.of(6.0, 8.0),
+                tools.findAllByMachineId(machine.getCncMachineId()).stream()
+                        .map(tool -> tool.getDiameter()).sorted().toList());
+        assertTrue(tools.findAllByMachineId(machine.getCncMachineId()).stream()
+                .allMatch(tool -> tool.getName().contains("SOFTVERSKI")));
         assertEquals(3, countRows("APP_USER"));
         assertEquals(0, countRows("MATERIAL_SHEET"));
         assertEquals(0, countRows("MACHINING_PARAMETERS"));
@@ -99,6 +103,8 @@ class V1BootstrapServiceIntegrationTest {
         List<CncMachine> loadedMachines = new ReferenceDataService(machines, tools).loadMachines();
         assertEquals(1, loadedMachines.size());
         assertEquals("ZK-1325", loadedMachines.getFirst().getName());
+        assertEquals(2, new ReferenceDataService(machines, tools)
+                .loadTools(loadedMachines.getFirst()).size());
     }
 
     private int countRows(String tableName) throws Exception {

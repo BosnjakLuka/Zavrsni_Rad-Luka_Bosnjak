@@ -13,6 +13,7 @@ import hr.lukabosnjak.domain.entities.User;
 import hr.lukabosnjak.domain.enums.ShapeSubtype;
 import hr.lukabosnjak.domain.enums.ShapeType;
 import hr.lukabosnjak.gcode.GCodeProgram;
+import hr.lukabosnjak.geometry.CutSide;
 import hr.lukabosnjak.persistence.jdbc.ConnectionProvider;
 import hr.lukabosnjak.service.ProgramGenerationRequest;
 import hr.lukabosnjak.ui.controller.CncMachineFormController;
@@ -69,7 +70,7 @@ class ApplicationCompositionRootIntegrationTest {
                 null, ShapeType.TRIANGLE, ShapeSubtype.EQUILATERAL,
                 30.0, null, null, null, null, null);
         ProgramGenerationRequest input = new ProgramGenerationRequest(
-                references.machine(), references.tool(), sheet, parameters, shape);
+                references.machine(), references.tool(), sheet, parameters, shape, CutSide.INSIDE);
 
         GCodeProgram previewResult = firstContext.programGenerationService().generate(input);
         assertTrue(previewResult.text().startsWith("G21\nG17\nG90\n"));

@@ -3,11 +3,13 @@ package hr.lukabosnjak.service;
 import hr.lukabosnjak.domain.entities.CncMachine;
 import hr.lukabosnjak.domain.entities.MaterialType;
 import hr.lukabosnjak.domain.entities.Role;
+import hr.lukabosnjak.domain.entities.Tool;
 import hr.lukabosnjak.domain.entities.User;
 import hr.lukabosnjak.persistence.repository.CncMachineRepository;
 import hr.lukabosnjak.persistence.repository.MaterialTypeRepository;
 import hr.lukabosnjak.persistence.repository.RoleRepository;
 import hr.lukabosnjak.persistence.repository.UserRepository;
+import hr.lukabosnjak.persistence.repository.ToolRepository;
 
 import java.sql.SQLException;
 import java.util.List;
@@ -19,6 +21,7 @@ public final class V1BootstrapService {
     public static final List<String> MATERIAL_TYPE_NAMES = List.of(
             "TEST_MATERIAL_1", "TEST_MATERIAL_2", "TEST_MATERIAL_3",
             "TEST_MATERIAL_4", "TEST_MATERIAL_5");
+    public static final List<Double> SOFTWARE_TEST_TOOL_DIAMETERS = List.of(6.0, 8.0);
 
     private static final String LEGACY_USER_ROLE = "USER";
     private static final String MACHINE_NAME = "ZK-1325";
@@ -35,17 +38,20 @@ public final class V1BootstrapService {
     private final MaterialTypeRepository materialTypeRepository;
     private final CncMachineRepository cncMachineRepository;
     private final UserRepository userRepository;
+    private final ToolRepository toolRepository;
 
     public V1BootstrapService(
             RoleRepository roleRepository,
             MaterialTypeRepository materialTypeRepository,
             CncMachineRepository cncMachineRepository,
-            UserRepository userRepository
+            UserRepository userRepository,
+            ToolRepository toolRepository
     ) {
         this.roleRepository = Objects.requireNonNull(roleRepository);
         this.materialTypeRepository = Objects.requireNonNull(materialTypeRepository);
         this.cncMachineRepository = Objects.requireNonNull(cncMachineRepository);
         this.userRepository = Objects.requireNonNull(userRepository);
+        this.toolRepository = Objects.requireNonNull(toolRepository);
     }
 
     public void initialize() throws SQLException {
@@ -53,6 +59,7 @@ public final class V1BootstrapService {
         ensureRoles();
         ensureMaterialTypes();
         ensureZk1325Machine();
+        ensureSoftwareTestTools();
         ensureDevelopmentUsers();
     }
 
@@ -102,6 +109,33 @@ public final class V1BootstrapService {
                 userRepository.save(new User(
                         null, role, seed.username(), seed.passwordHash(),
                         seed.firstName(), seed.lastName(), true, null, null));
+            }
+        }
+    }
+
+    private void ensureSoftwareTestTools() throws SQLException {
+        CncMachine machine = cncMachineRepository.findAll().stream()
+                .filter(candidate -> MACHINE_NAME.equals(candidate.getName())
+                        && MACHINE_NAME.equals(candidate.getModel())
+                        && MACHINE_CONTROLLER.equals(candidate.getController()))
+                .findFirst()
+                .orElseThrow(() -> new SQLException("Bootstrap machine is missing"));
+
+        for (double diameter : SOFTWARE_TEST_TOOL_DIAMETERS) {
+            int toolNumber = diameter == 6.0 ? 9006 : 9008;
+            if (toolRepository.findByMachineIdAndToolNumber(machine.getCncMachineId(), toolNumber).isEmpty()) {
+                toolRepository.save(new Tool(
+                        null,
+                        machine,
+                        toolNumber,
+                        "TESTNI ALAT Ø" + (int) diameter + " mm (SOFTVERSKI)",
+                        null,
+                        diameter,
+                        null,
+                        null,
+                        true,
+                        null,
+                        null));
             }
         }
     }

@@ -72,6 +72,48 @@ class RichAutoA11GCodeGeneratorTest {
     }
 
     @Test
+    void generatesReferenceProfileShapeWithReferenceFeedAndDepthValues() {
+        RichAutoA11GCodeGenerator generator = new RichAutoA11GCodeGenerator(
+                new RichAutoA11Profile(
+                        true,
+                        false,
+                        true,
+                        true,
+                        MILLIMETERS,
+                        ABSOLUTE,
+                        3,
+                        MATERIAL_SURFACE_ZERO_NEGATIVE_CUT,
+                        RELATIVE_TO_ARC_START,
+                        Set.of()));
+
+        MachiningParameters parameters = new MachiningParameters(
+                null, 18000.0, 500.0, 150.0, 1.0, 1.0, 5.0);
+        ToolPath rectangle = new ToolPath(List.of(
+                new LineSegment(new Point2(0.0, 0.0), new Point2(100.0, 0.0)),
+                new LineSegment(new Point2(100.0, 0.0), new Point2(100.0, 200.0)),
+                new LineSegment(new Point2(100.0, 200.0), new Point2(0.0, 200.0)),
+                new LineSegment(new Point2(0.0, 200.0), new Point2(0.0, 0.0))));
+
+        assertEquals("""
+                G21
+                G17
+                G90
+                G54
+                M03
+                G00 Z5.000
+                G00 X0.000 Y0.000
+                G01 Z-1.000 F150.000
+                G01 X100.000 Y0.000 F500.000
+                G01 X100.000 Y200.000
+                G01 X0.000 Y200.000
+                G01 X0.000 Y0.000
+                G00 Z5.000
+                M05
+                M30
+                """, generator.generate(rectangle, parameters).text());
+    }
+
+    @Test
     void usesPositiveCutConventionAndOmitsFeedWordsWhenDisabled() {
         RichAutoA11GCodeGenerator generator = new RichAutoA11GCodeGenerator(
                 softwareTestProfile(MATERIAL_SURFACE_ZERO_POSITIVE_CUT, false, false, false, false));
