@@ -44,12 +44,9 @@ public final class ReferenceDataValidator {
             throw new ValidationException("Broj alata mora biti veći od 0.");
         }
         requireText(tool.getName(), "Naziv alata je obavezan.");
-        requireText(tool.getType(), "Tip alata je obavezan.");
         requirePositive(tool.getDiameter(), "Promjer alata mora biti veći od 0 mm.");
-        requirePositive(tool.getCuttingLength(), "Rezna duljina alata mora biti veća od 0 mm.");
-        if (tool.getFluteCount() <= 0) {
-            throw new ValidationException("Broj oštrica mora biti veći od 0.");
-        }
+        requirePositiveWhenKnown(tool.getCuttingLength(), "Rezna duljina alata mora biti veća od 0 mm.");
+        requirePositiveIntegerWhenKnown(tool.getFluteCount(), "Broj oštrica mora biti veći od 0.");
     }
 
     private void requireText(String value, String message) {
@@ -67,6 +64,12 @@ public final class ReferenceDataValidator {
     private void requirePositiveWhenKnown(Double value, String message) {
         if (value != null) {
             requirePositive(value, message);
+        }
+    }
+
+    private void requirePositiveIntegerWhenKnown(Integer value, String message) {
+        if (value != null && value <= 0) {
+            throw new ValidationException(message);
         }
     }
 }

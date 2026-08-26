@@ -49,8 +49,8 @@ public final class JdbcToolRepository extends JdbcRepositorySupport implements T
             statement.setString(3, tool.getName());
             statement.setString(4, tool.getType());
             statement.setDouble(5, tool.getDiameter());
-            statement.setDouble(6, tool.getCuttingLength());
-            statement.setInt(7, tool.getFluteCount());
+            statement.setObject(6, tool.getCuttingLength());
+            statement.setObject(7, tool.getFluteCount());
             statement.setBoolean(8, tool.isActive());
         });
         return findById(id).orElseThrow(() -> new SQLException("Saved tool was not found"));
@@ -75,8 +75,8 @@ public final class JdbcToolRepository extends JdbcRepositorySupport implements T
             statement.setString(3, tool.getName());
             statement.setString(4, tool.getType());
             statement.setDouble(5, tool.getDiameter());
-            statement.setDouble(6, tool.getCuttingLength());
-            statement.setInt(7, tool.getFluteCount());
+            statement.setObject(6, tool.getCuttingLength());
+            statement.setObject(7, tool.getFluteCount());
             statement.setBoolean(8, tool.isActive());
             statement.setLong(9, tool.getToolId());
             if (statement.executeUpdate() != 1) throw new SQLException("Tool was not found");
@@ -137,6 +137,8 @@ public final class JdbcToolRepository extends JdbcRepositorySupport implements T
     }
 
     private static Tool map(ResultSet resultSet) throws SQLException {
+        Double cuttingLength = resultSet.getObject("cutting_length", Double.class);
+        Integer fluteCount = resultSet.getObject("flute_count", Integer.class);
         CncMachine machine = new CncMachine(
                 resultSet.getLong("cnc_machine_id"), resultSet.getString("machine_name"),
                 resultSet.getString("manufacturer"), resultSet.getString("model"),
@@ -151,8 +153,7 @@ public final class JdbcToolRepository extends JdbcRepositorySupport implements T
         return new Tool(
                 resultSet.getLong("tool_id"), machine, resultSet.getInt("tool_number"),
                 resultSet.getString("tool_name"), resultSet.getString("type"),
-                resultSet.getDouble("diameter"), resultSet.getDouble("cutting_length"),
-                resultSet.getInt("flute_count"), resultSet.getBoolean("active"),
+                resultSet.getDouble("diameter"), cuttingLength, fluteCount, resultSet.getBoolean("active"),
                 resultSet.getTimestamp("tool_created_at").toLocalDateTime(),
                 resultSet.getTimestamp("tool_updated_at").toLocalDateTime()
         );

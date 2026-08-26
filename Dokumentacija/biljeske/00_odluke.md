@@ -21,6 +21,44 @@ Tri development računa koriste unaprijed generirane PBKDF2 zapise i ne spremaju
 
 ---
 
+## Nepoznati tehnički atributi kataloškog alata
+
+**Datum:** 2026-08-26
+**Odluka:** Katalog dopušta da `Tool.type`, `Tool.cuttingLength` i
+`Tool.fluteCount` budu nepoznati (`null`) kada za stvarni alat nisu potvrđeni.
+`Tool.toolNumber`, naziv i pozitivan `Tool.diameter` ostaju obvezni za unos
+stvarnog alata. Ø6 mm i Ø8 mm ne seedaju se automatski.
+
+**Razlog:** Aplikacija ne smije izmišljati tehničke podatke alata. Promjer je
+potreban za budući sloj kompenzacije i zato se sprema uz odabrani `Tool`, dok
+se ostali podaci mogu dopuniti kada budu poznati.
+
+**Ograničenje:** Nije potvrđeno koji se alat ni promjer koristi na konkretnom
+ZK-1325 / RichAuto A11. Cutter compensation ostaje odluka Koraka 16.
+
+---
+
+## Operatorski process preset za Iteraciju 1
+
+**Datum:** 2026-08-26
+**Odluka:** Glavni operatorski ekran koristi mali service-slojni
+`MachiningParametersPreset` za početne machining vrijednosti. Tehničkih šest
+vrijednosti nisu obvezni ručni input svakog Generate toka, nego se automatski
+popunjavaju i ostaju dostupne u neobaveznom naprednom panelu. Prije fizičke
+potvrde preseta vrijednosti moraju biti označene kao referentne/testne.
+`MachiningParameters` ostaje snapshot koji se sprema uz `MachiningJob`.
+
+**Razlog:** Operatoru se uklanja nepotrebno ponavljanje tehničkog unosa, bez
+gubitka podataka potrebnih za validaciju, G-code generiranje i objašnjivost
+spremljenog posla. Preset ne preuzima odgovornost `RichAutoA11Profilea`, koji i
+dalje određuje format i opcionalno emitiranje naredbi.
+
+**Ograničenje:** Ove vrijednosti nisu fizički potvrđene na ZK-1325 /
+RichAuto A11. Nije potvrđeno ni čita li konkretna konfiguracija `F`, `S`, `G54`
+ili `G40`.
+
+---
+
 ## V1 RBAC, registracija, korisnički računi i session
 
 **Datum:** 2026-08-26

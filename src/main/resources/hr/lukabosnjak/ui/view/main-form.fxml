@@ -9,6 +9,7 @@
 <?import javafx.scene.control.Separator?>
 <?import javafx.scene.control.TextArea?>
 <?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.TitledPane?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.ColumnConstraints?>
 <?import javafx.scene.layout.GridPane?>
@@ -79,22 +80,27 @@
                                 <ComboBox fx:id="toolComboBox" maxWidth="Infinity" promptText="Odaberite alat" HBox.hgrow="ALWAYS" />
                                 <Button fx:id="addToolButton" mnemonicParsing="false" onAction="#handleAddTool" text="Dodaj..." />
                             </HBox>
-                            <Separator />
-                            <Label style="-fx-font-size: 16px; -fx-font-weight: bold;" text="Parametri obrade" />
-                            <GridPane hgap="10.0" vgap="8.0">
-                                <Label text="Spindle speed" GridPane.rowIndex="0" />
-                                <TextField fx:id="spindleSpeedInput" promptText="0.0" GridPane.columnIndex="1" GridPane.rowIndex="0" />
-                                <Label text="Feed rate" GridPane.rowIndex="1" />
-                                <TextField fx:id="feedRateInput" promptText="0.0" GridPane.columnIndex="1" GridPane.rowIndex="1" />
-                                <Label text="Plunge rate" GridPane.rowIndex="2" />
-                                <TextField fx:id="plungeRateInput" promptText="0.0" GridPane.columnIndex="1" GridPane.rowIndex="2" />
-                                <Label text="Cut depth (mm)" GridPane.rowIndex="3" />
-                                <TextField fx:id="cutDepthInput" promptText="0.0" GridPane.columnIndex="1" GridPane.rowIndex="3" />
-                                <Label text="Step-down (mm)" GridPane.rowIndex="4" />
-                                <TextField fx:id="stepDownInput" promptText="0.0" GridPane.columnIndex="1" GridPane.rowIndex="4" />
-                                <Label text="Safe Z (mm)" GridPane.rowIndex="5" />
-                                <TextField fx:id="safeZInput" promptText="0.0" GridPane.columnIndex="1" GridPane.rowIndex="5" />
-                            </GridPane>
+                            <TitledPane expanded="false" text="Napredne tehničke postavke (nije obavezno)">
+                                <content>
+                                    <VBox spacing="8.0">
+                                        <Label fx:id="machiningPresetLabel" wrapText="true" />
+                                        <GridPane hgap="10.0" vgap="8.0">
+                                            <Label text="Spindle speed" GridPane.rowIndex="0" />
+                                            <TextField fx:id="spindleSpeedInput" promptText="0.0" GridPane.columnIndex="1" GridPane.rowIndex="0" />
+                                            <Label text="Feed rate" GridPane.rowIndex="1" />
+                                            <TextField fx:id="feedRateInput" promptText="0.0" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                                            <Label text="Plunge rate" GridPane.rowIndex="2" />
+                                            <TextField fx:id="plungeRateInput" promptText="0.0" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+                                            <Label text="Cut depth (mm)" GridPane.rowIndex="3" />
+                                            <TextField fx:id="cutDepthInput" promptText="0.0" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+                                            <Label text="Step-down (mm)" GridPane.rowIndex="4" />
+                                            <TextField fx:id="stepDownInput" promptText="0.0" GridPane.columnIndex="1" GridPane.rowIndex="4" />
+                                            <Label text="Safe Z (mm)" GridPane.rowIndex="5" />
+                                            <TextField fx:id="safeZInput" promptText="0.0" GridPane.columnIndex="1" GridPane.rowIndex="5" />
+                                        </GridPane>
+                                    </VBox>
+                                </content>
+                            </TitledPane>
                         </VBox>
                     </GridPane>
                     <HBox spacing="10.0">

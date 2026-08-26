@@ -179,11 +179,13 @@ public final class JdbcMachiningJobRepository extends JdbcRepositorySupport impl
                 resultSet.getTimestamp("user_updated_at").toLocalDateTime());
         CncMachine jobMachine = mapMachine(resultSet, "job_machine_");
         CncMachine toolMachine = mapMachine(resultSet, "tool_machine_");
+        Double cuttingLength = resultSet.getObject("cutting_length", Double.class);
+        Integer fluteCount = resultSet.getObject("flute_count", Integer.class);
         Tool tool = new Tool(
                 resultSet.getLong("tool_id"), toolMachine, resultSet.getInt("tool_number"),
                 resultSet.getString("tool_name"), resultSet.getString("tool_type"),
-                resultSet.getDouble("tool_diameter"), resultSet.getDouble("cutting_length"),
-                resultSet.getInt("flute_count"), resultSet.getBoolean("tool_active"),
+                resultSet.getDouble("tool_diameter"), cuttingLength, fluteCount,
+                resultSet.getBoolean("tool_active"),
                 resultSet.getTimestamp("tool_created_at").toLocalDateTime(),
                 resultSet.getTimestamp("tool_updated_at").toLocalDateTime());
         Timestamp materialDeletedAt = resultSet.getTimestamp("material_deleted_at");

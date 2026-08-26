@@ -21,6 +21,7 @@ import hr.lukabosnjak.persistence.repository.RoleRepository;
 import hr.lukabosnjak.persistence.repository.ToolRepository;
 import hr.lukabosnjak.persistence.repository.UserRepository;
 import hr.lukabosnjak.service.MaterialReferenceDataService;
+import hr.lukabosnjak.service.MachiningParametersPreset;
 import hr.lukabosnjak.service.AuthService;
 import hr.lukabosnjak.service.AuthorizationService;
 import hr.lukabosnjak.service.PasswordHasher;
@@ -69,6 +70,7 @@ final class ApplicationCompositionRoot {
     private final MachiningJobRepository machiningJobRepository;
 
     private final ProgramGenerationService programGenerationService;
+    private final MachiningParametersPreset machiningParametersPreset;
     private final ReferenceDataService referenceDataService;
     private final MaterialReferenceDataService materialReferenceDataService;
     private final ReferenceDataManagementService referenceDataManagementService;
@@ -103,6 +105,7 @@ final class ApplicationCompositionRoot {
 
         programGenerationService = new ProgramGenerationService(
                 machiningJobValidator, toolPathService, singleShapeFitValidator, gCodeGenerator);
+        machiningParametersPreset = MachiningParametersPreset.referenceDefaults();
         referenceDataService = new ReferenceDataService(cncMachineRepository, toolRepository);
         materialReferenceDataService = new MaterialReferenceDataService(materialTypeRepository);
         savedJobService = new SavedJobService(machiningJobRepository);
@@ -146,6 +149,7 @@ final class ApplicationCompositionRoot {
         if (controllerType == MainFormController.class) {
             return new MainFormController(
                     programGenerationService, referenceDataService, materialReferenceDataService,
+                    machiningParametersPreset,
                     savedJobService, programExportService, authService, sessionContext, authorizationService, navigation,
                     type -> createController(type, navigation));
         }

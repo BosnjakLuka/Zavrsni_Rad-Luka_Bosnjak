@@ -19,6 +19,8 @@ public final class DatabaseInitializer {
             "/db/migration/12-02-cnc-machine-nullable-limits.sql";
     private static final String CATALOG_ACTIVE_STATUS_MIGRATION =
             "/db/migration/14-06-catalog-active-status.sql";
+    private static final String TOOL_OPTIONAL_ATTRIBUTES_MIGRATION =
+            "/db/migration/15-03-tool-optional-attributes.sql";
     private static final Set<String> EXPECTED_TABLES = Set.of(
             "ROLE",
             "APP_USER",
@@ -67,6 +69,7 @@ public final class DatabaseInitializer {
 
         executeScript(connection, CNC_MACHINE_NULLABLE_LIMITS_MIGRATION);
         executeScript(connection, CATALOG_ACTIVE_STATUS_MIGRATION);
+        executeScript(connection, TOOL_OPTIONAL_ATTRIBUTES_MIGRATION);
     }
 
     private static void executeScript(Connection connection, String resourcePath) throws SQLException {

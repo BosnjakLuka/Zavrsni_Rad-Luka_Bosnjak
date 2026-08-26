@@ -45,8 +45,8 @@ public final class ToolFormController {
                     nameInput.getText(),
                     typeInput.getText(),
                     NumericInputParser.parseRequiredFinite(diameterInput.getText(), "Promjer"),
-                    NumericInputParser.parseRequiredFinite(cuttingLengthInput.getText(), "Rezna duljina"),
-                    NumericInputParser.parseRequiredInteger(fluteCountInput.getText(), "Broj oštrica"),
+                    NumericInputParser.parseOptionalFinite(cuttingLengthInput.getText(), "Rezna duljina"),
+                    parseOptionalInteger(fluteCountInput.getText(), "Broj oštrica"),
                     true,
                     null,
                     null);
@@ -75,11 +75,18 @@ public final class ToolFormController {
         nameInput.setText(tool.getName());
         typeInput.setText(tool.getType());
         diameterInput.setText(Double.toString(tool.getDiameter()));
-        cuttingLengthInput.setText(Double.toString(tool.getCuttingLength()));
-        fluteCountInput.setText(Integer.toString(tool.getFluteCount()));
+        cuttingLengthInput.setText(tool.getCuttingLength() == null ? "" : Double.toString(tool.getCuttingLength()));
+        fluteCountInput.setText(tool.getFluteCount() == null ? "" : Integer.toString(tool.getFluteCount()));
     }
 
     private void closeWindow() {
         ((Stage) statusLabel.getScene().getWindow()).close();
+    }
+
+    private Integer parseOptionalInteger(String value, String fieldLabel) {
+        if (value == null || value.isBlank()) {
+            return null;
+        }
+        return NumericInputParser.parseRequiredInteger(value, fieldLabel);
     }
 }

@@ -11,6 +11,7 @@ import hr.lukabosnjak.domain.enums.ShapeSubtype;
 import hr.lukabosnjak.domain.enums.ShapeType;
 import hr.lukabosnjak.gcode.GCodeProgram;
 import hr.lukabosnjak.service.MaterialReferenceDataService;
+import hr.lukabosnjak.service.MachiningParametersPreset;
 import hr.lukabosnjak.service.AuthService;
 import hr.lukabosnjak.service.AuthorizationException;
 import hr.lukabosnjak.service.AuthorizationService;
@@ -64,6 +65,7 @@ public class MainFormController {
     @FXML private TextField cutDepthInput;
     @FXML private TextField stepDownInput;
     @FXML private TextField safeZInput;
+    @FXML private Label machiningPresetLabel;
     @FXML private TextArea gCodePreview;
     @FXML private ListView<MachiningJob> savedJobsList;
     @FXML private Label currentUserLabel;
@@ -80,6 +82,7 @@ public class MainFormController {
     private final ProgramGenerationService programGenerationService;
     private final ReferenceDataService referenceDataService;
     private final MaterialReferenceDataService materialReferenceDataService;
+    private final MachiningParametersPreset machiningParametersPreset;
     private final SavedJobService savedJobService;
     private final ProgramExportService programExportService;
     private final AuthService authService;
@@ -94,6 +97,7 @@ public class MainFormController {
             ProgramGenerationService programGenerationService,
             ReferenceDataService referenceDataService,
             MaterialReferenceDataService materialReferenceDataService,
+            MachiningParametersPreset machiningParametersPreset,
             SavedJobService savedJobService,
             ProgramExportService programExportService,
             AuthService authService,
@@ -105,6 +109,7 @@ public class MainFormController {
         this.programGenerationService = programGenerationService;
         this.referenceDataService = referenceDataService;
         this.materialReferenceDataService = materialReferenceDataService;
+        this.machiningParametersPreset = Objects.requireNonNull(machiningParametersPreset);
         this.savedJobService = savedJobService;
         this.programExportService = programExportService;
         this.authService = authService;
@@ -140,6 +145,7 @@ public class MainFormController {
             }
         });
         updateShapeFields(shapeTypeComboBox.getValue());
+        applyMachiningPreset();
         loadReferenceData();
         saveButton.setDisable(true);
         exportButton.setDisable(true);
@@ -402,6 +408,20 @@ public class MainFormController {
                 numeric(plungeRateInput, "Brzina uranjanja"), numeric(cutDepthInput, "Dubina reza"),
                 numeric(stepDownInput, "Step-down"), numeric(safeZInput, "Safe Z"));
         return new ProgramGenerationRequest(machineComboBox.getValue(), toolComboBox.getValue(), sheet, parameters, shape);
+    }
+
+    private void applyMachiningPreset() {
+        MachiningParameters presetParameters = machiningParametersPreset.toParameters();
+        spindleSpeedInput.setText(Double.toString(presetParameters.getSpindleSpeed()));
+        feedRateInput.setText(Double.toString(presetParameters.getFeedRate()));
+        plungeRateInput.setText(Double.toString(presetParameters.getPlungeRate()));
+        cutDepthInput.setText(Double.toString(presetParameters.getCutDepth()));
+        stepDownInput.setText(Double.toString(presetParameters.getStepDown()));
+        safeZInput.setText(Double.toString(presetParameters.getSafeZ()));
+        String status = machiningParametersPreset.referenceOnly()
+                ? "Predložak: " + machiningParametersPreset.name() + " (nije fizički potvrđeno na stroju)."
+                : "Predložak: " + machiningParametersPreset.name() + ".";
+        machiningPresetLabel.setText(status);
     }
 
     private void populateForm(MachiningJob job) {

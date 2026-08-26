@@ -9,8 +9,8 @@ public class Tool {
     private String name;
     private String type;
     private double diameter;
-    private double cuttingLength;
-    private int fluteCount;
+    private Double cuttingLength;
+    private Integer fluteCount;
     private boolean active;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
@@ -22,8 +22,8 @@ public class Tool {
             String name,
             String type,
             double diameter,
-            double cuttingLength,
-            int fluteCount,
+            Number cuttingLength,
+            Number fluteCount,
             boolean active,
             LocalDateTime createdAt,
             LocalDateTime updatedAt
@@ -34,8 +34,8 @@ public class Tool {
         this.name = name;
         this.type = type;
         this.diameter = diameter;
-        this.cuttingLength = cuttingLength;
-        this.fluteCount = fluteCount;
+        this.cuttingLength = cuttingLength == null ? null : cuttingLength.doubleValue();
+        this.fluteCount = fluteCount == null ? null : fluteCount.intValue();
         this.active = active;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
@@ -89,19 +89,19 @@ public class Tool {
         this.diameter = diameter;
     }
 
-    public double getCuttingLength() {
+    public Double getCuttingLength() {
         return cuttingLength;
     }
 
-    public void setCuttingLength(double cuttingLength) {
+    public void setCuttingLength(Double cuttingLength) {
         this.cuttingLength = cuttingLength;
     }
 
-    public int getFluteCount() {
+    public Integer getFluteCount() {
         return fluteCount;
     }
 
-    public void setFluteCount(int fluteCount) {
+    public void setFluteCount(Integer fluteCount) {
         this.fluteCount = fluteCount;
     }
 

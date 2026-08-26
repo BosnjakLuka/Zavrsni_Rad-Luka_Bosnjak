@@ -18,7 +18,7 @@
         <Label text="CNC stroj:" />
         <Label fx:id="machineLabel" style="-fx-font-weight: bold;" />
     </HBox>
-    <Label text="Unesite podatke stvarnog glodala koje će se koristiti na odabranom stroju." wrapText="true" />
+    <Label text="Unesite poznate podatke stvarnog glodala. Promjer je obavezan; ostali tehnički podaci mogu ostati prazni ako nisu poznati." wrapText="true" />
     <GridPane hgap="12.0" vgap="9.0">
         <columnConstraints>
             <ColumnConstraints minWidth="170.0" />
@@ -28,13 +28,13 @@
         <TextField fx:id="toolNumberInput" promptText="npr. 1" GridPane.columnIndex="1" GridPane.rowIndex="0" />
         <Label text="Naziv *" GridPane.rowIndex="1" />
         <TextField fx:id="nameInput" promptText="Naziv ili oznaka glodala" GridPane.columnIndex="1" GridPane.rowIndex="1" />
-        <Label text="Tip *" GridPane.rowIndex="2" />
+        <Label text="Tip" GridPane.rowIndex="2" />
         <TextField fx:id="typeInput" promptText="Potvrđeni tip alata" GridPane.columnIndex="1" GridPane.rowIndex="2" />
         <Label text="Promjer (mm) *" GridPane.rowIndex="3" />
         <TextField fx:id="diameterInput" promptText="0.0" GridPane.columnIndex="1" GridPane.rowIndex="3" />
-        <Label text="Rezna duljina (mm) *" GridPane.rowIndex="4" />
+        <Label text="Rezna duljina (mm)" GridPane.rowIndex="4" />
         <TextField fx:id="cuttingLengthInput" promptText="0.0" GridPane.columnIndex="1" GridPane.rowIndex="4" />
-        <Label text="Broj oštrica *" GridPane.rowIndex="5" />
+        <Label text="Broj oštrica" GridPane.rowIndex="5" />
         <TextField fx:id="fluteCountInput" promptText="npr. 2" GridPane.columnIndex="1" GridPane.rowIndex="5" />
     </GridPane>
     <Label fx:id="statusLabel" style="-fx-text-fill: #b00020;" wrapText="true" />
