@@ -4,6 +4,66 @@ Ovdje se zapisuju samo potvrđene odluke koje mijenjaju arhitekturu, tehnologiju
 
 Ne zapisuj obične implementacijske detalje, privremene eksperimente ni nepotvrđene pretpostavke. Postojeće odluke iz `AGENTS.md` ne kopiraj bez nove potrebe; ovdje se bilježi njihov nastanak ili kasnija promjena.
 
+## Ugovor `.nc` izvoza
+
+**Datum:** 2026-08-26
+**Status:** IMPLEMENTIRANO / TESTIRANO
+
+**Odluka:** `NcExportService` u `gcode` sloju prima već generirani `GCodeProgram` i eksplicitni odredišni `Path`. Prihvaća samo naziv datoteke s `.nc` ekstenzijom bez obzira na veličinu slova, kodira cijeli sadržaj kao US-ASCII bez BOM-a i odbija znak koji se ne može tako zapisati prije stvaranja datoteke. Zapis koristi create-new semantiku i ne prepisuje postojeću datoteku. Servis ne formatira brojeve, ne bira odredište, ne stvara direktorije i ne traži USB ili druge uređaje.
+
+**Razlog:** G-code generator i formatter već proizvode determinističan tekst s decimalnom točkom, pa export treba samo očuvati te znakove u eksplicitnom, kontroleru prikladnom charsetu. Predani `Path` čuva odabir lokacije kao buduću UI odgovornost, a odbijanje postojećeg odredišta sprječava tihi gubitak datoteke bez potvrde korisnika.
+
+**Razmotrene alternative:** Nisu odabrani platformski default charset, lokalizirano ponovno formatiranje brojeva, prešutna zamjena ne-ASCII znakova, automatsko traženje USB uređaja, automatsko stvaranje direktorija ni silent overwrite postojeće datoteke.
+
+**Utjecaj na implementaciju:** Budući JavaFX UI mora korisniku omogućiti izbor konkretnog `.nc` patha i obraditi invalid extension, postojeću datoteku i I/O pogreške. Ako kasnije bude potreban potvrđeni overwrite tok, mora biti eksplicitno uveden nakon korisničke potvrde; trenutačni servis namjerno ga ne izvodi.
+
+---
+
+## Relativni I/J i G02/G03 mapiranje
+
+**Datum:** 2026-08-26
+**Status:** IMPLEMENTIRANO / SOFTVERSKI TESTIRANO / NIJE TESTIRANO NA STROJU
+
+**Odluka:** `RichAutoA11Profile` eksplicitno koristi `ArcCenterMode.RELATIVE_TO_ARC_START`. Za svaki postojeći `ArcSegment` generator emitira apsolutni završni X/Y prema G90 te relativni centar `I = center.x - start.x` i `J = center.y - start.y`. `ArcDirection.CLOCKWISE` mapira se na `G02`, a `COUNTERCLOCKWISE` na `G03`. Postojeći krug ostaje zapisan kao dvije polukružnice s različitim početnim i završnim točkama. Profil odvojeno evidentira fizičke mogućnosti `ARC_MOVES_G02_G03` i `RELATIVE_ARC_CENTER_IJ`; sama konfiguracija ne znači fizičku potvrdu.
+
+**Razlog:** `ArcSegment` već daje početak, kraj, centar i smjer pa generator treba samo mapirati geometrijske podatke u tekst. Relativni I/J ostaje stabilan nakon translacije cijele putanje, a dvije polukružnice izbjegavaju osjetljiv full-circle zapis s jednakim početkom i krajem.
+
+**Razmotrene alternative:** Nisu odabrani apsolutni I/J, radijusni R format, linearna aproksimacija kružnice ni ponovno računanje centra ili radijusa u generatoru. Jedan full-circle segment nije uveden jer ga `ArcSegment` namjerno zabranjuje i postojeća geometrija već daje dvije jasne polukružnice.
+
+**Utjecaj na implementaciju:** `RichAutoA11GCodeGenerator` sada prihvaća povezane i zatvorene putanje sastavljene od linija i lukova te odabire G01, G02 ili G03 prema stvarnom tipu segmenta. String-level testovi potvrđuju oba smjera i relativne I/J vrijednosti, ali ponašanje tih naredbi i konvencije nije fizički testirano na ZK-1325 / RichAuto A11.
+
+---
+
+## Linearni single-element G-code tok
+
+**Datum:** 2026-08-26
+**Status:** IMPLEMENTIRANO / SOFTVERSKI TESTIRANO / NIJE FIZIČKI TESTIRANO
+
+**Odluka:** `RichAutoA11GCodeGenerator` u Iteraciji 1 prihvaća samo povezani i zatvoreni `ToolPath` sastavljen od `LineSegment` zapisa. Nakon headera prvo emitira rapid `G00` na safe Z dobiven profilnom konvencijom. Za svaki pozitivni kumulativni rezultat `PassDepthCalculatora` zatim eksplicitno emitira safe-state `G00` do početnog XY, kontrolirani `G01` plunge na profilom mapiranu Z dubinu, `G01` rezanje do postojećih krajnjih točaka segmenata te `G00` retract na safe Z. Isti siguran XY rapid ponavlja se u svakom prolazu, a završni retract prethodi footeru. Kada profil uključuje F, plunge postavlja `plungeRate`, a prvi rezni segment svakog prolaza postavlja `feedRate`; ostali segmenti koriste modalnu vrijednost.
+
+**Razlog:** Eksplicitni retract prije svakog XY repositioninga čini softverski redoslijed lako provjerljivim i ne oslanja se na činjenicu da trenutačni zatvoreni oblici završavaju na početnoj točki. Generator samo slijedi postojeću putanju i ne ponavlja Shape geometriju. Provjera povezanosti i zatvorenosti sprječava da se prekid u ulaznoj putanji prešutno pretvori u rezni pomak između nepovezanih točaka.
+
+**Razmotrene alternative:** Nije odabrano preskakanje prividno redundantnog XY rapida između prolaza, ponavljanje F na svakom segmentu ni prihvaćanje otvorenih ili nepovezanih kontura. U milestoneu 9.3 `ArcSegment` se nije aproksimirao linijama; milestone 9.4 naknadno je dodao izravno G02/G03 mapiranje.
+
+**Utjecaj na implementaciju:** Kvadrat, pravokutnik i jednakostranični trokut iz postojećeg `ToolPathServicea` mogu se softverski pretvoriti u single-element G-code. Krug još nije podržan. Testovi koriste isključivo označene softverske vrijednosti i ne potvrđuju stvarne machining parametre, ponašanje naredbi, Z-smjer ni work zero na ZK-1325 / RichAuto A11.
+
+---
+
+## G-code profil, programski okvir i Z konvencija
+
+**Datum:** 2026-08-26
+**Status:** IMPLEMENTIRANO / SOFTVERSKI TESTIRANO / NIJE FIZIČKI TESTIRANO
+
+**Odluka:** G-code sloj koristi nepromjenjivi `GCodeProgram`, ugovor `GCodeGenerator`, deterministični `GCodeFormatter` i konfigurabilni `RichAutoA11Profile`. Profil zasebno čuva opcije emitiranja i skup mogućnosti koje su fizički potvrđene na kontroleru; jedno stanje ne određuje drugo. Trenutačni programski okvir emitira `G21`, `G17` i `G90`, opcionalno `G54`, zaseban `S` redak i `M03`, a završava opcionalnim `M05` i obveznim `M30`. Podržani su samo milimetri i apsolutno pozicioniranje jer su postojeće projektne veličine u milimetrima, a `ToolPath` sadrži apsolutne XY koordinate. Pozitivne domenske dubine i safe Z veličine ostaju bez predznaka; odabrana `ZCoordinateConvention` zasebno ih pretvara u G-code Z koordinate uz eksplicitnu pretpostavku da je nula na površini materijala. Step-down kalkulator vraća pozitivne kumulativne dubine i uvijek završava točnom ciljnom dubinom.
+
+**Razlog:** Odvajanje emitiranja od fizičke potvrde omogućuje softverske varijante bez tvrdnje da konkretni ZK-1325 / RichAuto A11 prihvaća `F`, `S`, `G54`, spindle naredbe ili odabrani work zero. Eksplicitna Z konvencija sprječava skriveno pretvaranje pozitivnog `cutDepth` u negativnu koordinatu. Fiksni LF izlaz, `BigDecimal` formatiranje i decimalna točka neovisna o Localeu čine `.nc` tekst ponovljivim.
+
+**Razmotrene alternative:** Nisu odabrani hardkodirani fizički statusi, skrivena pretpostavka negativnog Z rezanja, formatiranje pomoću zadanog Localea ni inkrementalno/inch pozicioniranje bez potrebne konverzije putanje. `F` nije stavljen u header jer će njegovo značenje ovisiti o budućem plunge ili reznom pomaku. Konkretni `RichAutoA11GCodeGenerator` nije uveden prije implementacije ToolPath naredbi kako djelomičan generator ne bi vraćao program bez rezne putanje.
+
+**Utjecaj na implementaciju:** Budući single-element generator implementirat će `GCodeGenerator`, sastaviti header i footer oko naredbi putanje te primijeniti profilnu Z konvenciju na rezultate `PassDepthCalculatora`. Fizička potvrda naredbi, Z-smjera i work zeroa mora se zasebno zabilježiti tek nakon testa na ciljnom stroju; trenutačni unit testovi dokazuju samo determinističan softverski output.
+
+---
+
 ## V1 geometrijska reprezentacija i ToolPath
 
 **Datum:** 2026-08-26
