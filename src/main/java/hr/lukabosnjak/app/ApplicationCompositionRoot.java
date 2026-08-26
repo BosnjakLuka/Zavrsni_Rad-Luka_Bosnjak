@@ -1,0 +1,142 @@
+package hr.lukabosnjak.app;
+
+import hr.lukabosnjak.config.DatabaseConfig;
+import hr.lukabosnjak.config.DatabaseInitializer;
+import hr.lukabosnjak.gcode.NcExportService;
+import hr.lukabosnjak.gcode.RichAutoA11GCodeGenerator;
+import hr.lukabosnjak.gcode.RichAutoA11Profile;
+import hr.lukabosnjak.geometry.ToolPathBoundsCalculator;
+import hr.lukabosnjak.geometry.ToolPathService;
+import hr.lukabosnjak.persistence.jdbc.ConnectionProvider;
+import hr.lukabosnjak.persistence.jdbc.JdbcCncMachineRepository;
+import hr.lukabosnjak.persistence.jdbc.JdbcMachiningJobRepository;
+import hr.lukabosnjak.persistence.jdbc.JdbcMaterialTypeRepository;
+import hr.lukabosnjak.persistence.jdbc.JdbcRoleRepository;
+import hr.lukabosnjak.persistence.jdbc.JdbcToolRepository;
+import hr.lukabosnjak.persistence.jdbc.JdbcUserRepository;
+import hr.lukabosnjak.persistence.repository.CncMachineRepository;
+import hr.lukabosnjak.persistence.repository.MachiningJobRepository;
+import hr.lukabosnjak.persistence.repository.MaterialTypeRepository;
+import hr.lukabosnjak.persistence.repository.RoleRepository;
+import hr.lukabosnjak.persistence.repository.ToolRepository;
+import hr.lukabosnjak.persistence.repository.UserRepository;
+import hr.lukabosnjak.service.MaterialReferenceDataService;
+import hr.lukabosnjak.service.ProgramExportService;
+import hr.lukabosnjak.service.ProgramGenerationService;
+import hr.lukabosnjak.service.ReferenceDataService;
+import hr.lukabosnjak.service.SavedJobService;
+import hr.lukabosnjak.ui.controller.MainFormController;
+import hr.lukabosnjak.validation.MachiningJobValidator;
+import hr.lukabosnjak.validation.MachiningParametersValidator;
+import hr.lukabosnjak.validation.MaterialSheetValidator;
+import hr.lukabosnjak.validation.ShapeValidator;
+import hr.lukabosnjak.validation.SingleShapeFitValidator;
+
+import java.sql.SQLException;
+import java.util.Objects;
+import java.util.Set;
+
+import static hr.lukabosnjak.gcode.RichAutoA11Profile.ArcCenterMode.RELATIVE_TO_ARC_START;
+import static hr.lukabosnjak.gcode.RichAutoA11Profile.PositioningMode.ABSOLUTE;
+import static hr.lukabosnjak.gcode.RichAutoA11Profile.Units.MILLIMETERS;
+import static hr.lukabosnjak.gcode.RichAutoA11Profile.ZCoordinateConvention.MATERIAL_SURFACE_ZERO_NEGATIVE_CUT;
+
+/** The single manual composition root for the non-modular JavaFX application. */
+final class ApplicationCompositionRoot {
+    private final RoleRepository roleRepository;
+    private final UserRepository userRepository;
+    private final MaterialTypeRepository materialTypeRepository;
+    private final CncMachineRepository cncMachineRepository;
+    private final ToolRepository toolRepository;
+    private final MachiningJobRepository machiningJobRepository;
+
+    private final ProgramGenerationService programGenerationService;
+    private final ReferenceDataService referenceDataService;
+    private final MaterialReferenceDataService materialReferenceDataService;
+    private final SavedJobService savedJobService;
+    private final ProgramExportService programExportService;
+
+    private ApplicationCompositionRoot(ConnectionProvider connectionProvider) {
+        Objects.requireNonNull(connectionProvider, "connectionProvider");
+
+        roleRepository = new JdbcRoleRepository(connectionProvider);
+        userRepository = new JdbcUserRepository(connectionProvider);
+        materialTypeRepository = new JdbcMaterialTypeRepository(connectionProvider);
+        cncMachineRepository = new JdbcCncMachineRepository(connectionProvider);
+        toolRepository = new JdbcToolRepository(connectionProvider);
+        machiningJobRepository = new JdbcMachiningJobRepository(connectionProvider);
+
+        ShapeValidator shapeValidator = new ShapeValidator();
+        MaterialSheetValidator materialSheetValidator = new MaterialSheetValidator();
+        MachiningParametersValidator machiningParametersValidator = new MachiningParametersValidator();
+        MachiningJobValidator machiningJobValidator = new MachiningJobValidator(
+                shapeValidator, materialSheetValidator, machiningParametersValidator);
+        ToolPathService toolPathService = new ToolPathService(shapeValidator);
+        SingleShapeFitValidator singleShapeFitValidator = new SingleShapeFitValidator(
+                new ToolPathBoundsCalculator(), materialSheetValidator);
+        RichAutoA11GCodeGenerator gCodeGenerator = new RichAutoA11GCodeGenerator(conservativePreviewProfile());
+
+        programGenerationService = new ProgramGenerationService(
+                machiningJobValidator, toolPathService, singleShapeFitValidator, gCodeGenerator);
+        referenceDataService = new ReferenceDataService(cncMachineRepository, toolRepository);
+        materialReferenceDataService = new MaterialReferenceDataService(materialTypeRepository);
+        savedJobService = new SavedJobService(machiningJobRepository);
+        programExportService = new ProgramExportService(new NcExportService());
+    }
+
+    static ApplicationCompositionRoot production() {
+        return new ApplicationCompositionRoot(DatabaseConfig::getConnection);
+    }
+
+    static ApplicationCompositionRoot forConnectionProvider(ConnectionProvider connectionProvider) {
+        return new ApplicationCompositionRoot(connectionProvider);
+    }
+
+    void initializeDatabase() throws SQLException {
+        DatabaseInitializer.initialize();
+    }
+
+    Object createController(Class<?> controllerType) {
+        if (controllerType == MainFormController.class) {
+            return new MainFormController(
+                    programGenerationService, referenceDataService, materialReferenceDataService,
+                    savedJobService, programExportService);
+        }
+        throw new IllegalArgumentException("Unsupported controller: " + controllerType.getName());
+    }
+
+    ProgramGenerationService programGenerationService() {
+        return programGenerationService;
+    }
+
+    RoleRepository roleRepository() {
+        return roleRepository;
+    }
+
+    UserRepository userRepository() {
+        return userRepository;
+    }
+
+    MaterialTypeRepository materialTypeRepository() {
+        return materialTypeRepository;
+    }
+
+    CncMachineRepository cncMachineRepository() {
+        return cncMachineRepository;
+    }
+
+    ToolRepository toolRepository() {
+        return toolRepository;
+    }
+
+    MachiningJobRepository machiningJobRepository() {
+        return machiningJobRepository;
+    }
+
+    private RichAutoA11Profile conservativePreviewProfile() {
+        return new RichAutoA11Profile(
+                false, false, false, false,
+                MILLIMETERS, ABSOLUTE, 3,
+                MATERIAL_SURFACE_ZERO_NEGATIVE_CUT, RELATIVE_TO_ARC_START, Set.of());
+    }
+}

@@ -247,6 +247,21 @@ Ne zapisuj obi훾ne implementacijske detalje, privremene eksperimente ni nepotvr�
 
 ---
 
+## Jedan ru훾ni application composition root
+
+**Datum:** 2026-08-26
+**Status:** IMPLEMENTIRANO / TESTIRANO
+
+**Odluka:** `ApplicationCompositionRoot` u paketu `hr.lukabosnjak.app` jedino je mjesto koje ru훾no stvara i povezuje produkcijske JDBC repositoryje, validatore, geometry/fit komponente, RichAuto generator i profil, application servicee te ovisnosti JavaFX controllera. `Main` zadr탑ava samo JavaFX lifecycle i delegiranje. Projekt ne koristi Spring, DI framework ni modularni service loader.
+
+**Razlog:** Eksplicitno ru훾no povezivanje ostaje pregledno za studentski projekt, izbjegava duplicirane factory metode i omogu훶uje integration testu stvaranje svje탑eg objektnog grafa nad izoliranim `ConnectionProviderom`.
+
+**Razmotrene alternative:** Povezivanje svih ovisnosti izravno u `Main`, globalni singletoni, service locator i DI framework nisu odabrani. Snapshot repositoryji nisu javno izlo탑eni composition rootom jer ostaju transakcijski detalj `JdbcMachiningJobRepositoryja`.
+
+**Utjecaj na implementaciju:** Nove produkcijske ovisnosti moraju se dodavati u composition root tek kada pripadaju odobrenom scopeu. `LayoutService` se ne povezuje dok stvarno ne postoji nakon GATE 1.
+
+---
+
 ## Predlo탑ak odluke
 
 ### <Kratak naziv odluke>

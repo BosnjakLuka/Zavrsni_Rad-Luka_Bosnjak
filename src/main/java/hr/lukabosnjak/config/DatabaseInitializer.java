@@ -42,7 +42,10 @@ public final class DatabaseInitializer {
         }
     }
 
-    private static void initialize(Connection connection) throws SQLException {
+    public static void initialize(Connection connection) throws SQLException {
+        if (connection == null) {
+            throw new IllegalArgumentException("Connection is required");
+        }
         Set<String> existingTables = readPublicTableNames(connection);
 
         if (existingTables.containsAll(EXPECTED_TABLES)) {

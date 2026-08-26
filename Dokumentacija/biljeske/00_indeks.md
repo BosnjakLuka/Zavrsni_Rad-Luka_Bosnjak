@@ -4,6 +4,7 @@ Kronološki katalog dokumentiranih razvojnih koraka. Nakon svakog dokumentiranog
 
 | Prompt | Tema | Status | Glavne datoteke | Testirano | Kandidat za završni rad | Bilješka |
 |---|---|---|---|---|---|---|
+| 11.1 | Composition root i softverski end-to-end tok | IMPLEMENTIRANO / TESTIRANO / NIJE FIZIČKI TESTIRANO | `ApplicationCompositionRoot`, integration test | Ciljani test prošao; puni suite 110 testova, BUILD SUCCESS | Ručni composition root i E2E round-trip | [11-01-composition-root-e2e.md](11-01-composition-root-e2e.md) |
 | 10.4 | Saved jobs, quick access i `.nc` export | IMPLEMENTIRANO / NIJE TESTIRANO | `service`, `MainFormController`, FXML | Maven je stao na postojećoj H2 JAR ovisnosti prije testova | Quick access i export granica | [10-04-saved-jobs-quick-access-export.md](10-04-saved-jobs-quick-access-export.md) |
 | 10.3 | Generate workflow za jedan element | IMPLEMENTIRANO / NIJE TESTIRANO | `service`, `MainFormController`, FXML | Maven je stao na postojećoj H2 JAR ovisnosti prije testova | Orkestracija validation → ToolPath → G-code | [10-03-generate-workflow.md](10-03-generate-workflow.md) |
 | 10.2 | FXML glavni UI kostur | IMPLEMENTIRANO / NIJE TESTIRANO | FXML view, controller i parser | Maven je pokrenut, ali lokalni JDK ne podržava `release 26`; vizualni JavaFX test nije izvršen | Dinamička semantička polja oblika | [10-02-fxml-glavni-ui-kostur.md](10-02-fxml-glavni-ui-kostur.md) |
