@@ -24,11 +24,16 @@ import hr.lukabosnjak.service.MaterialReferenceDataService;
 import hr.lukabosnjak.service.ProgramExportService;
 import hr.lukabosnjak.service.ProgramGenerationService;
 import hr.lukabosnjak.service.ReferenceDataService;
+import hr.lukabosnjak.service.ReferenceDataManagementService;
 import hr.lukabosnjak.service.SavedJobService;
+import hr.lukabosnjak.ui.controller.CncMachineFormController;
 import hr.lukabosnjak.ui.controller.MainFormController;
+import hr.lukabosnjak.ui.controller.MaterialTypeFormController;
+import hr.lukabosnjak.ui.controller.ToolFormController;
 import hr.lukabosnjak.validation.MachiningJobValidator;
 import hr.lukabosnjak.validation.MachiningParametersValidator;
 import hr.lukabosnjak.validation.MaterialSheetValidator;
+import hr.lukabosnjak.validation.ReferenceDataValidator;
 import hr.lukabosnjak.validation.ShapeValidator;
 import hr.lukabosnjak.validation.SingleShapeFitValidator;
 
@@ -53,6 +58,7 @@ final class ApplicationCompositionRoot {
     private final ProgramGenerationService programGenerationService;
     private final ReferenceDataService referenceDataService;
     private final MaterialReferenceDataService materialReferenceDataService;
+    private final ReferenceDataManagementService referenceDataManagementService;
     private final SavedJobService savedJobService;
     private final ProgramExportService programExportService;
 
@@ -80,6 +86,8 @@ final class ApplicationCompositionRoot {
                 machiningJobValidator, toolPathService, singleShapeFitValidator, gCodeGenerator);
         referenceDataService = new ReferenceDataService(cncMachineRepository, toolRepository);
         materialReferenceDataService = new MaterialReferenceDataService(materialTypeRepository);
+        referenceDataManagementService = new ReferenceDataManagementService(
+                materialTypeRepository, cncMachineRepository, toolRepository, new ReferenceDataValidator());
         savedJobService = new SavedJobService(machiningJobRepository);
         programExportService = new ProgramExportService(new NcExportService());
     }
@@ -100,7 +108,16 @@ final class ApplicationCompositionRoot {
         if (controllerType == MainFormController.class) {
             return new MainFormController(
                     programGenerationService, referenceDataService, materialReferenceDataService,
-                    savedJobService, programExportService);
+                    savedJobService, programExportService, this::createController);
+        }
+        if (controllerType == MaterialTypeFormController.class) {
+            return new MaterialTypeFormController(referenceDataManagementService);
+        }
+        if (controllerType == CncMachineFormController.class) {
+            return new CncMachineFormController(referenceDataManagementService);
+        }
+        if (controllerType == ToolFormController.class) {
+            return new ToolFormController(referenceDataManagementService);
         }
         throw new IllegalArgumentException("Unsupported controller: " + controllerType.getName());
     }

@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox prefWidth="500.0" spacing="12.0" xmlns="http://javafx.com/javafx/26"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="hr.lukabosnjak.ui.controller.ToolFormController">
+    <padding><Insets bottom="18.0" left="18.0" right="18.0" top="18.0" /></padding>
+    <Label style="-fx-font-size: 18px; -fx-font-weight: bold;" text="Dodavanje alata" />
+    <HBox spacing="6.0">
+        <Label text="CNC stroj:" />
+        <Label fx:id="machineLabel" style="-fx-font-weight: bold;" />
+    </HBox>
+    <Label text="Unesite podatke stvarnog glodala koje će se koristiti na odabranom stroju." wrapText="true" />
+    <GridPane hgap="12.0" vgap="9.0">
+        <columnConstraints>
+            <ColumnConstraints minWidth="170.0" />
+            <ColumnConstraints hgrow="ALWAYS" />
+        </columnConstraints>
+        <Label text="Broj alata *" GridPane.rowIndex="0" />
+        <TextField fx:id="toolNumberInput" promptText="npr. 1" GridPane.columnIndex="1" GridPane.rowIndex="0" />
+        <Label text="Naziv *" GridPane.rowIndex="1" />
+        <TextField fx:id="nameInput" promptText="Naziv ili oznaka glodala" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+        <Label text="Tip *" GridPane.rowIndex="2" />
+        <TextField fx:id="typeInput" promptText="Potvrđeni tip alata" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+        <Label text="Promjer (mm) *" GridPane.rowIndex="3" />
+        <TextField fx:id="diameterInput" promptText="0.0" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+        <Label text="Rezna duljina (mm) *" GridPane.rowIndex="4" />
+        <TextField fx:id="cuttingLengthInput" promptText="0.0" GridPane.columnIndex="1" GridPane.rowIndex="4" />
+        <Label text="Broj oštrica *" GridPane.rowIndex="5" />
+        <TextField fx:id="fluteCountInput" promptText="npr. 2" GridPane.columnIndex="1" GridPane.rowIndex="5" />
+    </GridPane>
+    <Label fx:id="statusLabel" style="-fx-text-fill: #b00020;" wrapText="true" />
+    <HBox alignment="CENTER_RIGHT" spacing="8.0">
+        <Button cancelButton="true" mnemonicParsing="false" onAction="#handleCancel" text="Odustani" />
+        <Button defaultButton="true" mnemonicParsing="false" onAction="#handleSave" text="Spremi" />
+    </HBox>
+</VBox>

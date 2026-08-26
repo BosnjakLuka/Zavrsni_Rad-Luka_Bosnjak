@@ -15,6 +15,10 @@ import hr.lukabosnjak.domain.enums.ShapeType;
 import hr.lukabosnjak.gcode.GCodeProgram;
 import hr.lukabosnjak.persistence.jdbc.ConnectionProvider;
 import hr.lukabosnjak.service.ProgramGenerationRequest;
+import hr.lukabosnjak.ui.controller.CncMachineFormController;
+import hr.lukabosnjak.ui.controller.MainFormController;
+import hr.lukabosnjak.ui.controller.MaterialTypeFormController;
+import hr.lukabosnjak.ui.controller.ToolFormController;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -23,6 +27,7 @@ import java.sql.DriverManager;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -94,6 +99,18 @@ class ApplicationCompositionRootIntegrationTest {
         assertEquals(references.machine().getCncMachineId(), reloaded.getCncMachine().getCncMachineId());
         assertEquals(references.tool().getToolId(), reloaded.getTool().getToolId());
         assertEquals(references.user().getUserId(), reloaded.getCreatedBy().getUserId());
+    }
+
+    @Test
+    void createsMainAndReferenceDataFormControllersFromOneCompositionRoot() {
+        ApplicationCompositionRoot context = ApplicationCompositionRoot.forConnectionProvider(connectionProvider);
+
+        assertInstanceOf(MainFormController.class, context.createController(MainFormController.class));
+        assertInstanceOf(MaterialTypeFormController.class,
+                context.createController(MaterialTypeFormController.class));
+        assertInstanceOf(CncMachineFormController.class,
+                context.createController(CncMachineFormController.class));
+        assertInstanceOf(ToolFormController.class, context.createController(ToolFormController.class));
     }
 
     private PersistedReferences saveReferences(ApplicationCompositionRoot context) throws Exception {

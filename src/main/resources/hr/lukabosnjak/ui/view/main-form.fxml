@@ -41,7 +41,10 @@
                             <Separator />
                             <Label style="-fx-font-size: 16px; -fx-font-weight: bold;" text="Ploča materijala" />
                             <Label text="Vrsta materijala" />
-                            <ComboBox fx:id="materialTypeComboBox" maxWidth="Infinity" promptText="Odaberite vrstu materijala" />
+                            <HBox spacing="8.0">
+                                <ComboBox fx:id="materialTypeComboBox" maxWidth="Infinity" promptText="Odaberite vrstu materijala" HBox.hgrow="ALWAYS" />
+                                <Button mnemonicParsing="false" onAction="#handleAddMaterialType" text="Dodaj..." />
+                            </HBox>
                             <GridPane hgap="10.0" vgap="8.0">
                                 <Label text="Širina (mm)" GridPane.rowIndex="0" />
                                 <TextField fx:id="materialWidthInput" promptText="0.0" GridPane.columnIndex="1" GridPane.rowIndex="0" />
@@ -53,10 +56,16 @@
                         </VBox>
                         <VBox spacing="10.0" GridPane.columnIndex="1" GridPane.rowIndex="0">
                             <Label style="-fx-font-size: 16px; -fx-font-weight: bold;" text="Stroj i alat" />
-                            <Label text="Machine" />
-                            <ComboBox fx:id="machineComboBox" maxWidth="Infinity" onAction="#handleMachineChanged" promptText="Odaberite CNC stroj" />
-                            <Label text="Tool" />
-                            <ComboBox fx:id="toolComboBox" maxWidth="Infinity" promptText="Odaberite alat" />
+                            <Label text="CNC stroj" />
+                            <HBox spacing="8.0">
+                                <ComboBox fx:id="machineComboBox" maxWidth="Infinity" onAction="#handleMachineChanged" promptText="Odaberite CNC stroj" HBox.hgrow="ALWAYS" />
+                                <Button mnemonicParsing="false" onAction="#handleAddMachine" text="Dodaj..." />
+                            </HBox>
+                            <Label text="Alat" />
+                            <HBox spacing="8.0">
+                                <ComboBox fx:id="toolComboBox" maxWidth="Infinity" promptText="Odaberite alat" HBox.hgrow="ALWAYS" />
+                                <Button mnemonicParsing="false" onAction="#handleAddTool" text="Dodaj..." />
+                            </HBox>
                             <Separator />
                             <Label style="-fx-font-size: 16px; -fx-font-weight: bold;" text="Machining parameters" />
                             <GridPane hgap="10.0" vgap="8.0">

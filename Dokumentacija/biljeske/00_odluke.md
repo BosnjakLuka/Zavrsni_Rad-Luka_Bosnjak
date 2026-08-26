@@ -290,6 +290,21 @@ Ne zapisuj obične implementacijske detalje, privremene eksperimente ni nepotvr�
 ---
 
 <!-- Nove potvrđene odluke dodaju se iznad odjeljka predloška. -->
+
+## Modalni unos referentnih podataka bez zadanih fizičkih vrijednosti
+
+**Datum:** 2026-08-26
+**Status:** IMPLEMENTIRANO / SOFTVERSKI TESTIRANO / NIJE VIZUALNO TESTIRANO
+
+**Odluka:** Vrsta materijala, CNC stroj i alat dodaju se kroz tri zasebna modalna FXML obrasca otvorena iz glavne forme. Nakon spremanja novi zapis odmah se dodaje i odabire u odgovarajućem padajućem izborniku. Alat se uvijek stvara za prethodno odabrani spremljeni stroj. Fizičke vrijednosti stroja i alata nisu seedane; korisnik ih mora unijeti iz potvrđenog izvora.
+
+**Razlog:** Modalni tok uklanja prazne padajuće izbornike bez napuštanja glavnog programa, dok izostanak pretpostavljenog seeda sprječava da nepotvrđeni max feed, RPM, Z hod ili glodalo postanu stvarne postavke aplikacije.
+
+**Razmotrene alternative:** Razmotreni su zasebna navigacijska scena, tabovi i testni/defaultni seed. Nisu odabrani jer je potvrđen modalni tok, a stvarne fizičke vrijednosti još nisu dostavljene.
+
+**Utjecaj na implementaciju:** `ApplicationCompositionRoot` stvara sva četiri UI controllera i zajednički `ReferenceDataManagementService`. Controlleri ne sadrže SQL; management service koristi postojeće repositoryje i novu referentnu validaciju. `Tool.type` ostaje slobodan tekst do potvrđene odluke o stvarnim kategorijama alata.
+
+---
 ## Konzervativni softverski profil Generate previewa
 
 **Datum:** 2026-08-26

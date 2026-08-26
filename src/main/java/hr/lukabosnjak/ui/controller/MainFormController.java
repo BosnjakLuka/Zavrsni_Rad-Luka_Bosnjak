@@ -19,6 +19,9 @@ import hr.lukabosnjak.service.ReferenceDataService;
 import hr.lukabosnjak.service.SavedJobAccessException;
 import hr.lukabosnjak.service.SavedJobService;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
@@ -27,12 +30,17 @@ import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
+import javafx.util.Callback;
 import javafx.util.StringConverter;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 
 public class MainFormController {
     @FXML private ComboBox<ShapeType> shapeTypeComboBox;
@@ -59,6 +67,7 @@ public class MainFormController {
     private final MaterialReferenceDataService materialReferenceDataService;
     private final SavedJobService savedJobService;
     private final ProgramExportService programExportService;
+    private final Callback<Class<?>, Object> controllerFactory;
     private final List<ShapeInput> shapeInputs = new ArrayList<>();
     private GCodeProgram displayedProgram;
 
@@ -67,13 +76,15 @@ public class MainFormController {
             ReferenceDataService referenceDataService,
             MaterialReferenceDataService materialReferenceDataService,
             SavedJobService savedJobService,
-            ProgramExportService programExportService
+            ProgramExportService programExportService,
+            Callback<Class<?>, Object> controllerFactory
     ) {
         this.programGenerationService = programGenerationService;
         this.referenceDataService = referenceDataService;
         this.materialReferenceDataService = materialReferenceDataService;
         this.savedJobService = savedJobService;
         this.programExportService = programExportService;
+        this.controllerFactory = controllerFactory;
     }
 
     @FXML
@@ -109,6 +120,59 @@ public class MainFormController {
     @FXML
     private void handleMachineChanged() {
         loadToolsForSelectedMachine();
+    }
+
+    @FXML
+    private void handleAddMaterialType() {
+        MaterialTypeFormController controller = showDialog(
+                "/hr/lukabosnjak/ui/view/material-type-form.fxml",
+                "Dodavanje vrste materijala",
+                MaterialTypeFormController.class,
+                ignored -> { });
+        if (controller == null || controller.getSavedMaterialType() == null) {
+            return;
+        }
+        MaterialType saved = controller.getSavedMaterialType();
+        materialTypeComboBox.getItems().add(saved);
+        materialTypeComboBox.setValue(saved);
+        statusLabel.setText("Vrsta materijala je spremljena i odabrana.");
+    }
+
+    @FXML
+    private void handleAddMachine() {
+        CncMachineFormController controller = showDialog(
+                "/hr/lukabosnjak/ui/view/cnc-machine-form.fxml",
+                "Dodavanje CNC stroja",
+                CncMachineFormController.class,
+                ignored -> { });
+        if (controller == null || controller.getSavedMachine() == null) {
+            return;
+        }
+        CncMachine saved = controller.getSavedMachine();
+        machineComboBox.getItems().add(saved);
+        machineComboBox.setValue(saved);
+        statusLabel.setText("CNC stroj je spremljen i odabran. Sada dodajte alat za taj stroj.");
+    }
+
+    @FXML
+    private void handleAddTool() {
+        CncMachine selectedMachine = machineComboBox.getValue();
+        if (selectedMachine == null) {
+            statusLabel.setText("Prije dodavanja alata odaberite ili dodajte CNC stroj.");
+            return;
+        }
+        ToolFormController controller = showDialog(
+                "/hr/lukabosnjak/ui/view/tool-form.fxml",
+                "Dodavanje alata",
+                ToolFormController.class,
+                form -> form.setMachine(selectedMachine));
+        if (controller == null || controller.getSavedTool() == null) {
+            return;
+        }
+        Tool saved = controller.getSavedTool();
+        toolComboBox.getItems().add(saved);
+        toolComboBox.setValue(saved);
+        statusLabel.setText("Alat je spremljen i odabran za CNC stroj " + selectedMachine.getName() + ".");
     }
 
     @FXML
@@ -183,6 +247,38 @@ public class MainFormController {
             toolComboBox.getItems().setAll(referenceDataService.loadTools(machineComboBox.getValue()));
         } catch (ReferenceDataAccessException exception) {
             statusLabel.setText(exception.getMessage());
+        }
+    }
+
+    private <T> T showDialog(
+            String resourcePath,
+            String title,
+            Class<T> controllerType,
+            Consumer<T> beforeShow
+    ) {
+        URL resource = MainFormController.class.getResource(resourcePath);
+        if (resource == null) {
+            statusLabel.setText("UI obrazac nije pronađen: " + resourcePath);
+            return null;
+        }
+        try {
+            FXMLLoader loader = new FXMLLoader(resource);
+            loader.setControllerFactory(controllerFactory);
+            Parent root = loader.load();
+            T controller = controllerType.cast(loader.getController());
+            beforeShow.accept(controller);
+
+            Stage dialog = new Stage();
+            dialog.setTitle(title);
+            dialog.initOwner(statusLabel.getScene().getWindow());
+            dialog.initModality(Modality.WINDOW_MODAL);
+            dialog.setResizable(false);
+            dialog.setScene(new Scene(root));
+            dialog.showAndWait();
+            return controller;
+        } catch (IOException exception) {
+            statusLabel.setText("Otvaranje obrasca nije uspjelo: " + exception.getMessage());
+            return null;
         }
     }
 

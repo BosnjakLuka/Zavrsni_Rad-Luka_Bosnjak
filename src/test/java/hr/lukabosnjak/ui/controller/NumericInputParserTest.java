@@ -31,4 +31,11 @@ class NumericInputParserTest {
         assertThrows(IllegalArgumentException.class,
                 () -> NumericInputParser.parseRequiredFinite("Infinity", "Širina"));
     }
+
+    @Test
+    void parsesIntegerAndRejectsDecimalIntegerInput() {
+        assertEquals(2, NumericInputParser.parseRequiredInteger(" 2 ", "Broj oštrica"));
+        assertThrows(IllegalArgumentException.class,
+                () -> NumericInputParser.parseRequiredInteger("2.5", "Broj oštrica"));
+    }
 }

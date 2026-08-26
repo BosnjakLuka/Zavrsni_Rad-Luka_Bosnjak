@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox prefWidth="420.0" spacing="10.0" xmlns="http://javafx.com/javafx/26"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="hr.lukabosnjak.ui.controller.MaterialTypeFormController">
+    <padding><Insets bottom="18.0" left="18.0" right="18.0" top="18.0" /></padding>
+    <Label style="-fx-font-size: 18px; -fx-font-weight: bold;" text="Dodavanje vrste materijala" />
+    <Label text="Naziv *" />
+    <TextField fx:id="nameInput" promptText="npr. MDF" />
+    <Label text="Opis" />
+    <TextArea fx:id="descriptionInput" prefRowCount="4" promptText="Neobavezan opis materijala" wrapText="true" />
+    <Label fx:id="statusLabel" style="-fx-text-fill: #b00020;" wrapText="true" />
+    <HBox alignment="CENTER_RIGHT" spacing="8.0">
+        <Button cancelButton="true" mnemonicParsing="false" onAction="#handleCancel" text="Odustani" />
+        <Button defaultButton="true" mnemonicParsing="false" onAction="#handleSave" text="Spremi" />
+    </HBox>
+</VBox>

@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox prefWidth="540.0" spacing="12.0" xmlns="http://javafx.com/javafx/26"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="hr.lukabosnjak.ui.controller.CncMachineFormController">
+    <padding><Insets bottom="18.0" left="18.0" right="18.0" top="18.0" /></padding>
+    <Label style="-fx-font-size: 18px; -fx-font-weight: bold;" text="Dodavanje CNC stroja" />
+    <Label text="Unesite stvarne vrijednosti s pločice stroja ili potvrđene dokumentacije." wrapText="true" />
+    <GridPane hgap="12.0" vgap="9.0">
+        <columnConstraints>
+            <ColumnConstraints minWidth="215.0" />
+            <ColumnConstraints hgrow="ALWAYS" />
+        </columnConstraints>
+        <Label text="Naziv *" GridPane.rowIndex="0" />
+        <TextField fx:id="nameInput" promptText="npr. ZK-1325" GridPane.columnIndex="1" GridPane.rowIndex="0" />
+        <Label text="Proizvođač" GridPane.rowIndex="1" />
+        <TextField fx:id="manufacturerInput" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+        <Label text="Model" GridPane.rowIndex="2" />
+        <TextField fx:id="modelInput" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+        <Label text="Kontroler *" GridPane.rowIndex="3" />
+        <TextField fx:id="controllerInput" promptText="npr. RichAuto A11" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+        <Label text="Radna površina X (mm) *" GridPane.rowIndex="4" />
+        <TextField fx:id="workAreaXInput" promptText="0.0" GridPane.columnIndex="1" GridPane.rowIndex="4" />
+        <Label text="Radna površina Y (mm) *" GridPane.rowIndex="5" />
+        <TextField fx:id="workAreaYInput" promptText="0.0" GridPane.columnIndex="1" GridPane.rowIndex="5" />
+        <Label text="Radna površina Z (mm) *" GridPane.rowIndex="6" />
+        <TextField fx:id="workAreaZInput" promptText="0.0" GridPane.columnIndex="1" GridPane.rowIndex="6" />
+        <Label text="Maksimalni posmak (mm/min) *" GridPane.rowIndex="7" />
+        <TextField fx:id="maxFeedRateInput" promptText="0.0" GridPane.columnIndex="1" GridPane.rowIndex="7" />
+        <Label text="Minimalna brzina vretena (RPM) *" GridPane.rowIndex="8" />
+        <TextField fx:id="minSpindleSpeedInput" promptText="0.0" GridPane.columnIndex="1" GridPane.rowIndex="8" />
+        <Label text="Maksimalna brzina vretena (RPM) *" GridPane.rowIndex="9" />
+        <TextField fx:id="maxSpindleSpeedInput" promptText="0.0" GridPane.columnIndex="1" GridPane.rowIndex="9" />
+    </GridPane>
+    <Label fx:id="statusLabel" style="-fx-text-fill: #b00020;" wrapText="true" />
+    <HBox alignment="CENTER_RIGHT" spacing="8.0">
+        <Button cancelButton="true" mnemonicParsing="false" onAction="#handleCancel" text="Odustani" />
+        <Button defaultButton="true" mnemonicParsing="false" onAction="#handleSave" text="Spremi" />
+    </HBox>
+</VBox>

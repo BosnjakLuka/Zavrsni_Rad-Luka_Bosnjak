@@ -23,4 +23,16 @@ public final class NumericInputParser {
             throw new IllegalArgumentException("Polje '" + fieldLabel + "' mora sadržavati broj.");
         }
     }
+
+    public static int parseRequiredInteger(String value, String fieldLabel) {
+        if (value == null || value.isBlank()) {
+            throw new IllegalArgumentException("Polje '" + fieldLabel + "' je obavezno.");
+        }
+
+        try {
+            return Integer.parseInt(value.trim());
+        } catch (NumberFormatException exception) {
+            throw new IllegalArgumentException("Polje '" + fieldLabel + "' mora sadržavati cijeli broj.");
+        }
+    }
 }
