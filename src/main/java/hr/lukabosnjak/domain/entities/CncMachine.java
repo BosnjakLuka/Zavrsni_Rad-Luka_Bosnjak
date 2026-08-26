@@ -10,10 +10,10 @@ public class CncMachine {
     private String controller;
     private double workAreaX;
     private double workAreaY;
-    private double workAreaZ;
-    private double maxFeedRate;
-    private double minSpindleSpeed;
-    private double maxSpindleSpeed;
+    private Double workAreaZ;
+    private Double maxFeedRate;
+    private Double minSpindleSpeed;
+    private Double maxSpindleSpeed;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
@@ -25,10 +25,10 @@ public class CncMachine {
             String controller,
             double workAreaX,
             double workAreaY,
-            double workAreaZ,
-            double maxFeedRate,
-            double minSpindleSpeed,
-            double maxSpindleSpeed,
+            Double workAreaZ,
+            Double maxFeedRate,
+            Double minSpindleSpeed,
+            Double maxSpindleSpeed,
             LocalDateTime createdAt,
             LocalDateTime updatedAt
     ) {
@@ -103,35 +103,35 @@ public class CncMachine {
         this.workAreaY = workAreaY;
     }
 
-    public double getWorkAreaZ() {
+    public Double getWorkAreaZ() {
         return workAreaZ;
     }
 
-    public void setWorkAreaZ(double workAreaZ) {
+    public void setWorkAreaZ(Double workAreaZ) {
         this.workAreaZ = workAreaZ;
     }
 
-    public double getMaxFeedRate() {
+    public Double getMaxFeedRate() {
         return maxFeedRate;
     }
 
-    public void setMaxFeedRate(double maxFeedRate) {
+    public void setMaxFeedRate(Double maxFeedRate) {
         this.maxFeedRate = maxFeedRate;
     }
 
-    public double getMinSpindleSpeed() {
+    public Double getMinSpindleSpeed() {
         return minSpindleSpeed;
     }
 
-    public void setMinSpindleSpeed(double minSpindleSpeed) {
+    public void setMinSpindleSpeed(Double minSpindleSpeed) {
         this.minSpindleSpeed = minSpindleSpeed;
     }
 
-    public double getMaxSpindleSpeed() {
+    public Double getMaxSpindleSpeed() {
         return maxSpindleSpeed;
     }
 
-    public void setMaxSpindleSpeed(double maxSpindleSpeed) {
+    public void setMaxSpindleSpeed(Double maxSpindleSpeed) {
         this.maxSpindleSpeed = maxSpindleSpeed;
     }
 

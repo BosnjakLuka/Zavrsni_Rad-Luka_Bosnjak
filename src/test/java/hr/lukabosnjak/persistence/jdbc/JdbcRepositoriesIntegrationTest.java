@@ -70,6 +70,10 @@ class JdbcRepositoriesIntegrationTest {
         assertEquals("Machine A", loadedMachine.getName());
         assertNull(loadedMachine.getManufacturer());
         assertEquals(1250.0, loadedMachine.getWorkAreaX());
+        assertNull(loadedMachine.getWorkAreaZ());
+        assertNull(loadedMachine.getMaxFeedRate());
+        assertNull(loadedMachine.getMinSpindleSpeed());
+        assertNull(loadedMachine.getMaxSpindleSpeed());
         assertEquals(1, machines.findAll().size());
     }
 
@@ -149,15 +153,19 @@ class JdbcRepositoriesIntegrationTest {
                 .map(Tool::getToolNumber).toList());
         assertEquals(secondTool.getToolId(), tools.findByMachineIdAndToolNumber(
                 firstMachine.getCncMachineId(), 2).orElseThrow().getToolId());
-        assertEquals("Machine A", tools.findById(firstTool.getToolId()).orElseThrow()
-                .getCncMachine().getName());
+        CncMachine loadedToolMachine = tools.findById(firstTool.getToolId()).orElseThrow().getCncMachine();
+        assertEquals("Machine A", loadedToolMachine.getName());
+        assertNull(loadedToolMachine.getWorkAreaZ());
+        assertNull(loadedToolMachine.getMaxFeedRate());
+        assertNull(loadedToolMachine.getMinSpindleSpeed());
+        assertNull(loadedToolMachine.getMaxSpindleSpeed());
         assertTrue(tools.findByMachineIdAndToolNumber(firstMachine.getCncMachineId(), 99).isEmpty());
     }
 
     private CncMachine machine(String name) {
         return new CncMachine(
-                null, name, null, null, "Test controller", 1250.0, 2500.0, 150.0,
-                5000.0, 1000.0, 24000.0, null, null);
+                null, name, null, "ZK-1325", "RichAuto A11", 1250.0, 2500.0,
+                null, null, null, null, null, null);
     }
 
     private Tool tool(CncMachine machine, int toolNumber, String name) {

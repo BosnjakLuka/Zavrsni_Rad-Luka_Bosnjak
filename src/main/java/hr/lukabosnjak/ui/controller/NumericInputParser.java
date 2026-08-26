@@ -24,6 +24,13 @@ public final class NumericInputParser {
         }
     }
 
+    public static Double parseOptionalFinite(String value, String fieldLabel) {
+        if (value == null || value.isBlank()) {
+            return null;
+        }
+        return parseRequiredFinite(value, fieldLabel);
+    }
+
     public static int parseRequiredInteger(String value, String fieldLabel) {
         if (value == null || value.isBlank()) {
             throw new IllegalArgumentException("Polje '" + fieldLabel + "' je obavezno.");

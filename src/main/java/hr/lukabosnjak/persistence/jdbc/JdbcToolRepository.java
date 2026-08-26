@@ -100,9 +100,10 @@ public final class JdbcToolRepository extends JdbcRepositorySupport implements T
                 resultSet.getLong("cnc_machine_id"), resultSet.getString("machine_name"),
                 resultSet.getString("manufacturer"), resultSet.getString("model"),
                 resultSet.getString("controller"), resultSet.getDouble("work_area_x"),
-                resultSet.getDouble("work_area_y"), resultSet.getDouble("work_area_z"),
-                resultSet.getDouble("max_feed_rate"), resultSet.getDouble("min_spindle_speed"),
-                resultSet.getDouble("max_spindle_speed"),
+                resultSet.getDouble("work_area_y"), resultSet.getObject("work_area_z", Double.class),
+                resultSet.getObject("max_feed_rate", Double.class),
+                resultSet.getObject("min_spindle_speed", Double.class),
+                resultSet.getObject("max_spindle_speed", Double.class),
                 resultSet.getTimestamp("machine_created_at").toLocalDateTime(),
                 resultSet.getTimestamp("machine_updated_at").toLocalDateTime()
         );

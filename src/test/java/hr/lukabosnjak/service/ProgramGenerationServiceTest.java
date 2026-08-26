@@ -77,7 +77,9 @@ class ProgramGenerationServiceTest {
     }
 
     private CncMachine machine(Long id) {
-        return new CncMachine(id, "Testni stroj", null, null, "", 200, 200, 50, 1000, 1000, 24000, null, null);
+        return new CncMachine(
+                id, "Testni stroj", null, null, "", 200, 200,
+                50.0, 1000.0, 1000.0, 24000.0, null, null);
     }
 
     private static final class CapturingGenerator implements hr.lukabosnjak.gcode.GCodeGenerator {

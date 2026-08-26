@@ -7,6 +7,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Types;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -33,10 +34,10 @@ public final class JdbcCncMachineRepository extends JdbcRepositorySupport implem
             statement.setString(4, machine.getController());
             statement.setDouble(5, machine.getWorkAreaX());
             statement.setDouble(6, machine.getWorkAreaY());
-            statement.setDouble(7, machine.getWorkAreaZ());
-            statement.setDouble(8, machine.getMaxFeedRate());
-            statement.setDouble(9, machine.getMinSpindleSpeed());
-            statement.setDouble(10, machine.getMaxSpindleSpeed());
+            statement.setObject(7, machine.getWorkAreaZ(), Types.DOUBLE);
+            statement.setObject(8, machine.getMaxFeedRate(), Types.DOUBLE);
+            statement.setObject(9, machine.getMinSpindleSpeed(), Types.DOUBLE);
+            statement.setObject(10, machine.getMaxSpindleSpeed(), Types.DOUBLE);
         });
         return findById(id).orElseThrow(() -> new SQLException("Saved CNC machine was not found"));
     }
@@ -72,9 +73,10 @@ public final class JdbcCncMachineRepository extends JdbcRepositorySupport implem
                 resultSet.getLong("cnc_machine_id"), resultSet.getString("name"),
                 resultSet.getString("manufacturer"), resultSet.getString("model"),
                 resultSet.getString("controller"), resultSet.getDouble("work_area_x"),
-                resultSet.getDouble("work_area_y"), resultSet.getDouble("work_area_z"),
-                resultSet.getDouble("max_feed_rate"), resultSet.getDouble("min_spindle_speed"),
-                resultSet.getDouble("max_spindle_speed"),
+                resultSet.getDouble("work_area_y"), resultSet.getObject("work_area_z", Double.class),
+                resultSet.getObject("max_feed_rate", Double.class),
+                resultSet.getObject("min_spindle_speed", Double.class),
+                resultSet.getObject("max_spindle_speed", Double.class),
                 resultSet.getTimestamp("created_at").toLocalDateTime(),
                 resultSet.getTimestamp("updated_at").toLocalDateTime()
         );

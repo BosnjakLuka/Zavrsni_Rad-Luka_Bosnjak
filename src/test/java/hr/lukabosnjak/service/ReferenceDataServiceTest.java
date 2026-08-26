@@ -34,7 +34,9 @@ class ReferenceDataServiceTest {
     }
 
     private CncMachine machine(Long id) {
-        return new CncMachine(id, "Stroj", null, null, "", 100, 100, 50, 1000, 1000, 24000, null, null);
+        return new CncMachine(
+                id, "Stroj", null, null, "", 100, 100,
+                50.0, 1000.0, 1000.0, 24000.0, null, null);
     }
 
     private static final class MachineRepositoryStub implements CncMachineRepository {

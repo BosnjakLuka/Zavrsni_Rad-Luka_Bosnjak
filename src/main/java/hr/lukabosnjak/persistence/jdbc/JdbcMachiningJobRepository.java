@@ -227,10 +227,11 @@ public final class JdbcMachiningJobRepository extends JdbcRepositorySupport impl
                 resultSet.getLong(prefix + "id"), resultSet.getString(prefix + "name"),
                 resultSet.getString(prefix + "manufacturer"), resultSet.getString(prefix + "model"),
                 resultSet.getString(prefix + "controller"), resultSet.getDouble(prefix + "work_area_x"),
-                resultSet.getDouble(prefix + "work_area_y"), resultSet.getDouble(prefix + "work_area_z"),
-                resultSet.getDouble(prefix + "max_feed_rate"),
-                resultSet.getDouble(prefix + "min_spindle_speed"),
-                resultSet.getDouble(prefix + "max_spindle_speed"),
+                resultSet.getDouble(prefix + "work_area_y"),
+                resultSet.getObject(prefix + "work_area_z", Double.class),
+                resultSet.getObject(prefix + "max_feed_rate", Double.class),
+                resultSet.getObject(prefix + "min_spindle_speed", Double.class),
+                resultSet.getObject(prefix + "max_spindle_speed", Double.class),
                 resultSet.getTimestamp(prefix + "created_at").toLocalDateTime(),
                 resultSet.getTimestamp(prefix + "updated_at").toLocalDateTime());
     }

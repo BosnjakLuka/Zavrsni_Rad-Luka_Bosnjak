@@ -4,6 +4,7 @@ Kronološki katalog dokumentiranih razvojnih koraka. Nakon svakog dokumentiranog
 
 | Prompt | Tema | Status | Glavne datoteke | Testirano | Kandidat za završni rad | Bilješka |
 |---|---|---|---|---|---|---|
+| 12.2 | Nullable tehničke granice CNC stroja | IMPLEMENTIRANO / SOFTVERSKI TESTIRANO / NIJE VIZUALNO NI FIZIČKI TESTIRANO | `CncMachine`, H2 migracija, JDBC mapping, validacija i UI obrazac | Ciljano 32 testa; puni suite 122 testa, BUILD SUCCESS | Uvjetna validacija i korektivna migracija | [12-02-cnc-machine-nullable-limits.md](12-02-cnc-machine-nullable-limits.md) |
 | 11.2 | Modalni obrasci za materijal, stroj i alat | IMPLEMENTIRANO / SOFTVERSKI TESTIRANO / NIJE VIZUALNO TESTIRANO | FXML, UI controlleri, management service i validator | Ciljani testovi prošli; puni suite 118 testova, BUILD SUCCESS | Service integritet i UI koordinacija | [11-02-reference-data-forms.md](11-02-reference-data-forms.md) |
 | 11.1 | Composition root i softverski end-to-end tok | IMPLEMENTIRANO / TESTIRANO / NIJE FIZIČKI TESTIRANO | `ApplicationCompositionRoot`, integration test | Ciljani test prošao; puni suite 110 testova, BUILD SUCCESS | Ručni composition root i E2E round-trip | [11-01-composition-root-e2e.md](11-01-composition-root-e2e.md) |
 | 10.4 | Saved jobs, quick access i `.nc` export | IMPLEMENTIRANO / NIJE TESTIRANO | `service`, `MainFormController`, FXML | Maven je stao na postojećoj H2 JAR ovisnosti prije testova | Quick access i export granica | [10-04-saved-jobs-quick-access-export.md](10-04-saved-jobs-quick-access-export.md) |

@@ -15,6 +15,8 @@ import java.util.TreeSet;
 
 public final class DatabaseInitializer {
     private static final String SCHEMA_RESOURCE = "/db/schema.sql";
+    private static final String CNC_MACHINE_NULLABLE_LIMITS_MIGRATION =
+            "/db/migration/12-02-cnc-machine-nullable-limits.sql";
     private static final Set<String> EXPECTED_TABLES = Set.of(
             "ROLE",
             "APP_USER",
@@ -48,32 +50,32 @@ public final class DatabaseInitializer {
         }
         Set<String> existingTables = readPublicTableNames(connection);
 
-        if (existingTables.containsAll(EXPECTED_TABLES)) {
-            return;
-        }
-
-        if (!existingTables.isEmpty()) {
+        if (!existingTables.isEmpty() && !existingTables.containsAll(EXPECTED_TABLES)) {
             throw incompleteSchemaException(existingTables);
         }
 
-        executeSchema(connection);
+        if (existingTables.isEmpty()) {
+            executeScript(connection, SCHEMA_RESOURCE);
+        }
 
         Set<String> initializedTables = readPublicTableNames(connection);
         if (!initializedTables.containsAll(EXPECTED_TABLES)) {
             throw incompleteSchemaException(initializedTables);
         }
+
+        executeScript(connection, CNC_MACHINE_NULLABLE_LIMITS_MIGRATION);
     }
 
-    private static void executeSchema(Connection connection) throws SQLException {
-        InputStream schemaStream = DatabaseInitializer.class.getResourceAsStream(SCHEMA_RESOURCE);
+    private static void executeScript(Connection connection, String resourcePath) throws SQLException {
+        InputStream schemaStream = DatabaseInitializer.class.getResourceAsStream(resourcePath);
         if (schemaStream == null) {
-            throw new SQLException("Schema resource not found: " + SCHEMA_RESOURCE);
+            throw new SQLException("Database script resource not found: " + resourcePath);
         }
 
         try (Reader reader = new InputStreamReader(schemaStream, StandardCharsets.UTF_8)) {
             RunScript.execute(connection, reader);
         } catch (java.io.IOException exception) {
-            throw new SQLException("Failed to close schema resource: " + SCHEMA_RESOURCE, exception);
+            throw new SQLException("Failed to close database script resource: " + resourcePath, exception);
         }
     }
 

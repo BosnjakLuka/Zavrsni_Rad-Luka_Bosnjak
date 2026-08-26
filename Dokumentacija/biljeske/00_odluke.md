@@ -4,6 +4,21 @@ Ovdje se zapisuju samo potvrđene odluke koje mijenjaju arhitekturu, tehnologiju
 
 Ne zapisuj obične implementacijske detalje, privremene eksperimente ni nepotvrđene pretpostavke. Postojeće odluke iz `AGENTS.md` ne kopiraj bez nove potrebe; ovdje se bilježi njihov nastanak ili kasnija promjena.
 
+## Nullable reprezentacija nepoznatih granica CNC stroja
+
+**Datum:** 2026-08-26
+**Status:** IMPLEMENTIRANO / SOFTVERSKI TESTIRANO / NIJE FIZIČKI TESTIRANO
+
+**Odluka:** `CncMachine.workAreaX` i `workAreaY` ostaju obvezni `double` i SQL `NOT NULL`. `workAreaZ`, `maxFeedRate`, `minSpindleSpeed` i `maxSpindleSpeed` koriste nullable `Double` i SQL `NULL` kada vrijednost nije potvrđena. Poznata opcionalna vrijednost mora biti pozitivna i konačna; job provjera primjenjuje samo granice koje postoje. Približnih 80 mm za ZK-1325 nije potvrđeno mjerenjem ili dokumentacijom i zato se ne sprema niti koristi kao safety limit.
+
+**Razlog:** `null` jednoznačno razlikuje nepoznatu tehničku specifikaciju od stvarne brojčane vrijednosti. Nula ili proizvoljna testna vrijednost pogrešno bi izgledala kao potvrđen podatak i mogla bi neopravdano blokirati ili dopustiti operatorski workflow.
+
+**Razmotrene alternative:** Nisu odabrani `0`, testne vrijednosti u produkcijskom zapisu ni zaseban statusni objekt za svaku granicu. Potpuno uklanjanje provjera također nije odabrano jer se potvrđena granica mora poštovati kada postoji.
+
+**Utjecaj na implementaciju:** Nova i postojeća H2 shema dopuštaju `NULL` samo za četiri nepotvrđene granice; JDBC čuva nullable vrijednosti kroz machine, tool i machining-job mapping. Obrazac dopušta prazna opcionalna polja, dok validation sloj i dalje provjerava svaki poznati limit. Stvarni seed ZK-1325 ostaje zaseban korak.
+
+---
+
 ## Ugovor `.nc` izvoza
 
 **Datum:** 2026-08-26

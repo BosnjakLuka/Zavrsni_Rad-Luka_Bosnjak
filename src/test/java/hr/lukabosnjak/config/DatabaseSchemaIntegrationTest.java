@@ -41,6 +41,12 @@ class DatabaseSchemaIntegrationTest {
             assertFalse(actualTables.contains("USER"));
             assertEquals(Set.of("USER", "ADMIN"), readRoleNames(connection));
             assertEquals(0, countUsers(connection));
+            assertEquals("NO", readNullableStatus(connection, "WORK_AREA_X"));
+            assertEquals("NO", readNullableStatus(connection, "WORK_AREA_Y"));
+            assertEquals("YES", readNullableStatus(connection, "WORK_AREA_Z"));
+            assertEquals("YES", readNullableStatus(connection, "MAX_FEED_RATE"));
+            assertEquals("YES", readNullableStatus(connection, "MIN_SPINDLE_SPEED"));
+            assertEquals("YES", readNullableStatus(connection, "MAX_SPINDLE_SPEED"));
         }
     }
 
@@ -83,6 +89,20 @@ class DatabaseSchemaIntegrationTest {
              ResultSet resultSet = statement.executeQuery()) {
             resultSet.next();
             return resultSet.getInt(1);
+        }
+    }
+
+    private String readNullableStatus(Connection connection, String columnName) throws Exception {
+        try (PreparedStatement statement = connection.prepareStatement("""
+                SELECT IS_NULLABLE
+                FROM INFORMATION_SCHEMA.COLUMNS
+                WHERE TABLE_SCHEMA = 'PUBLIC' AND TABLE_NAME = 'CNC_MACHINE' AND COLUMN_NAME = ?
+                """)) {
+            statement.setString(1, columnName);
+            try (ResultSet resultSet = statement.executeQuery()) {
+                resultSet.next();
+                return resultSet.getString("IS_NULLABLE");
+            }
         }
     }
 }

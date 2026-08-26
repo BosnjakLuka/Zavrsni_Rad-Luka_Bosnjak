@@ -22,11 +22,12 @@ public final class ReferenceDataValidator {
         requireText(machine.getController(), "Kontroler CNC stroja je obavezan.");
         requirePositive(machine.getWorkAreaX(), "Radna površina X mora biti veća od 0 mm.");
         requirePositive(machine.getWorkAreaY(), "Radna površina Y mora biti veća od 0 mm.");
-        requirePositive(machine.getWorkAreaZ(), "Radna površina Z mora biti veća od 0 mm.");
-        requirePositive(machine.getMaxFeedRate(), "Maksimalni posmak mora biti veći od 0.");
-        requirePositive(machine.getMinSpindleSpeed(), "Minimalna brzina vretena mora biti veća od 0.");
-        requirePositive(machine.getMaxSpindleSpeed(), "Maksimalna brzina vretena mora biti veća od 0.");
-        if (machine.getMinSpindleSpeed() > machine.getMaxSpindleSpeed()) {
+        requirePositiveWhenKnown(machine.getWorkAreaZ(), "Radna površina Z mora biti veća od 0 mm.");
+        requirePositiveWhenKnown(machine.getMaxFeedRate(), "Maksimalni posmak mora biti veći od 0.");
+        requirePositiveWhenKnown(machine.getMinSpindleSpeed(), "Minimalna brzina vretena mora biti veća od 0.");
+        requirePositiveWhenKnown(machine.getMaxSpindleSpeed(), "Maksimalna brzina vretena mora biti veća od 0.");
+        if (machine.getMinSpindleSpeed() != null && machine.getMaxSpindleSpeed() != null
+                && machine.getMinSpindleSpeed() > machine.getMaxSpindleSpeed()) {
             throw new ValidationException(
                     "Minimalna brzina vretena ne smije biti veća od maksimalne brzine vretena.");
         }
@@ -60,6 +61,12 @@ public final class ReferenceDataValidator {
     private void requirePositive(double value, String message) {
         if (!Double.isFinite(value) || value <= 0) {
             throw new ValidationException(message);
+        }
+    }
+
+    private void requirePositiveWhenKnown(Double value, String message) {
+        if (value != null) {
+            requirePositive(value, message);
         }
     }
 }

@@ -35,10 +35,10 @@ CREATE TABLE CNC_MACHINE (
     controller VARCHAR NOT NULL,
     work_area_x DOUBLE PRECISION NOT NULL,
     work_area_y DOUBLE PRECISION NOT NULL,
-    work_area_z DOUBLE PRECISION NOT NULL,
-    max_feed_rate DOUBLE PRECISION NOT NULL,
-    min_spindle_speed DOUBLE PRECISION NOT NULL,
-    max_spindle_speed DOUBLE PRECISION NOT NULL,
+    work_area_z DOUBLE PRECISION,
+    max_feed_rate DOUBLE PRECISION,
+    min_spindle_speed DOUBLE PRECISION,
+    max_spindle_speed DOUBLE PRECISION,
     created_at TIMESTAMP NOT NULL,
     updated_at TIMESTAMP NOT NULL
 );

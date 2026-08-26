@@ -73,6 +73,11 @@ class JdbcMachiningJobRepositoryIntegrationTest {
         assertEquals(references.tool().getToolId(), loaded.getTool().getToolId());
         assertEquals(references.machine().getCncMachineId(),
                 loaded.getTool().getCncMachine().getCncMachineId());
+        assertNull(loaded.getCncMachine().getWorkAreaZ());
+        assertNull(loaded.getCncMachine().getMaxFeedRate());
+        assertNull(loaded.getCncMachine().getMinSpindleSpeed());
+        assertNull(loaded.getCncMachine().getMaxSpindleSpeed());
+        assertNull(loaded.getTool().getCncMachine().getWorkAreaZ());
 
         assertNotNull(loaded.getMaterialSheet().getMaterialSheetId());
         assertEquals(references.materialType().getMaterialTypeId(),
@@ -111,8 +116,8 @@ class JdbcMachiningJobRepositoryIntegrationTest {
         MaterialType materialType = new JdbcMaterialTypeRepository(connectionProvider).save(
                 new MaterialType(null, "Test material", null, null, null, null));
         CncMachine machine = new JdbcCncMachineRepository(connectionProvider).save(new CncMachine(
-                null, "Test machine", null, null, "Test controller",
-                1250.0, 2500.0, 150.0, 5000.0, 1000.0, 24000.0, null, null));
+                null, "ZK-1325", null, "ZK-1325", "RichAuto A11",
+                1250.0, 2500.0, null, null, null, null, null, null));
         Tool tool = new JdbcToolRepository(connectionProvider).save(new Tool(
                 null, machine, 1, "Test tool", "TEST_TYPE", 6.0, 20.0, 2,
                 true, null, null));

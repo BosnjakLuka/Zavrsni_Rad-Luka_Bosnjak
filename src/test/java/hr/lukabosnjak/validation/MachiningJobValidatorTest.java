@@ -106,6 +106,34 @@ class MachiningJobValidatorTest {
     }
 
     @Test
+    void acceptsJobWhenMachineTechnicalLimitsAreUnknown() {
+        CncMachine machine = machine(1L);
+        machine.setWorkAreaZ(null);
+        machine.setMaxFeedRate(null);
+        machine.setMinSpindleSpeed(null);
+        machine.setMaxSpindleSpeed(null);
+
+        assertDoesNotThrow(() -> validator.validate(job(machine, tool(machine, true))));
+    }
+
+    @Test
+    void enforcesEachKnownSpindleLimitIndependently() {
+        CncMachine maximumOnly = machine(1L);
+        maximumOnly.setMinSpindleSpeed(null);
+        maximumOnly.setMaxSpindleSpeed(17_000.0);
+        assertMessage(
+                "Brzina vretena mora biti unutar raspona odabranog stroja.",
+                job(maximumOnly, tool(maximumOnly, true)));
+
+        CncMachine minimumOnly = machine(1L);
+        minimumOnly.setMinSpindleSpeed(19_000.0);
+        minimumOnly.setMaxSpindleSpeed(null);
+        assertMessage(
+                "Brzina vretena mora biti unutar raspona odabranog stroja.",
+                job(minimumOnly, tool(minimumOnly, true)));
+    }
+
+    @Test
     void rejectsSpindleSpeedOutsideMachineRange() {
         MachiningJob belowMinimum = validJob();
         belowMinimum.getMachiningParameters().setSpindleSpeed(999.9);

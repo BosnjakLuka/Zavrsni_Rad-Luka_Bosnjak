@@ -3,6 +3,7 @@ package hr.lukabosnjak.ui.controller;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class NumericInputParserTest {
@@ -10,6 +11,15 @@ class NumericInputParserTest {
     @Test
     void parsesFiniteDecimalNumbersIncludingCroatianDecimalSeparator() {
         assertEquals(12.5, NumericInputParser.parseRequiredFinite(" 12,5 ", "Širina"));
+    }
+
+    @Test
+    void parsesOptionalFiniteNumberAndMapsBlankToNull() {
+        assertNull(NumericInputParser.parseOptionalFinite(" ", "Maksimalni posmak"));
+        assertNull(NumericInputParser.parseOptionalFinite(null, "Maksimalni posmak"));
+        assertEquals(1250.5, NumericInputParser.parseOptionalFinite(" 1250,5 ", "Maksimalni posmak"));
+        assertThrows(IllegalArgumentException.class,
+                () -> NumericInputParser.parseOptionalFinite("NaN", "Maksimalni posmak"));
     }
 
     @Test

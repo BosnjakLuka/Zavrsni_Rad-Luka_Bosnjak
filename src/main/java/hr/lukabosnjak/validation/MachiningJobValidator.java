@@ -49,14 +49,17 @@ public final class MachiningJobValidator {
         if (!tool.isActive()) {
             throw new ValidationException("Odabrani alat nije aktivan.");
         }
-        if (!(job.getMachiningParameters().getFeedRate() <= machine.getMaxFeedRate())) {
+        Double maxFeedRate = machine.getMaxFeedRate();
+        if (maxFeedRate != null && job.getMachiningParameters().getFeedRate() > maxFeedRate) {
             throw new ValidationException(
                     "Brzina posmaka ne smije biti veća od maksimalne brzine posmaka odabranog stroja.");
         }
 
         double spindleSpeed = job.getMachiningParameters().getSpindleSpeed();
-        if (!(spindleSpeed >= machine.getMinSpindleSpeed()
-                && spindleSpeed <= machine.getMaxSpindleSpeed())) {
+        Double minSpindleSpeed = machine.getMinSpindleSpeed();
+        Double maxSpindleSpeed = machine.getMaxSpindleSpeed();
+        if ((minSpindleSpeed != null && spindleSpeed < minSpindleSpeed)
+                || (maxSpindleSpeed != null && spindleSpeed > maxSpindleSpeed)) {
             throw new ValidationException("Brzina vretena mora biti unutar raspona odabranog stroja.");
         }
     }

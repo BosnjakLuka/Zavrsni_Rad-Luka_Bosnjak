@@ -41,10 +41,10 @@ public final class CncMachineFormController {
                     controllerInput.getText(),
                     numeric(workAreaXInput, "Radna površina X"),
                     numeric(workAreaYInput, "Radna površina Y"),
-                    numeric(workAreaZInput, "Radna površina Z"),
-                    numeric(maxFeedRateInput, "Maksimalni posmak"),
-                    numeric(minSpindleSpeedInput, "Minimalna brzina vretena"),
-                    numeric(maxSpindleSpeedInput, "Maksimalna brzina vretena"),
+                    optionalNumeric(workAreaZInput, "Radna površina Z"),
+                    optionalNumeric(maxFeedRateInput, "Maksimalni posmak"),
+                    optionalNumeric(minSpindleSpeedInput, "Minimalna brzina vretena"),
+                    optionalNumeric(maxSpindleSpeedInput, "Maksimalna brzina vretena"),
                     null,
                     null));
             closeWindow();
@@ -64,6 +64,10 @@ public final class CncMachineFormController {
 
     private double numeric(TextField input, String label) {
         return NumericInputParser.parseRequiredFinite(input.getText(), label);
+    }
+
+    private Double optionalNumeric(TextField input, String label) {
+        return NumericInputParser.parseOptionalFinite(input.getText(), label);
     }
 
     private void closeWindow() {
