@@ -259,4 +259,19 @@ Ne zapisuj obične implementacijske detalje, privremene eksperimente ni nepotvr�
 **Razmotrene alternative:** <stvarno razmotrene alternative ili „Nisu razmatrane”>  
 **Utjecaj na implementaciju:** <koje dijelove projekta ili kasniji opis aplikacije odluka mijenja>
 
+## FXML view i non-modularni JavaFX UI
+
+**Datum:** 2026-08-26
+**Status:** IMPLEMENTIRANO / NIJE TESTIRANO
+
+**Odluka:** Glavna JavaFX forma koristi FXML kao resource na putanji `src/main/resources/hr/lukabosnjak/ui/view/`, dok JavaFX controlleri pripadaju paketu `ui.controller`. Projekt ostaje non-modularan; FXML ne uvodi `module-info.java`. Maven dobiva `javafx-fxml` ovisnost samo zato što se FXML sada stvarno koristi.
+
+**Razlog:** FXML jasno odvaja deklarativni prikaz od UI koordinacije u controlleru, što je održivo i jednostavno za obrazlaganje u studentskom radu. Postojeći Maven projekt već radi bez modula, a za trenutačni opseg nema potrebe uvoditi modularnu konfiguraciju.
+
+**Razmotrene alternative:** Programatski UI ostaje moguća JavaFX alternativa, ali nije odabran za formu s više grupa unosa i dinamičkim poljima. Java klasa u `ui.view` nije uvedena jer view pripada FXML resursu.
+
+**Utjecaj na implementaciju:** `Main` učitava FXML, a controller samo upravlja JavaFX kontrolama i lokalnim porukama. Buduće povezivanje na service sloj mora zadržati SQL, geometriju, layout i G-code izvan controllera.
+
+---
+
 <!-- Nove potvrđene odluke dodaju se iznad odjeljka predloška. -->
