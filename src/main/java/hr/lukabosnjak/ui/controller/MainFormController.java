@@ -11,6 +11,7 @@ import hr.lukabosnjak.domain.enums.ShapeSubtype;
 import hr.lukabosnjak.domain.enums.ShapeType;
 import hr.lukabosnjak.gcode.GCodeProgram;
 import hr.lukabosnjak.service.MaterialReferenceDataService;
+import hr.lukabosnjak.service.AuthService;
 import hr.lukabosnjak.service.ProgramExportService;
 import hr.lukabosnjak.service.ProgramGenerationRequest;
 import hr.lukabosnjak.service.ProgramGenerationService;
@@ -18,6 +19,7 @@ import hr.lukabosnjak.service.ReferenceDataAccessException;
 import hr.lukabosnjak.service.ReferenceDataService;
 import hr.lukabosnjak.service.SavedJobAccessException;
 import hr.lukabosnjak.service.SavedJobService;
+import hr.lukabosnjak.service.SessionContext;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -60,6 +62,7 @@ public class MainFormController {
     @FXML private TextField safeZInput;
     @FXML private TextArea gCodePreview;
     @FXML private ListView<MachiningJob> savedJobsList;
+    @FXML private Label currentUserLabel;
     @FXML private Label statusLabel;
 
     private final ProgramGenerationService programGenerationService;
@@ -67,6 +70,9 @@ public class MainFormController {
     private final MaterialReferenceDataService materialReferenceDataService;
     private final SavedJobService savedJobService;
     private final ProgramExportService programExportService;
+    private final AuthService authService;
+    private final SessionContext sessionContext;
+    private final ApplicationNavigation navigation;
     private final Callback<Class<?>, Object> controllerFactory;
     private final List<ShapeInput> shapeInputs = new ArrayList<>();
     private GCodeProgram displayedProgram;
@@ -77,6 +83,9 @@ public class MainFormController {
             MaterialReferenceDataService materialReferenceDataService,
             SavedJobService savedJobService,
             ProgramExportService programExportService,
+            AuthService authService,
+            SessionContext sessionContext,
+            ApplicationNavigation navigation,
             Callback<Class<?>, Object> controllerFactory
     ) {
         this.programGenerationService = programGenerationService;
@@ -84,11 +93,17 @@ public class MainFormController {
         this.materialReferenceDataService = materialReferenceDataService;
         this.savedJobService = savedJobService;
         this.programExportService = programExportService;
+        this.authService = authService;
+        this.sessionContext = sessionContext;
+        this.navigation = navigation;
         this.controllerFactory = controllerFactory;
     }
 
     @FXML
     private void initialize() {
+        currentUserLabel.setText(sessionContext.currentUser()
+                .map(user -> user.getUsername() + " (" + user.getRole().getName() + ")")
+                .orElse("Nema prijavljenog korisnika"));
         shapeTypeComboBox.getItems().setAll(ShapeType.values());
         shapeTypeComboBox.setValue(ShapeType.SQUARE);
         shapeTypeComboBox.valueProperty().addListener((observable, oldValue, newValue) -> updateShapeFields(newValue));
@@ -177,7 +192,13 @@ public class MainFormController {
 
     @FXML
     private void handleSave() {
-        statusLabel.setText("Spremanje zahtijeva prijavljenu sesiju autora, koja još nije implementirana.");
+        statusLabel.setText("Spremanje naloga s autorom bit će povezano u Koraku 13.4.");
+    }
+
+    @FXML
+    private void handleLogout() {
+        authService.logout();
+        navigation.showLogin();
     }
 
     @FXML

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.PasswordField?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox alignment="CENTER" maxWidth="390.0" spacing="10.0"
+      xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="hr.lukabosnjak.ui.controller.RegistrationController">
+    <padding><Insets bottom="28.0" left="30.0" right="30.0" top="28.0" /></padding>
+    <Label style="-fx-font-size: 22px; -fx-font-weight: bold;" text="Novi korisnički račun" />
+    <Label text="Novi račun dobiva rolu OPERATOR." />
+    <TextField fx:id="usernameInput" maxWidth="Infinity" promptText="Korisničko ime" />
+    <TextField fx:id="firstNameInput" maxWidth="Infinity" promptText="Ime" />
+    <TextField fx:id="lastNameInput" maxWidth="Infinity" promptText="Prezime" />
+    <PasswordField fx:id="passwordInput" maxWidth="Infinity" promptText="Lozinka (najmanje 8 znakova)" />
+    <PasswordField fx:id="confirmPasswordInput" maxWidth="Infinity" onAction="#handleRegister" promptText="Ponovite lozinku" />
+    <HBox alignment="CENTER" spacing="10.0">
+        <Button mnemonicParsing="false" onAction="#handleBackToLogin" text="Natrag" />
+        <Button defaultButton="true" mnemonicParsing="false" onAction="#handleRegister" text="Registriraj se" />
+    </HBox>
+    <Label fx:id="statusLabel" minHeight="50.0" textFill="#b00020" wrapText="true" />
+</VBox>

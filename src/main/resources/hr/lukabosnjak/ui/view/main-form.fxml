@@ -13,15 +13,23 @@
 <?import javafx.scene.layout.ColumnConstraints?>
 <?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.VBox?>
 
 <BorderPane xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="hr.lukabosnjak.ui.controller.MainFormController">
     <top>
-        <VBox spacing="4.0" BorderPane.alignment="CENTER_LEFT">
+        <HBox alignment="CENTER_LEFT" spacing="12.0" BorderPane.alignment="CENTER_LEFT">
             <padding><Insets bottom="14.0" left="18.0" right="18.0" top="16.0" /></padding>
-            <Label style="-fx-font-size: 22px; -fx-font-weight: bold;" text="CNC Optimizer" />
-            <Label text="Single-element program — UI kostur" />
-        </VBox>
+            <VBox spacing="4.0">
+                <Label style="-fx-font-size: 22px; -fx-font-weight: bold;" text="CNC Optimizer" />
+                <Label text="Program za jedan element" />
+            </VBox>
+            <Region HBox.hgrow="ALWAYS" />
+            <VBox alignment="CENTER_RIGHT" spacing="5.0">
+                <Label fx:id="currentUserLabel" />
+                <Button mnemonicParsing="false" onAction="#handleLogout" text="Odjava" />
+            </VBox>
+        </HBox>
     </top>
     <center>
         <ScrollPane fitToWidth="true" BorderPane.alignment="CENTER">

@@ -18,6 +18,8 @@ class FxmlControllerContractTest {
     @Test
     void fxmlResourcesReferenceExistingControllerFieldsAndActions() throws Exception {
         List<FormContract> forms = List.of(
+                new FormContract("/hr/lukabosnjak/ui/view/login.fxml", LoginController.class),
+                new FormContract("/hr/lukabosnjak/ui/view/registration.fxml", RegistrationController.class),
                 new FormContract("/hr/lukabosnjak/ui/view/main-form.fxml", MainFormController.class),
                 new FormContract("/hr/lukabosnjak/ui/view/material-type-form.fxml", MaterialTypeFormController.class),
                 new FormContract("/hr/lukabosnjak/ui/view/cnc-machine-form.fxml", CncMachineFormController.class),

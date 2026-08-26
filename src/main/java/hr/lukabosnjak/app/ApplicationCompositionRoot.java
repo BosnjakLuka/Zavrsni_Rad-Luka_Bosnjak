@@ -31,8 +31,11 @@ import hr.lukabosnjak.service.SavedJobService;
 import hr.lukabosnjak.service.SessionContext;
 import hr.lukabosnjak.service.V1BootstrapService;
 import hr.lukabosnjak.ui.controller.CncMachineFormController;
+import hr.lukabosnjak.ui.controller.ApplicationNavigation;
+import hr.lukabosnjak.ui.controller.LoginController;
 import hr.lukabosnjak.ui.controller.MainFormController;
 import hr.lukabosnjak.ui.controller.MaterialTypeFormController;
+import hr.lukabosnjak.ui.controller.RegistrationController;
 import hr.lukabosnjak.ui.controller.ToolFormController;
 import hr.lukabosnjak.validation.MachiningJobValidator;
 import hr.lukabosnjak.validation.MachiningParametersValidator;
@@ -121,11 +124,19 @@ final class ApplicationCompositionRoot {
         v1BootstrapService.initialize();
     }
 
-    Object createController(Class<?> controllerType) {
+    Object createController(Class<?> controllerType, ApplicationNavigation navigation) {
+        Objects.requireNonNull(navigation, "navigation");
+        if (controllerType == LoginController.class) {
+            return new LoginController(authService, navigation);
+        }
+        if (controllerType == RegistrationController.class) {
+            return new RegistrationController(authService, navigation);
+        }
         if (controllerType == MainFormController.class) {
             return new MainFormController(
                     programGenerationService, referenceDataService, materialReferenceDataService,
-                    savedJobService, programExportService, this::createController);
+                    savedJobService, programExportService, authService, sessionContext, navigation,
+                    type -> createController(type, navigation));
         }
         if (controllerType == MaterialTypeFormController.class) {
             return new MaterialTypeFormController(referenceDataManagementService);

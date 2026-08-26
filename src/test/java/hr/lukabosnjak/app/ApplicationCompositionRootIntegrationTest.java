@@ -16,8 +16,11 @@ import hr.lukabosnjak.gcode.GCodeProgram;
 import hr.lukabosnjak.persistence.jdbc.ConnectionProvider;
 import hr.lukabosnjak.service.ProgramGenerationRequest;
 import hr.lukabosnjak.ui.controller.CncMachineFormController;
+import hr.lukabosnjak.ui.controller.ApplicationNavigation;
+import hr.lukabosnjak.ui.controller.LoginController;
 import hr.lukabosnjak.ui.controller.MainFormController;
 import hr.lukabosnjak.ui.controller.MaterialTypeFormController;
+import hr.lukabosnjak.ui.controller.RegistrationController;
 import hr.lukabosnjak.ui.controller.ToolFormController;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -105,13 +108,17 @@ class ApplicationCompositionRootIntegrationTest {
     @Test
     void createsMainAndReferenceDataFormControllersFromOneCompositionRoot() {
         ApplicationCompositionRoot context = ApplicationCompositionRoot.forConnectionProvider(connectionProvider);
+        ApplicationNavigation navigation = new NoOpNavigation();
 
-        assertInstanceOf(MainFormController.class, context.createController(MainFormController.class));
+        assertInstanceOf(LoginController.class, context.createController(LoginController.class, navigation));
+        assertInstanceOf(RegistrationController.class,
+                context.createController(RegistrationController.class, navigation));
+        assertInstanceOf(MainFormController.class, context.createController(MainFormController.class, navigation));
         assertInstanceOf(MaterialTypeFormController.class,
-                context.createController(MaterialTypeFormController.class));
+                context.createController(MaterialTypeFormController.class, navigation));
         assertInstanceOf(CncMachineFormController.class,
-                context.createController(CncMachineFormController.class));
-        assertInstanceOf(ToolFormController.class, context.createController(ToolFormController.class));
+                context.createController(CncMachineFormController.class, navigation));
+        assertInstanceOf(ToolFormController.class, context.createController(ToolFormController.class, navigation));
     }
 
     private PersistedReferences saveReferences(ApplicationCompositionRoot context) throws Exception {
@@ -131,5 +138,11 @@ class ApplicationCompositionRootIntegrationTest {
     }
 
     private record PersistedReferences(MaterialType materialType, CncMachine machine, Tool tool, User user) {
+    }
+
+    private static final class NoOpNavigation implements ApplicationNavigation {
+        @Override public void showLogin() { }
+        @Override public void showRegistration() { }
+        @Override public void showMain() { }
     }
 }
