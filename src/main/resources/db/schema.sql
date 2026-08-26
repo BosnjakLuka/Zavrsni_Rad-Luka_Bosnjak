@@ -38,6 +38,7 @@ CREATE TABLE CNC_MACHINE (
     max_feed_rate DOUBLE PRECISION,
     min_spindle_speed DOUBLE PRECISION,
     max_spindle_speed DOUBLE PRECISION,
+    active BOOLEAN NOT NULL DEFAULT TRUE,
     created_at TIMESTAMP NOT NULL,
     updated_at TIMESTAMP NOT NULL
 );

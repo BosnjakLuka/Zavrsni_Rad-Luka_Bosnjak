@@ -9,6 +9,7 @@ import java.util.Optional;
 public interface ToolRepository {
     Tool save(Tool tool) throws SQLException;
     Tool update(Tool tool) throws SQLException;
+    Tool setActive(long toolId, boolean active) throws SQLException;
 
     Optional<Tool> findById(long toolId) throws SQLException;
 

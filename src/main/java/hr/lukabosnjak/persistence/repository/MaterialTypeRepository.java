@@ -9,6 +9,7 @@ import java.util.Optional;
 public interface MaterialTypeRepository {
     MaterialType save(MaterialType materialType) throws SQLException;
     MaterialType update(MaterialType materialType) throws SQLException;
+    MaterialType setActive(long materialTypeId, boolean active) throws SQLException;
 
     Optional<MaterialType> findById(long materialTypeId) throws SQLException;
 

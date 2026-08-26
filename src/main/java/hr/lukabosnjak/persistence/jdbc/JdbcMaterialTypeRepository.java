@@ -39,6 +39,7 @@ public final class JdbcMaterialTypeRepository extends JdbcRepositorySupport impl
         if (materialType.getMaterialTypeId() == null) {
             throw new IllegalArgumentException("Material type id is required");
         }
+
         try (Connection connection = connectionProvider.getConnection();
              PreparedStatement statement = connection.prepareStatement("""
                      UPDATE MATERIAL_TYPE
@@ -52,6 +53,18 @@ public final class JdbcMaterialTypeRepository extends JdbcRepositorySupport impl
         }
         return findById(materialType.getMaterialTypeId())
                 .orElseThrow(() -> new SQLException("Updated material type was not found"));
+    }
+
+    @Override
+    public MaterialType setActive(long materialTypeId, boolean active) throws SQLException {
+        try (Connection connection = connectionProvider.getConnection();
+             PreparedStatement statement = connection.prepareStatement(
+                     "UPDATE MATERIAL_TYPE SET deleted_at = ?, updated_at = CURRENT_TIMESTAMP WHERE material_type_id = ?")) {
+            statement.setTimestamp(1, active ? null : new Timestamp(System.currentTimeMillis()));
+            statement.setLong(2, materialTypeId);
+            if (statement.executeUpdate() != 1) throw new SQLException("Material type was not found");
+        }
+        return findById(materialTypeId).orElseThrow(() -> new SQLException("Material type was not found"));
     }
 
     @Override

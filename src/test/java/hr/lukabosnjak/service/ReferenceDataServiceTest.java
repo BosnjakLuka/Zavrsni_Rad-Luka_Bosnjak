@@ -49,6 +49,7 @@ class ReferenceDataServiceTest {
         @Override public Optional<CncMachine> findById(long id) { throw new UnsupportedOperationException(); }
         @Override public List<CncMachine> findAll() throws SQLException { if (exception != null) throw exception; return machines; }
         @Override public CncMachine update(CncMachine machine) { throw new UnsupportedOperationException(); }
+        @Override public CncMachine setActive(long id, boolean active) { throw new UnsupportedOperationException(); }
     }
 
     private static final class ToolRepositoryStub implements ToolRepository {
@@ -59,5 +60,6 @@ class ReferenceDataServiceTest {
         @Override public List<Tool> findAllByMachineId(long id) { return tools; }
         @Override public Optional<Tool> findByMachineIdAndToolNumber(long machineId, int toolNumber) { throw new UnsupportedOperationException(); }
         @Override public Tool update(Tool tool) { throw new UnsupportedOperationException(); }
+        @Override public Tool setActive(long id, boolean active) { throw new UnsupportedOperationException(); }
     }
 }

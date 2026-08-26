@@ -26,6 +26,9 @@ public final class CatalogController {
     @FXML private Button addMaterialTypeButton;
     @FXML private Button addMachineButton;
     @FXML private Button addToolButton;
+    @FXML private Button deactivateMaterialTypeButton;
+    @FXML private Button deactivateMachineButton;
+    @FXML private Button deactivateToolButton;
     @FXML private Label currentUserLabel;
     @FXML private Label statusLabel;
     @FXML private ListView<MaterialType> materialTypesList;
@@ -58,24 +61,30 @@ public final class CatalogController {
         addMaterialTypeButton.setDisable(!allowed);
         addMachineButton.setDisable(!allowed);
         addToolButton.setDisable(!allowed);
+        deactivateMaterialTypeButton.setDisable(!allowed);
+        deactivateMachineButton.setDisable(!allowed);
+        deactivateToolButton.setDisable(!allowed);
         statusLabel.setText("Odaberite katalog koji želite urediti.");
         materialTypesList.setCellFactory(list -> new javafx.scene.control.ListCell<>() {
             @Override protected void updateItem(MaterialType item, boolean empty) {
                 super.updateItem(item, empty);
-                setText(empty || item == null ? null : item.getName());
+                setText(empty || item == null ? null : item.getName()
+                        + (item.getDeletedAt() == null ? " — aktivno" : " — deaktivirano"));
             }
         });
         machinesList.setCellFactory(list -> new javafx.scene.control.ListCell<>() {
             @Override protected void updateItem(CncMachine item, boolean empty) {
                 super.updateItem(item, empty);
-                setText(empty || item == null ? null : item.getName() + " — " + item.getController());
+                setText(empty || item == null ? null : item.getName() + " — " + item.getController()
+                        + (item.isActive() ? " — aktivno" : " — deaktivirano"));
             }
         });
         toolsList.setCellFactory(list -> new javafx.scene.control.ListCell<>() {
             @Override protected void updateItem(Tool item, boolean empty) {
                 super.updateItem(item, empty);
                 setText(empty || item == null ? null : "T" + item.getToolNumber()
-                        + " — Ø" + item.getDiameter() + " mm — " + item.getName());
+                        + " — Ø" + item.getDiameter() + " mm — " + item.getName()
+                        + (item.isActive() ? " — aktivno" : " — deaktivirano"));
             }
         });
         refresh();
@@ -124,6 +133,39 @@ public final class CatalogController {
 
     @FXML private void handleRefresh() {
         refresh();
+    }
+
+    @FXML private void handleToggleMaterialType() {
+        MaterialType selected = materialTypesList.getSelectionModel().getSelectedItem();
+        if (selected == null) { statusLabel.setText("Odaberite vrstu materijala."); return; }
+        try {
+            managementService.setMaterialTypeActive(selected.getMaterialTypeId(), selected.getDeletedAt() != null);
+            refresh();
+        } catch (AuthorizationException | ReferenceDataAccessException exception) {
+            statusLabel.setText(exception.getMessage());
+        }
+    }
+
+    @FXML private void handleToggleMachine() {
+        CncMachine selected = machinesList.getSelectionModel().getSelectedItem();
+        if (selected == null) { statusLabel.setText("Odaberite CNC stroj."); return; }
+        try {
+            managementService.setMachineActive(selected.getCncMachineId(), !selected.isActive());
+            refresh();
+        } catch (AuthorizationException | ReferenceDataAccessException exception) {
+            statusLabel.setText(exception.getMessage());
+        }
+    }
+
+    @FXML private void handleToggleTool() {
+        Tool selected = toolsList.getSelectionModel().getSelectedItem();
+        if (selected == null) { statusLabel.setText("Odaberite alat."); return; }
+        try {
+            managementService.setToolActive(selected.getToolId(), !selected.isActive());
+            refresh();
+        } catch (AuthorizationException | ReferenceDataAccessException exception) {
+            statusLabel.setText(exception.getMessage());
+        }
     }
 
     @FXML private void handleBack() { navigation.showMain(); }

@@ -17,7 +17,8 @@ public final class MaterialReferenceDataService {
 
     public List<MaterialType> loadMaterialTypes() {
         try {
-            return materialTypeRepository.findAll();
+            return materialTypeRepository.findAll().stream()
+                    .filter(value -> value.getDeletedAt() == null).toList();
         } catch (SQLException exception) {
             throw new ReferenceDataAccessException("Učitavanje vrsta materijala nije uspjelo.", exception);
         }

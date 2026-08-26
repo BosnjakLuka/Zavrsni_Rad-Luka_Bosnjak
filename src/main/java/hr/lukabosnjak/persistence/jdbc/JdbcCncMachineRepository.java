@@ -25,8 +25,8 @@ public final class JdbcCncMachineRepository extends JdbcRepositorySupport implem
         requireNew(machine.getCncMachineId(), "CNC machine");
         long id = executeInsert("""
                 INSERT INTO CNC_MACHINE (name, manufacturer, model, controller, work_area_x, work_area_y,
-                    work_area_z, max_feed_rate, min_spindle_speed, max_spindle_speed, created_at, updated_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+                    work_area_z, max_feed_rate, min_spindle_speed, max_spindle_speed, active, created_at, updated_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
                 """, statement -> {
             statement.setString(1, machine.getName());
             statement.setString(2, machine.getManufacturer());
@@ -38,8 +38,21 @@ public final class JdbcCncMachineRepository extends JdbcRepositorySupport implem
             statement.setObject(8, machine.getMaxFeedRate(), Types.DOUBLE);
             statement.setObject(9, machine.getMinSpindleSpeed(), Types.DOUBLE);
             statement.setObject(10, machine.getMaxSpindleSpeed(), Types.DOUBLE);
+            statement.setBoolean(11, machine.isActive());
         });
         return findById(id).orElseThrow(() -> new SQLException("Saved CNC machine was not found"));
+    }
+
+    @Override
+    public CncMachine setActive(long cncMachineId, boolean active) throws SQLException {
+        try (Connection connection = connectionProvider.getConnection();
+             PreparedStatement statement = connection.prepareStatement(
+                     "UPDATE CNC_MACHINE SET active = ?, updated_at = CURRENT_TIMESTAMP WHERE cnc_machine_id = ?")) {
+            statement.setBoolean(1, active);
+            statement.setLong(2, cncMachineId);
+            if (statement.executeUpdate() != 1) throw new SQLException("CNC machine was not found");
+        }
+        return findById(cncMachineId).orElseThrow(() -> new SQLException("CNC machine was not found"));
     }
 
     @Override
@@ -106,6 +119,7 @@ public final class JdbcCncMachineRepository extends JdbcRepositorySupport implem
                 resultSet.getObject("max_feed_rate", Double.class),
                 resultSet.getObject("min_spindle_speed", Double.class),
                 resultSet.getObject("max_spindle_speed", Double.class),
+                resultSet.getBoolean("active"),
                 resultSet.getTimestamp("created_at").toLocalDateTime(),
                 resultSet.getTimestamp("updated_at").toLocalDateTime()
         );

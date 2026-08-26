@@ -14,6 +14,7 @@ public class CncMachine {
     private Double maxFeedRate;
     private Double minSpindleSpeed;
     private Double maxSpindleSpeed;
+    private boolean active;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
@@ -32,6 +33,26 @@ public class CncMachine {
             LocalDateTime createdAt,
             LocalDateTime updatedAt
     ) {
+        this(cncMachineId, name, manufacturer, model, controller, workAreaX, workAreaY,
+                workAreaZ, maxFeedRate, minSpindleSpeed, maxSpindleSpeed, true, createdAt, updatedAt);
+    }
+
+    public CncMachine(
+            Long cncMachineId,
+            String name,
+            String manufacturer,
+            String model,
+            String controller,
+            double workAreaX,
+            double workAreaY,
+            Double workAreaZ,
+            Double maxFeedRate,
+            Double minSpindleSpeed,
+            Double maxSpindleSpeed,
+            boolean active,
+            LocalDateTime createdAt,
+            LocalDateTime updatedAt
+    ) {
         this.cncMachineId = cncMachineId;
         this.name = name;
         this.manufacturer = manufacturer;
@@ -43,6 +64,7 @@ public class CncMachine {
         this.maxFeedRate = maxFeedRate;
         this.minSpindleSpeed = minSpindleSpeed;
         this.maxSpindleSpeed = maxSpindleSpeed;
+        this.active = active;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
     }
@@ -134,6 +156,10 @@ public class CncMachine {
     public void setMaxSpindleSpeed(Double maxSpindleSpeed) {
         this.maxSpindleSpeed = maxSpindleSpeed;
     }
+
+    public boolean isActive() { return active; }
+
+    public void setActive(boolean active) { this.active = active; }
 
     public LocalDateTime getCreatedAt() {
         return createdAt;

@@ -113,6 +113,12 @@ class ReferenceDataManagementServiceTest {
                 .filter(value -> value.getMaterialTypeId() == id).findFirst(); }
         @Override public List<MaterialType> findAll() throws SQLException { failIfNeeded(); return List.copyOf(values); }
         @Override public MaterialType update(MaterialType value) { return value; }
+        @Override public MaterialType setActive(long id, boolean active) {
+            MaterialType value = values.stream().filter(item -> item.getMaterialTypeId() == id)
+                    .findFirst().orElseThrow();
+            value.setDeletedAt(active ? null : java.time.LocalDateTime.now());
+            return value;
+        }
         private void failIfNeeded() throws SQLException { if (failure != null) throw failure; }
     }
 
@@ -130,6 +136,12 @@ class ReferenceDataManagementServiceTest {
                 .filter(value -> value.getCncMachineId() == id).findFirst(); }
         @Override public List<CncMachine> findAll() { return List.copyOf(values); }
         @Override public CncMachine update(CncMachine value) { return value; }
+        @Override public CncMachine setActive(long id, boolean active) {
+            CncMachine value = values.stream().filter(item -> item.getCncMachineId() == id)
+                    .findFirst().orElseThrow();
+            value.setActive(active);
+            return value;
+        }
     }
 
     private static final class ToolRepositoryStub implements ToolRepository {
@@ -151,5 +163,11 @@ class ReferenceDataManagementServiceTest {
                     && value.getToolNumber() == toolNumber).findFirst();
         }
         @Override public Tool update(Tool value) { return value; }
+        @Override public Tool setActive(long id, boolean active) {
+            Tool value = values.stream().filter(item -> item.getToolId() == id)
+                    .findFirst().orElseThrow();
+            value.setActive(active);
+            return value;
+        }
     }
 }

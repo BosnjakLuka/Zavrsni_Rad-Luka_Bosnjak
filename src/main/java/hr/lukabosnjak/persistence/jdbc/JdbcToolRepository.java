@@ -62,6 +62,7 @@ public final class JdbcToolRepository extends JdbcRepositorySupport implements T
                 || tool.getCncMachine().getCncMachineId() == null) {
             throw new IllegalArgumentException("Tool requires persisted identifiers");
         }
+
         try (Connection connection = connectionProvider.getConnection();
              PreparedStatement statement = connection.prepareStatement("""
                      UPDATE TOOL SET cnc_machine_id = ?, tool_number = ?, name = ?, type = ?,
@@ -81,6 +82,18 @@ public final class JdbcToolRepository extends JdbcRepositorySupport implements T
             if (statement.executeUpdate() != 1) throw new SQLException("Tool was not found");
         }
         return findById(tool.getToolId()).orElseThrow(() -> new SQLException("Updated tool was not found"));
+    }
+
+    @Override
+    public Tool setActive(long toolId, boolean active) throws SQLException {
+        try (Connection connection = connectionProvider.getConnection();
+             PreparedStatement statement = connection.prepareStatement(
+                     "UPDATE TOOL SET active = ?, updated_at = CURRENT_TIMESTAMP WHERE tool_id = ?")) {
+            statement.setBoolean(1, active);
+            statement.setLong(2, toolId);
+            if (statement.executeUpdate() != 1) throw new SQLException("Tool was not found");
+        }
+        return findById(toolId).orElseThrow(() -> new SQLException("Tool was not found"));
     }
 
     @Override

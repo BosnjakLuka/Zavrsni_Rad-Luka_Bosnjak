@@ -143,6 +143,33 @@ public final class ReferenceDataManagementService {
         }
     }
 
+    public MaterialType setMaterialTypeActive(long id, boolean active) {
+        requireCatalogAccess();
+        try {
+            return materialTypeRepository.setActive(id, active);
+        } catch (SQLException exception) {
+            throw new ReferenceDataAccessException("Promjena statusa vrste materijala nije uspjela.", exception);
+        }
+    }
+
+    public CncMachine setMachineActive(long id, boolean active) {
+        requireCatalogAccess();
+        try {
+            return machineRepository.setActive(id, active);
+        } catch (SQLException exception) {
+            throw new ReferenceDataAccessException("Promjena statusa CNC stroja nije uspjela.", exception);
+        }
+    }
+
+    public Tool setToolActive(long id, boolean active) {
+        requireCatalogAccess();
+        try {
+            return toolRepository.setActive(id, active);
+        } catch (SQLException exception) {
+            throw new ReferenceDataAccessException("Promjena statusa alata nije uspjela.", exception);
+        }
+    }
+
     private void requireCatalogAccess() {
         authorizationService.require(AuthorizationService.Permission.MANAGE_REFERENCE_DATA);
     }

@@ -21,7 +21,7 @@ public final class ReferenceDataService {
 
     public List<CncMachine> loadMachines() {
         try {
-            return machineRepository.findAll();
+            return machineRepository.findAll().stream().filter(CncMachine::isActive).toList();
         } catch (SQLException exception) {
             throw new ReferenceDataAccessException("Učitavanje CNC strojeva nije uspjelo.", exception);
         }
@@ -32,7 +32,8 @@ public final class ReferenceDataService {
             return List.of();
         }
         try {
-            return toolRepository.findAllByMachineId(machine.getCncMachineId());
+            return toolRepository.findAllByMachineId(machine.getCncMachineId()).stream()
+                    .filter(Tool::isActive).toList();
         } catch (SQLException exception) {
             throw new ReferenceDataAccessException("Učitavanje alata nije uspjelo.", exception);
         }
