@@ -1,14 +1,20 @@
 package hr.lukabosnjak.app;
 
 import hr.lukabosnjak.config.DatabaseInitializer;
+import hr.lukabosnjak.gcode.NcExportService;
 import hr.lukabosnjak.gcode.RichAutoA11GCodeGenerator;
 import hr.lukabosnjak.gcode.RichAutoA11Profile;
 import hr.lukabosnjak.geometry.ToolPathBoundsCalculator;
 import hr.lukabosnjak.geometry.ToolPathService;
 import hr.lukabosnjak.persistence.jdbc.JdbcCncMachineRepository;
+import hr.lukabosnjak.persistence.jdbc.JdbcMachiningJobRepository;
+import hr.lukabosnjak.persistence.jdbc.JdbcMaterialTypeRepository;
 import hr.lukabosnjak.persistence.jdbc.JdbcToolRepository;
+import hr.lukabosnjak.service.MaterialReferenceDataService;
+import hr.lukabosnjak.service.ProgramExportService;
 import hr.lukabosnjak.service.ProgramGenerationService;
 import hr.lukabosnjak.service.ReferenceDataService;
+import hr.lukabosnjak.service.SavedJobService;
 import hr.lukabosnjak.ui.controller.MainFormController;
 import hr.lukabosnjak.validation.MachiningJobValidator;
 import hr.lukabosnjak.validation.MachiningParametersValidator;
@@ -43,7 +49,9 @@ public class Main extends Application {
         FXMLLoader loader = new FXMLLoader(Main.class.getResource("/hr/lukabosnjak/ui/view/main-form.fxml"));
         loader.setControllerFactory(controllerType -> {
             if (controllerType == MainFormController.class) {
-                return new MainFormController(programGenerationService(), referenceDataService());
+                return new MainFormController(
+                        programGenerationService(), referenceDataService(), materialReferenceDataService(),
+                        savedJobService(), programExportService());
             }
             throw new IllegalArgumentException("Unsupported controller: " + controllerType.getName());
         });
@@ -67,6 +75,18 @@ public class Main extends Application {
 
     private ReferenceDataService referenceDataService() {
         return new ReferenceDataService(new JdbcCncMachineRepository(), new JdbcToolRepository());
+    }
+
+    private MaterialReferenceDataService materialReferenceDataService() {
+        return new MaterialReferenceDataService(new JdbcMaterialTypeRepository());
+    }
+
+    private SavedJobService savedJobService() {
+        return new SavedJobService(new JdbcMachiningJobRepository());
+    }
+
+    private ProgramExportService programExportService() {
+        return new ProgramExportService(new NcExportService());
     }
 
     private RichAutoA11Profile conservativePreviewProfile() {

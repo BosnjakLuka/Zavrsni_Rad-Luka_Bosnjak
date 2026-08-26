@@ -4,6 +4,7 @@
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.ComboBox?>
 <?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ListView?>
 <?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.control.Separator?>
 <?import javafx.scene.control.TextArea?>
@@ -39,6 +40,8 @@
                             <VBox fx:id="dynamicShapeFields" spacing="8.0" />
                             <Separator />
                             <Label style="-fx-font-size: 16px; -fx-font-weight: bold;" text="Ploča materijala" />
+                            <Label text="Vrsta materijala" />
+                            <ComboBox fx:id="materialTypeComboBox" maxWidth="Infinity" promptText="Odaberite vrstu materijala" />
                             <GridPane hgap="10.0" vgap="8.0">
                                 <Label text="Širina (mm)" GridPane.rowIndex="0" />
                                 <TextField fx:id="materialWidthInput" promptText="0.0" GridPane.columnIndex="1" GridPane.rowIndex="0" />
@@ -73,6 +76,7 @@
                         </VBox>
                     </GridPane>
                     <HBox spacing="10.0">
+                        <TextField fx:id="jobNameInput" prefWidth="220.0" promptText="Naziv programa" />
                         <Button mnemonicParsing="false" onAction="#handleGenerate" text="Generate" />
                         <Button mnemonicParsing="false" onAction="#handleSave" text="Save" />
                         <Button mnemonicParsing="false" onAction="#handleExport" text="Export .nc" />
@@ -80,6 +84,9 @@
                     </HBox>
                     <Label style="-fx-font-weight: bold;" text="G-code preview" />
                     <TextArea fx:id="gCodePreview" editable="false" prefRowCount="10" promptText="Generirani G-code bit će prikazan ovdje nakon buduće integracije." wrapText="false" />
+                    <Label style="-fx-font-weight: bold;" text="Saved Programs" />
+                    <ListView fx:id="savedJobsList" prefHeight="120.0" />
+                    <Button mnemonicParsing="false" onAction="#handleOpenSavedJob" text="Open selected program" />
                     <Label fx:id="statusLabel" wrapText="true" />
                 </VBox>
             </content>
