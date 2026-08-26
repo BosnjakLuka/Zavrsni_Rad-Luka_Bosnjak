@@ -21,11 +21,14 @@ import hr.lukabosnjak.persistence.repository.RoleRepository;
 import hr.lukabosnjak.persistence.repository.ToolRepository;
 import hr.lukabosnjak.persistence.repository.UserRepository;
 import hr.lukabosnjak.service.MaterialReferenceDataService;
+import hr.lukabosnjak.service.AuthService;
+import hr.lukabosnjak.service.PasswordHasher;
 import hr.lukabosnjak.service.ProgramExportService;
 import hr.lukabosnjak.service.ProgramGenerationService;
 import hr.lukabosnjak.service.ReferenceDataService;
 import hr.lukabosnjak.service.ReferenceDataManagementService;
 import hr.lukabosnjak.service.SavedJobService;
+import hr.lukabosnjak.service.SessionContext;
 import hr.lukabosnjak.service.V1BootstrapService;
 import hr.lukabosnjak.ui.controller.CncMachineFormController;
 import hr.lukabosnjak.ui.controller.MainFormController;
@@ -64,6 +67,8 @@ final class ApplicationCompositionRoot {
     private final SavedJobService savedJobService;
     private final ProgramExportService programExportService;
     private final V1BootstrapService v1BootstrapService;
+    private final AuthService authService;
+    private final SessionContext sessionContext;
 
     private ApplicationCompositionRoot(ConnectionProvider connectionProvider) {
         Objects.requireNonNull(connectionProvider, "connectionProvider");
@@ -94,8 +99,11 @@ final class ApplicationCompositionRoot {
                 materialTypeRepository, cncMachineRepository, toolRepository, new ReferenceDataValidator());
         savedJobService = new SavedJobService(machiningJobRepository);
         programExportService = new ProgramExportService(new NcExportService());
+        PasswordHasher passwordHasher = new PasswordHasher();
+        sessionContext = new SessionContext();
+        authService = new AuthService(userRepository, roleRepository, passwordHasher, sessionContext);
         v1BootstrapService = new V1BootstrapService(
-                roleRepository, materialTypeRepository, cncMachineRepository);
+                roleRepository, materialTypeRepository, cncMachineRepository, userRepository);
     }
 
     static ApplicationCompositionRoot production() {
@@ -157,6 +165,14 @@ final class ApplicationCompositionRoot {
 
     MachiningJobRepository machiningJobRepository() {
         return machiningJobRepository;
+    }
+
+    AuthService authService() {
+        return authService;
+    }
+
+    SessionContext sessionContext() {
+        return sessionContext;
     }
 
     private RichAutoA11Profile conservativePreviewProfile() {

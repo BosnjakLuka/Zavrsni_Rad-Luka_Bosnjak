@@ -7,6 +7,7 @@ import hr.lukabosnjak.persistence.jdbc.JdbcCncMachineRepository;
 import hr.lukabosnjak.persistence.jdbc.JdbcMaterialTypeRepository;
 import hr.lukabosnjak.persistence.jdbc.JdbcRoleRepository;
 import hr.lukabosnjak.persistence.jdbc.JdbcToolRepository;
+import hr.lukabosnjak.persistence.jdbc.JdbcUserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -28,6 +29,7 @@ class V1BootstrapServiceIntegrationTest {
     private JdbcMaterialTypeRepository materialTypes;
     private JdbcCncMachineRepository machines;
     private JdbcToolRepository tools;
+    private JdbcUserRepository users;
     private V1BootstrapService bootstrapService;
 
     @BeforeEach
@@ -41,7 +43,8 @@ class V1BootstrapServiceIntegrationTest {
         materialTypes = new JdbcMaterialTypeRepository(connectionProvider);
         machines = new JdbcCncMachineRepository(connectionProvider);
         tools = new JdbcToolRepository(connectionProvider);
-        bootstrapService = new V1BootstrapService(roles, materialTypes, machines);
+        users = new JdbcUserRepository(connectionProvider);
+        bootstrapService = new V1BootstrapService(roles, materialTypes, machines, users);
     }
 
     @Test
@@ -65,11 +68,16 @@ class V1BootstrapServiceIntegrationTest {
         assertNull(machine.getMinSpindleSpeed());
         assertNull(machine.getMaxSpindleSpeed());
         assertTrue(tools.findAllByMachineId(machine.getCncMachineId()).isEmpty());
-        assertEquals(0, countRows("APP_USER"));
+        assertEquals(3, countRows("APP_USER"));
         assertEquals(0, countRows("MATERIAL_SHEET"));
         assertEquals(0, countRows("MACHINING_PARAMETERS"));
         assertEquals(0, countRows("SHAPE"));
         assertEquals(0, countRows("MACHINING_JOB"));
+        PasswordHasher hasher = new PasswordHasher();
+        assertEquals(List.of("admin", "engineer", "operator"),
+                users.findAll().stream().map(user -> user.getUsername()).sorted().toList());
+        assertTrue(users.findAll().stream().allMatch(user ->
+                hasher.verify(user.getUsername().toCharArray(), user.getPasswordHash())));
     }
 
     @Test

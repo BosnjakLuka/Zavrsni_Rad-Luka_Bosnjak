@@ -8,6 +8,8 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 public final class JdbcUserRepository extends JdbcRepositorySupport implements UserRepository {
@@ -56,6 +58,19 @@ public final class JdbcUserRepository extends JdbcRepositorySupport implements U
                 return resultSet.next() ? Optional.of(map(resultSet)) : Optional.empty();
             }
         }
+    }
+
+    @Override
+    public List<User> findAll() throws SQLException {
+        List<User> users = new ArrayList<>();
+        try (Connection connection = connectionProvider.getConnection();
+             PreparedStatement statement = connection.prepareStatement(SELECT_WITH_ROLE + " ORDER BY u.user_id");
+             ResultSet resultSet = statement.executeQuery()) {
+            while (resultSet.next()) {
+                users.add(map(resultSet));
+            }
+        }
+        return users;
     }
 
     private Optional<User> findById(long userId) throws SQLException {

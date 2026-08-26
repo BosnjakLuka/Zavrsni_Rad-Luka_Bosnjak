@@ -50,7 +50,8 @@ class JdbcRepositoriesIntegrationTest {
         }
         new V1BootstrapService(new JdbcRoleRepository(connectionProvider),
                 new JdbcMaterialTypeRepository(connectionProvider),
-                new JdbcCncMachineRepository(connectionProvider)).initialize();
+                new JdbcCncMachineRepository(connectionProvider),
+                new JdbcUserRepository(connectionProvider)).initialize();
     }
 
     @Test

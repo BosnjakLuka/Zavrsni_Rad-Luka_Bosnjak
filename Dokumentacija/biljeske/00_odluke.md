@@ -4,6 +4,42 @@ Ovdje se zapisuju samo potvrđene odluke koje mijenjaju arhitekturu, tehnologiju
 
 Ne zapisuj obične implementacijske detalje, privremene eksperimente ni nepotvrđene pretpostavke. Postojeće odluke iz `AGENTS.md` ne kopiraj bez nove potrebe; ovdje se bilježi njihov nastanak ili kasnija promjena.
 
+## PBKDF2 format lozinki i in-memory session
+
+**Datum:** 2026-08-26
+**Status:** IMPLEMENTIRANO / SOFTVERSKI TESTIRANO
+
+**Odluka:** Lozinke se hashiraju ugrađenim JDK algoritmom `PBKDF2WithHmacSHA256`, s 600.000 iteracija, 16-byte nasumičnim saltom i 256-bitnim izvedenim ključem. Baza čuva verzionirani tekstualni zapis oblika `pbkdf2-sha256$iterations$salt$hash`, pri čemu su salt i hash Base64 kodirani. Verifikacija koristi constant-time usporedbu izvedenih bajtova. Username se normalizira s `trim()` i `lowercase` pravilom, registracijska lozinka ima 8–128 znakova, a session postoji samo u memoriji procesa do logouta ili zatvaranja aplikacije.
+
+Tri development računa koriste unaprijed generirane PBKDF2 zapise i ne spremaju plaintext lozinke u bazu, source dokumentaciju ni razvojne bilješke. Njihova kratka razvojna vjerodajnica iznimka je od registracijskog minimuma i ne predstavlja produkcijsku sigurnosnu preporuku.
+
+**Razlog:** JDK 26 obvezno podržava odabrani algoritam bez nove biblioteke, a radni faktor prati aktualnu OWASP preporuku za PBKDF2-HMAC-SHA256. Salt onemogućuje jednake zapise za jednake lozinke, a verzionirani format omogućuje buduće podizanje parametara.
+
+**Razmotrene alternative:** Nisu odabrani plaintext, brzi SHA-256, trajni session token, dodatna auth biblioteka, pepper bez sigurnog vanjskog spremišta ni spremanje razvojnih lozinki u bilješke.
+
+**Utjecaj na implementaciju:** `PasswordHasher`, `AuthService` i `SessionContext` pripadaju service sloju. `V1BootstrapService` nakon role seeda idempotentno dodaje development korisnike, dok `JdbcUserRepository` ostaje vlasnik SQL-a.
+
+---
+
+## V1 RBAC, registracija, korisnički računi i session
+
+**Datum:** 2026-08-26
+**Status:** ODLUČENO / NIJE IMPLEMENTIRANO / NIJE TESTIRANO
+
+**Odluka:** Sistemske role su fiksne `ADMIN`, `ENGINEER` i `OPERATOR`; admin ih dodjeljuje korisnicima, ali ih ne stvara, preimenuje ni briše. Javna registracija odmah stvara aktivan `OPERATOR` račun bez mogućnosti samostalnog izbora više role. `ADMIN` upravlja korisnicima i njihovim rolama, ima pristup svim referentnim podacima i programima te može izvršavati sve operatorske akcije. `ENGINEER` ne upravlja korisnicima ni rolama, ali upravlja materijalima, strojevima i alatima, generira i sprema programe te vidi, ponovno otvara i izvozi sve programe. `OPERATOR` generira i sprema nove programe te vidi, ponovno otvara i izvozi samo vlastite. Ponovno otvoreni job ostaje povijesni snapshot; promijenjeni podaci spremaju se kao novi job umjesto prepisivanja izvornog zapisa.
+
+Korisnici se ne brišu fizički. Admin ih može aktivirati/deaktivirati, uređivati ime i prezime, promijeniti rolu i resetirati lozinku, ali ne može deaktivirati vlastiti prijavljeni račun niti deaktivirati ili degradirati posljednjeg aktivnog administratora. Korisnik mijenja vlastitu lozinku uz provjeru stare, dok admin drugom korisniku može resetirati lozinku bez stare. Korisničko ime ostaje jedinstveno i nepromjenjivo. Session je samo u memoriji procesa i završava logoutom ili zatvaranjem aplikacije; nema `remember me` tokena.
+
+Bootstrap nakon stvarnog hashera dobiva po jedan development/test račun za svaku rolu, s dogovorenim lowercase korisničkim imenima. U repozitoriju, bazi i razvojnim bilješkama ne spremaju se plaintext lozinke. Potvrđen je ugrađeni JDK `PBKDF2WithHmacSHA256` s nasumičnim saltom i radnim faktorom; točan format i parametri zapisa dokumentirat će se uz implementaciju 13.2.
+
+**Razlog:** Matrica daje jasnu razliku između upravljanja sustavom, tehničkim katalozima i vlastitim operatorskim poslovima bez uvođenja općeg permission frameworka. Neizmjenjivi job snapshoti čuvaju povijest generiranih programa, a deaktivacija umjesto brisanja čuva referencijalni integritet.
+
+**Razmotrene alternative:** Nisu odabrani korisnički definirane role, samostalni izbor više role pri registraciji, trajni session token, hard-delete korisnika, prepisivanje spremljenog joba, plaintext lozinke ni vanjski identity provider.
+
+**Utjecaj na implementaciju:** Korak 13 mora u service sloju centralizirati autentikaciju, session i autorizacijska pravila; persistence sloj dobiva potrebne user upite i update operacije, a JavaFX controlleri samo koordiniraju UI. Stara odluka s rolama `USER`/`ADMIN` time je zamijenjena.
+
+---
+
 ## V1 bootstrap podaci i uklanjanje legacy USER role
 
 **Datum:** 2026-08-26
@@ -139,10 +175,10 @@ Ne zapisuj obične implementacijske detalje, privremene eksperimente ni nepotvr�
 
 ---
 
-## Lokalna autentikacija, uloge i vlasništvo nad poslovima u V1
+## Lokalna autentikacija, uloge i vlasništvo nad poslovima u V1 — zamijenjeno odlukom 13.1
 
 **Datum:** 2026-08-25
-**Status:** ODLUČENO / NIJE IMPLEMENTIRANO / NIJE TESTIRANO
+**Status:** ZAMIJENJENO ODLUKOM 13.1 / NIJE IMPLEMENTIRANO / NIJE TESTIRANO
 
 **Odluka:** V1 uključuje klasičnu lokalnu registraciju i prijavu bez OAutha i vanjskih identity providera. Postoje uloge `USER` i `ADMIN`. Javna registracija stvara aktivan `USER` račun. Pri prvom pokretanju, prije redovnog login toka, poseban first-run setup omogućuje stvaranje prvog `ADMIN` računa i unos njegove lozinke; zadana administratorska lozinka ne smije biti hardkodirana ni spremljena u repozitoriju. Lozinke se nikada ne spremaju kao čisti tekst, nego samo kao sigurni hash s podacima potrebnima za provjeru. `MACHINING_JOB.created_by_user_id` identificira prijavljenog autora: `USER` vidi i upravlja svojim poslovima, a `ADMIN` vidi sve poslove i upravlja osnovnim referentnim podacima.
 
