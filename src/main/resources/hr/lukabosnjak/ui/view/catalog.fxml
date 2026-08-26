@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ListView?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.VBox?>
+<BorderPane xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="hr.lukabosnjak.ui.controller.CatalogController">
+    <center>
+        <VBox alignment="TOP_CENTER" spacing="12.0">
+            <padding><Insets bottom="24.0" left="24.0" right="24.0" top="24.0"/></padding>
+            <Label style="-fx-font-size: 20px; -fx-font-weight: bold;" text="Katalog i postavke"/>
+            <Label fx:id="currentUserLabel"/>
+            <Label text="Vrste materijala"/>
+            <ListView fx:id="materialTypesList" prefHeight="90.0"/>
+            <Button fx:id="addMaterialTypeButton" onAction="#handleAddMaterialType" text="Dodaj vrstu materijala"/>
+            <Button onAction="#handleEditMaterialType" text="Uredi odabranu vrstu materijala"/>
+            <Label text="CNC strojevi"/>
+            <ListView fx:id="machinesList" prefHeight="100.0"/>
+            <Button fx:id="addMachineButton" onAction="#handleAddMachine" text="Dodaj CNC stroj"/>
+            <Button onAction="#handleEditMachine" text="Uredi odabrani CNC stroj"/>
+            <Label text="Alati odabranog stroja"/>
+            <ListView fx:id="toolsList" prefHeight="100.0"/>
+            <Button fx:id="addToolButton" onAction="#handleAddTool" text="Dodaj alat"/>
+            <Button onAction="#handleEditTool" text="Uredi odabrani alat"/>
+            <Label fx:id="statusLabel" wrapText="true"/>
+            <Button onAction="#handleRefresh" text="Osvježi"/>
+            <Button onAction="#handleBack" text="Natrag"/>
+            <Button onAction="#handleLogout" text="Odjava"/>
+        </VBox>
+    </center>
+</BorderPane>

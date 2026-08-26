@@ -144,6 +144,8 @@ class ApplicationCompositionRootIntegrationTest {
         @Override public void showLogin() { }
         @Override public void showRegistration() { }
         @Override public void showUserManagement() { }
+        @Override public void showSavedPrograms() { }
+        @Override public void showCatalog() { }
         @Override public void showMain() { }
     }
 }

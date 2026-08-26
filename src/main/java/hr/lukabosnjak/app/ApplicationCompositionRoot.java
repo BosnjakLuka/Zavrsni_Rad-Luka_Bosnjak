@@ -40,6 +40,8 @@ import hr.lukabosnjak.ui.controller.MaterialTypeFormController;
 import hr.lukabosnjak.ui.controller.RegistrationController;
 import hr.lukabosnjak.ui.controller.ToolFormController;
 import hr.lukabosnjak.ui.controller.UserManagementController;
+import hr.lukabosnjak.ui.controller.SavedProgramsController;
+import hr.lukabosnjak.ui.controller.CatalogController;
 import hr.lukabosnjak.validation.MachiningJobValidator;
 import hr.lukabosnjak.validation.MachiningParametersValidator;
 import hr.lukabosnjak.validation.MaterialSheetValidator;
@@ -103,14 +105,15 @@ final class ApplicationCompositionRoot {
                 machiningJobValidator, toolPathService, singleShapeFitValidator, gCodeGenerator);
         referenceDataService = new ReferenceDataService(cncMachineRepository, toolRepository);
         materialReferenceDataService = new MaterialReferenceDataService(materialTypeRepository);
-        referenceDataManagementService = new ReferenceDataManagementService(
-                materialTypeRepository, cncMachineRepository, toolRepository, new ReferenceDataValidator());
         savedJobService = new SavedJobService(machiningJobRepository);
         programExportService = new ProgramExportService(new NcExportService());
         PasswordHasher passwordHasher = new PasswordHasher();
         sessionContext = new SessionContext();
         authService = new AuthService(userRepository, roleRepository, passwordHasher, sessionContext);
         authorizationService = new AuthorizationService(sessionContext);
+        referenceDataManagementService = new ReferenceDataManagementService(
+                materialTypeRepository, cncMachineRepository, toolRepository,
+                new ReferenceDataValidator(), authorizationService);
         userManagementService = new UserManagementService(
                 userRepository, roleRepository, sessionContext, authorizationService);
         v1BootstrapService = new V1BootstrapService(
@@ -148,6 +151,15 @@ final class ApplicationCompositionRoot {
         }
         if (controllerType == UserManagementController.class) {
             return new UserManagementController(userManagementService, navigation);
+        }
+        if (controllerType == SavedProgramsController.class) {
+            return new SavedProgramsController(
+                    savedJobService, programExportService, sessionContext, navigation);
+        }
+        if (controllerType == CatalogController.class) {
+            return new CatalogController(
+                    referenceDataManagementService, authorizationService, sessionContext,
+                    navigation, type -> createController(type, navigation));
         }
         if (controllerType == MaterialTypeFormController.class) {
             return new MaterialTypeFormController(referenceDataManagementService);

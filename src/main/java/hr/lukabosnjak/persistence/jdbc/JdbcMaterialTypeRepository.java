@@ -35,6 +35,26 @@ public final class JdbcMaterialTypeRepository extends JdbcRepositorySupport impl
     }
 
     @Override
+    public MaterialType update(MaterialType materialType) throws SQLException {
+        if (materialType.getMaterialTypeId() == null) {
+            throw new IllegalArgumentException("Material type id is required");
+        }
+        try (Connection connection = connectionProvider.getConnection();
+             PreparedStatement statement = connection.prepareStatement("""
+                     UPDATE MATERIAL_TYPE
+                     SET name = ?, description = ?, updated_at = CURRENT_TIMESTAMP
+                     WHERE material_type_id = ?
+                     """)) {
+            statement.setString(1, materialType.getName());
+            statement.setString(2, materialType.getDescription());
+            statement.setLong(3, materialType.getMaterialTypeId());
+            if (statement.executeUpdate() != 1) throw new SQLException("Material type was not found");
+        }
+        return findById(materialType.getMaterialTypeId())
+                .orElseThrow(() -> new SQLException("Updated material type was not found"));
+    }
+
+    @Override
     public Optional<MaterialType> findById(long materialTypeId) throws SQLException {
         String sql = "SELECT * FROM MATERIAL_TYPE WHERE material_type_id = ?";
         try (Connection connection = connectionProvider.getConnection();

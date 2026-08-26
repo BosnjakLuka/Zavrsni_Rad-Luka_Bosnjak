@@ -9,7 +9,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
-/** Provides read-only access to persisted jobs for the JavaFX quick-access workflow. */
+/** Provides persisted-job access for the JavaFX saved-program workflow. */
 public final class SavedJobService {
     private final MachiningJobRepository machiningJobRepository;
 
@@ -22,6 +22,15 @@ public final class SavedJobService {
             return machiningJobRepository.findAll();
         } catch (SQLException exception) {
             throw new SavedJobAccessException("Učitavanje spremljenih programa nije uspjelo.", exception);
+        }
+    }
+
+    public MachiningJob save(MachiningJob job) {
+        Objects.requireNonNull(job, "job");
+        try {
+            return machiningJobRepository.save(job);
+        } catch (SQLException exception) {
+            throw new SavedJobAccessException("Spremanje programa nije uspjelo.", exception);
         }
     }
 

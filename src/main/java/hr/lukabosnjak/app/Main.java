@@ -5,7 +5,9 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 import hr.lukabosnjak.service.AuthorizationService;
+import hr.lukabosnjak.domain.entities.MachiningJob;
 import hr.lukabosnjak.ui.controller.ApplicationNavigation;
+import hr.lukabosnjak.ui.controller.MainFormController;
 
 import java.io.IOException;
 
@@ -49,6 +51,45 @@ public class Main extends Application implements ApplicationNavigation {
         }
 
         showView("/hr/lukabosnjak/ui/view/main-form.fxml", 1100, 760, 900, 650);
+    }
+
+    @Override
+    public void showMainWithJob(MachiningJob job) {
+        if (!compositionRoot.sessionContext().isAuthenticated()) {
+            showLogin();
+            return;
+        }
+        FXMLLoader loader = new FXMLLoader(Main.class.getResource(
+                "/hr/lukabosnjak/ui/view/main-form.fxml"));
+        loader.setControllerFactory(type -> compositionRoot.createController(type, this));
+        try {
+            primaryStage.setScene(new Scene(loader.load(), 1100, 760));
+            primaryStage.setMinWidth(900);
+            primaryStage.setMinHeight(650);
+            MainFormController controller = loader.getController();
+            controller.loadSavedJob(job);
+            primaryStage.centerOnScreen();
+        } catch (IOException exception) {
+            throw new IllegalStateException("UI prikaz nije moguće učitati.", exception);
+        }
+    }
+
+    @Override
+    public void showSavedPrograms() {
+        if (!compositionRoot.sessionContext().isAuthenticated()) {
+            showLogin();
+            return;
+        }
+        showView("/hr/lukabosnjak/ui/view/saved-programs.fxml", 900, 620, 760, 480);
+    }
+
+    @Override
+    public void showCatalog() {
+        if (!compositionRoot.sessionContext().isAuthenticated()) {
+            showLogin();
+            return;
+        }
+        showView("/hr/lukabosnjak/ui/view/catalog.fxml", 820, 560, 700, 450);
     }
 
     @Override

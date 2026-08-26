@@ -43,6 +43,35 @@ public final class JdbcCncMachineRepository extends JdbcRepositorySupport implem
     }
 
     @Override
+    public CncMachine update(CncMachine machine) throws SQLException {
+        if (machine.getCncMachineId() == null) {
+            throw new IllegalArgumentException("CNC machine id is required");
+        }
+        try (Connection connection = connectionProvider.getConnection();
+             PreparedStatement statement = connection.prepareStatement("""
+                     UPDATE CNC_MACHINE SET name = ?, manufacturer = ?, model = ?, controller = ?,
+                       work_area_x = ?, work_area_y = ?, work_area_z = ?, max_feed_rate = ?,
+                       min_spindle_speed = ?, max_spindle_speed = ?, updated_at = CURRENT_TIMESTAMP
+                     WHERE cnc_machine_id = ?
+                     """)) {
+            statement.setString(1, machine.getName());
+            statement.setString(2, machine.getManufacturer());
+            statement.setString(3, machine.getModel());
+            statement.setString(4, machine.getController());
+            statement.setDouble(5, machine.getWorkAreaX());
+            statement.setDouble(6, machine.getWorkAreaY());
+            statement.setObject(7, machine.getWorkAreaZ(), Types.DOUBLE);
+            statement.setObject(8, machine.getMaxFeedRate(), Types.DOUBLE);
+            statement.setObject(9, machine.getMinSpindleSpeed(), Types.DOUBLE);
+            statement.setObject(10, machine.getMaxSpindleSpeed(), Types.DOUBLE);
+            statement.setLong(11, machine.getCncMachineId());
+            if (statement.executeUpdate() != 1) throw new SQLException("CNC machine was not found");
+        }
+        return findById(machine.getCncMachineId())
+                .orElseThrow(() -> new SQLException("Updated CNC machine was not found"));
+    }
+
+    @Override
     public Optional<CncMachine> findById(long cncMachineId) throws SQLException {
         try (Connection connection = connectionProvider.getConnection();
              PreparedStatement statement = connection.prepareStatement(

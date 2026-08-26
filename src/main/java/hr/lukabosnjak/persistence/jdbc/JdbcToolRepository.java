@@ -38,6 +38,7 @@ public final class JdbcToolRepository extends JdbcRepositorySupport implements T
         if (tool.getCncMachine() == null || tool.getCncMachine().getCncMachineId() == null) {
             throw new IllegalArgumentException("Tool requires a persisted CNC machine");
         }
+
         long id = executeInsert("""
                 INSERT INTO TOOL (cnc_machine_id, tool_number, name, type, diameter, cutting_length,
                     flute_count, active, created_at, updated_at)
@@ -53,6 +54,33 @@ public final class JdbcToolRepository extends JdbcRepositorySupport implements T
             statement.setBoolean(8, tool.isActive());
         });
         return findById(id).orElseThrow(() -> new SQLException("Saved tool was not found"));
+    }
+
+    @Override
+    public Tool update(Tool tool) throws SQLException {
+        if (tool.getToolId() == null || tool.getCncMachine() == null
+                || tool.getCncMachine().getCncMachineId() == null) {
+            throw new IllegalArgumentException("Tool requires persisted identifiers");
+        }
+        try (Connection connection = connectionProvider.getConnection();
+             PreparedStatement statement = connection.prepareStatement("""
+                     UPDATE TOOL SET cnc_machine_id = ?, tool_number = ?, name = ?, type = ?,
+                       diameter = ?, cutting_length = ?, flute_count = ?, active = ?,
+                       updated_at = CURRENT_TIMESTAMP
+                     WHERE tool_id = ?
+                     """)) {
+            statement.setLong(1, tool.getCncMachine().getCncMachineId());
+            statement.setInt(2, tool.getToolNumber());
+            statement.setString(3, tool.getName());
+            statement.setString(4, tool.getType());
+            statement.setDouble(5, tool.getDiameter());
+            statement.setDouble(6, tool.getCuttingLength());
+            statement.setInt(7, tool.getFluteCount());
+            statement.setBoolean(8, tool.isActive());
+            statement.setLong(9, tool.getToolId());
+            if (statement.executeUpdate() != 1) throw new SQLException("Tool was not found");
+        }
+        return findById(tool.getToolId()).orElseThrow(() -> new SQLException("Updated tool was not found"));
     }
 
     @Override

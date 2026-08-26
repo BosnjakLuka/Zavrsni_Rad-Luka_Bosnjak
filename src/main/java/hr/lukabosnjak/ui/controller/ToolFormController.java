@@ -24,6 +24,7 @@ public final class ToolFormController {
     private final ReferenceDataManagementService managementService;
     private CncMachine machine;
     private Tool savedTool;
+    private Tool editingTool;
 
     public ToolFormController(ReferenceDataManagementService managementService) {
         this.managementService = Objects.requireNonNull(managementService);
@@ -37,8 +38,8 @@ public final class ToolFormController {
     @FXML
     private void handleSave() {
         try {
-            savedTool = managementService.createTool(new Tool(
-                    null,
+            Tool value = new Tool(
+                    editingTool == null ? null : editingTool.getToolId(),
                     machine,
                     NumericInputParser.parseRequiredInteger(toolNumberInput.getText(), "Broj alata"),
                     nameInput.getText(),
@@ -48,7 +49,10 @@ public final class ToolFormController {
                     NumericInputParser.parseRequiredInteger(fluteCountInput.getText(), "Broj oštrica"),
                     true,
                     null,
-                    null));
+                    null);
+            savedTool = editingTool == null
+                    ? managementService.createTool(value)
+                    : managementService.updateTool(value);
             closeWindow();
         } catch (IllegalArgumentException | ReferenceDataAccessException exception) {
             statusLabel.setText(exception.getMessage());
@@ -62,6 +66,17 @@ public final class ToolFormController {
 
     public Tool getSavedTool() {
         return savedTool;
+    }
+
+    public void setTool(Tool tool) {
+        editingTool = Objects.requireNonNull(tool);
+        setMachine(tool.getCncMachine());
+        toolNumberInput.setText(Integer.toString(tool.getToolNumber()));
+        nameInput.setText(tool.getName());
+        typeInput.setText(tool.getType());
+        diameterInput.setText(Double.toString(tool.getDiameter()));
+        cuttingLengthInput.setText(Double.toString(tool.getCuttingLength()));
+        fluteCountInput.setText(Integer.toString(tool.getFluteCount()));
     }
 
     private void closeWindow() {

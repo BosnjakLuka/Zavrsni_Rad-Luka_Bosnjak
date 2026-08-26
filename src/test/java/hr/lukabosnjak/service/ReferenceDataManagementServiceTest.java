@@ -76,7 +76,12 @@ class ReferenceDataManagementServiceTest {
             CncMachineRepository machines,
             ToolRepository tools
     ) {
-        return new ReferenceDataManagementService(materials, machines, tools, new ReferenceDataValidator());
+        SessionContext session = new SessionContext();
+        session.login(new hr.lukabosnjak.domain.entities.User(
+                1L, new hr.lukabosnjak.domain.entities.Role(1L, "ADMIN", null),
+                "admin", "hash", "Admin", "User", true, null, null));
+        return new ReferenceDataManagementService(materials, machines, tools,
+                new ReferenceDataValidator(), new AuthorizationService(session));
     }
 
     private CncMachine machine(String name) {
@@ -107,6 +112,7 @@ class ReferenceDataManagementServiceTest {
         @Override public Optional<MaterialType> findById(long id) { return values.stream()
                 .filter(value -> value.getMaterialTypeId() == id).findFirst(); }
         @Override public List<MaterialType> findAll() throws SQLException { failIfNeeded(); return List.copyOf(values); }
+        @Override public MaterialType update(MaterialType value) { return value; }
         private void failIfNeeded() throws SQLException { if (failure != null) throw failure; }
     }
 
@@ -123,6 +129,7 @@ class ReferenceDataManagementServiceTest {
         @Override public Optional<CncMachine> findById(long id) { return values.stream()
                 .filter(value -> value.getCncMachineId() == id).findFirst(); }
         @Override public List<CncMachine> findAll() { return List.copyOf(values); }
+        @Override public CncMachine update(CncMachine value) { return value; }
     }
 
     private static final class ToolRepositoryStub implements ToolRepository {
@@ -143,5 +150,6 @@ class ReferenceDataManagementServiceTest {
             return values.stream().filter(value -> value.getCncMachine().getCncMachineId() == machineId
                     && value.getToolNumber() == toolNumber).findFirst();
         }
+        @Override public Tool update(Tool value) { return value; }
     }
 }

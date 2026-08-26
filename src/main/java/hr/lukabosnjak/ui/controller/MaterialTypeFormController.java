@@ -18,6 +18,7 @@ public final class MaterialTypeFormController {
 
     private final ReferenceDataManagementService managementService;
     private MaterialType savedMaterialType;
+    private MaterialType editingMaterialType;
 
     public MaterialTypeFormController(ReferenceDataManagementService managementService) {
         this.managementService = Objects.requireNonNull(managementService);
@@ -26,8 +27,12 @@ public final class MaterialTypeFormController {
     @FXML
     private void handleSave() {
         try {
-            savedMaterialType = managementService.createMaterialType(new MaterialType(
-                    null, nameInput.getText(), descriptionInput.getText(), null, null, null));
+            MaterialType value = new MaterialType(
+                    editingMaterialType == null ? null : editingMaterialType.getMaterialTypeId(),
+                    nameInput.getText(), descriptionInput.getText(), null, null, null);
+            savedMaterialType = editingMaterialType == null
+                    ? managementService.createMaterialType(value)
+                    : managementService.updateMaterialType(value);
             closeWindow();
         } catch (IllegalArgumentException | ReferenceDataAccessException exception) {
             statusLabel.setText(exception.getMessage());
@@ -41,6 +46,12 @@ public final class MaterialTypeFormController {
 
     public MaterialType getSavedMaterialType() {
         return savedMaterialType;
+    }
+
+    public void setMaterialType(MaterialType materialType) {
+        editingMaterialType = Objects.requireNonNull(materialType);
+        nameInput.setText(materialType.getName());
+        descriptionInput.setText(materialType.getDescription());
     }
 
     private void closeWindow() {

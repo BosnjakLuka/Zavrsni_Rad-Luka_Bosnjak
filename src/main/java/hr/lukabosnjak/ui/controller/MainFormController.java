@@ -45,6 +45,7 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Consumer;
 
 public class MainFormController {
@@ -71,6 +72,10 @@ public class MainFormController {
     @FXML private Button addMaterialTypeButton;
     @FXML private Button addMachineButton;
     @FXML private Button addToolButton;
+    @FXML private Button saveButton;
+    @FXML private Button exportButton;
+    @FXML private Button savedProgramsButton;
+    @FXML private Button catalogButton;
 
     private final ProgramGenerationService programGenerationService;
     private final ReferenceDataService referenceDataService;
@@ -136,6 +141,8 @@ public class MainFormController {
         });
         updateShapeFields(shapeTypeComboBox.getValue());
         loadReferenceData();
+        saveButton.setDisable(true);
+        exportButton.setDisable(true);
     }
 
     @FXML
@@ -143,6 +150,8 @@ public class MainFormController {
         try {
             displayedProgram = programGenerationService.generate(readGenerationRequest());
             gCodePreview.setText(displayedProgram.text());
+            saveButton.setDisable(false);
+            exportButton.setDisable(false);
             statusLabel.setText("G-code za jedan element uspješno je generiran. Nije fizički testiran na stroju.");
         } catch (IllegalArgumentException | ReferenceDataAccessException exception) {
             clearPreview();
@@ -213,13 +222,51 @@ public class MainFormController {
 
     @FXML
     private void handleSave() {
-        statusLabel.setText("Spremanje naloga s autorom bit će povezano u Koraku 13.4.");
+        if (displayedProgram == null) {
+            statusLabel.setText("Najprije generirajte program.");
+            return;
+        }
+        String name = jobNameInput.getText() == null ? "" : jobNameInput.getText().trim();
+        if (name.isBlank()) {
+            statusLabel.setText("Naziv programa je obavezan.");
+            return;
+        }
+        try {
+            ProgramGenerationRequest request = readGenerationRequest();
+            MachiningJob saved = savedJobService.save(new MachiningJob(
+                    null,
+                    sessionContext.currentUser().orElseThrow(
+                            () -> new AuthorizationException("Za spremanje je potrebna prijava.")),
+                    request.machine(),
+                    request.tool(),
+                    request.materialSheet(),
+                    request.machiningParameters(),
+                    request.shape(),
+                    name,
+                    1,
+                    displayedProgram.text(),
+                    null,
+                    null));
+            statusLabel.setText("Program je spremljen pod nazivom: " + saved.getName() + ".");
+        } catch (IllegalArgumentException | AuthorizationException | SavedJobAccessException exception) {
+            statusLabel.setText(exception.getMessage());
+        }
     }
 
     @FXML
     private void handleLogout() {
         authService.logout();
         navigation.showLogin();
+    }
+
+    @FXML
+    private void handleSavedPrograms() {
+        navigation.showSavedPrograms();
+    }
+
+    @FXML
+    private void handleCatalog() {
+        navigation.showCatalog();
     }
 
     @FXML
@@ -265,30 +312,24 @@ public class MainFormController {
     }
 
     @FXML
-    private void handleSavedPrograms() {
-        try {
-            savedJobsList.getItems().setAll(savedJobService.loadAll());
-            statusLabel.setText(savedJobsList.getItems().isEmpty()
-                    ? "Nema spremljenih programa."
-                    : "Odaberite spremljeni program i otvorite ga.");
-        } catch (SavedJobAccessException exception) {
-            statusLabel.setText(exception.getMessage());
-        }
-    }
-
-    @FXML
     private void handleOpenSavedJob() {
         MachiningJob selectedJob = savedJobsList.getSelectionModel().getSelectedItem();
         if (selectedJob == null) {
             statusLabel.setText("Odaberite spremljeni program za otvaranje.");
             return;
         }
+
         try {
             populateForm(savedJobService.loadById(selectedJob.getMachiningJobId()));
             statusLabel.setText("Spremljeni program je učitan u formu.");
         } catch (IllegalArgumentException | SavedJobAccessException exception) {
             statusLabel.setText(exception.getMessage());
         }
+    }
+
+    public void loadSavedJob(MachiningJob job) {
+        populateForm(Objects.requireNonNull(job, "job"));
+        statusLabel.setText("Spremljeni program je učitan u generator.");
     }
 
     private void loadReferenceData() {
@@ -383,6 +424,8 @@ public class MainFormController {
         if (shapeInputs.size() > 1) shapeInputs.get(1).input().setText(Double.toString(job.getShape().getDimensionB()));
         displayedProgram = savedJobService.gCodeProgramOf(job);
         gCodePreview.setText(displayedProgram.text());
+        saveButton.setDisable(false);
+        exportButton.setDisable(false);
     }
 
     private void updateShapeFields(ShapeType shapeType) {
@@ -409,7 +452,12 @@ public class MainFormController {
     }
 
     private double numeric(TextField input, String label) { return NumericInputParser.parseRequiredFinite(input.getText(), label); }
-    private void clearPreview() { displayedProgram = null; gCodePreview.clear(); }
+    private void clearPreview() {
+        displayedProgram = null;
+        gCodePreview.clear();
+        saveButton.setDisable(true);
+        exportButton.setDisable(true);
+    }
     private String suggestedNcFileName() { return jobNameInput.getText().isBlank() ? "cnc-program.nc" : jobNameInput.getText() + ".nc"; }
 
     private StringConverter<CncMachine> machineConverter() { return converter(CncMachine::getName); }

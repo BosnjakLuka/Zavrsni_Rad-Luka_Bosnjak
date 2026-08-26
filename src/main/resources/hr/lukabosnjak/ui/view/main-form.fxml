@@ -25,6 +25,10 @@
                 <Label text="Program za jedan element" />
             </VBox>
             <Region HBox.hgrow="ALWAYS" />
+            <HBox spacing="6.0">
+                <Button fx:id="savedProgramsButton" onAction="#handleSavedPrograms" text="Spremljeni programi" />
+                <Button fx:id="catalogButton" onAction="#handleCatalog" text="Katalog" />
+            </HBox>
             <VBox alignment="CENTER_RIGHT" spacing="5.0">
                 <Label fx:id="currentUserLabel" />
                 <Button fx:id="userManagementButton" mnemonicParsing="false" onAction="#handleUserManagement" text="Korisnici" />
@@ -76,7 +80,7 @@
                                 <Button fx:id="addToolButton" mnemonicParsing="false" onAction="#handleAddTool" text="Dodaj..." />
                             </HBox>
                             <Separator />
-                            <Label style="-fx-font-size: 16px; -fx-font-weight: bold;" text="Machining parameters" />
+                            <Label style="-fx-font-size: 16px; -fx-font-weight: bold;" text="Parametri obrade" />
                             <GridPane hgap="10.0" vgap="8.0">
                                 <Label text="Spindle speed" GridPane.rowIndex="0" />
                                 <TextField fx:id="spindleSpeedInput" promptText="0.0" GridPane.columnIndex="1" GridPane.rowIndex="0" />
@@ -95,16 +99,16 @@
                     </GridPane>
                     <HBox spacing="10.0">
                         <TextField fx:id="jobNameInput" prefWidth="220.0" promptText="Naziv programa" />
-                        <Button mnemonicParsing="false" onAction="#handleGenerate" text="Generate" />
-                        <Button mnemonicParsing="false" onAction="#handleSave" text="Save" />
-                        <Button mnemonicParsing="false" onAction="#handleExport" text="Export .nc" />
-                        <Button mnemonicParsing="false" onAction="#handleSavedPrograms" text="Saved Programs" />
+                        <Button mnemonicParsing="false" onAction="#handleGenerate" text="Generiraj" />
+                        <Button fx:id="saveButton" mnemonicParsing="false" onAction="#handleSave" text="Spremi" />
+                        <Button fx:id="exportButton" mnemonicParsing="false" onAction="#handleExport" text="Izvezi .nc" />
+                        <Button mnemonicParsing="false" onAction="#handleSavedPrograms" text="Spremljeni programi" />
                     </HBox>
-                    <Label style="-fx-font-weight: bold;" text="G-code preview" />
-                    <TextArea fx:id="gCodePreview" editable="false" prefRowCount="10" promptText="Generirani G-code bit će prikazan ovdje nakon buduće integracije." wrapText="false" />
-                    <Label style="-fx-font-weight: bold;" text="Saved Programs" />
+                    <Label style="-fx-font-weight: bold;" text="Pregled G-koda" />
+                    <TextArea fx:id="gCodePreview" editable="false" prefRowCount="10" promptText="Generirani G-code prikazat će se ovdje." wrapText="false" />
+                    <Label style="-fx-font-weight: bold;" text="Spremljeni programi (brzi pregled)" />
                     <ListView fx:id="savedJobsList" prefHeight="120.0" />
-                    <Button mnemonicParsing="false" onAction="#handleOpenSavedJob" text="Open selected program" />
+                    <Button mnemonicParsing="false" onAction="#handleOpenSavedJob" text="Otvori odabrani program" />
                     <Label fx:id="statusLabel" wrapText="true" />
                 </VBox>
             </content>

@@ -10,6 +10,7 @@ import hr.lukabosnjak.domain.entities.Shape;
 import hr.lukabosnjak.domain.entities.Tool;
 import hr.lukabosnjak.domain.entities.User;
 import hr.lukabosnjak.domain.enums.ShapeType;
+import hr.lukabosnjak.service.SavedJobService;
 import org.h2.tools.RunScript;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -55,15 +56,21 @@ class JdbcMachiningJobRepositoryIntegrationTest {
         References references = saveReferences();
         JdbcMachiningJobRepository savingRepository = new JdbcMachiningJobRepository(connectionProvider);
 
-        MachiningJob saved = savingRepository.save(newJob(references, 1));
+        SavedJobService savingService = new SavedJobService(savingRepository);
+        MachiningJob saved = savingService.save(newJob(references, 1));
 
         JdbcMachiningJobRepository freshRepository = new JdbcMachiningJobRepository(connectionProvider);
         MachiningJob loaded = freshRepository.findById(saved.getMachiningJobId()).orElseThrow();
+        SavedJobService freshSavedJobService = new SavedJobService(freshRepository);
+        MachiningJob quickAccessLoaded = freshSavedJobService.loadById(saved.getMachiningJobId());
 
         assertNotNull(loaded.getMachiningJobId());
         assertEquals("Single element test job", loaded.getName());
         assertEquals(1, loaded.getQuantity());
         assertEquals(TEST_G_CODE, loaded.getGCode());
+        assertEquals(TEST_G_CODE, freshSavedJobService.gCodeProgramOf(quickAccessLoaded).text());
+        assertEquals(10.0, quickAccessLoaded.getMachiningParameters().getSafeZ());
+        assertEquals(80.0, quickAccessLoaded.getShape().getDimensionA());
         assertNotNull(loaded.getCreatedAt());
         assertNotNull(loaded.getUpdatedAt());
 

@@ -25,6 +25,7 @@ public final class CncMachineFormController {
 
     private final ReferenceDataManagementService managementService;
     private CncMachine savedMachine;
+    private CncMachine editingMachine;
 
     public CncMachineFormController(ReferenceDataManagementService managementService) {
         this.managementService = Objects.requireNonNull(managementService);
@@ -33,8 +34,8 @@ public final class CncMachineFormController {
     @FXML
     private void handleSave() {
         try {
-            savedMachine = managementService.createMachine(new CncMachine(
-                    null,
+            CncMachine value = new CncMachine(
+                    editingMachine == null ? null : editingMachine.getCncMachineId(),
                     nameInput.getText(),
                     manufacturerInput.getText(),
                     modelInput.getText(),
@@ -46,7 +47,10 @@ public final class CncMachineFormController {
                     optionalNumeric(minSpindleSpeedInput, "Minimalna brzina vretena"),
                     optionalNumeric(maxSpindleSpeedInput, "Maksimalna brzina vretena"),
                     null,
-                    null));
+                    null);
+            savedMachine = editingMachine == null
+                    ? managementService.createMachine(value)
+                    : managementService.updateMachine(value);
             closeWindow();
         } catch (IllegalArgumentException | ReferenceDataAccessException exception) {
             statusLabel.setText(exception.getMessage());
@@ -62,6 +66,20 @@ public final class CncMachineFormController {
         return savedMachine;
     }
 
+    public void setMachine(CncMachine machine) {
+        editingMachine = Objects.requireNonNull(machine);
+        nameInput.setText(machine.getName());
+        manufacturerInput.setText(machine.getManufacturer());
+        modelInput.setText(machine.getModel());
+        controllerInput.setText(machine.getController());
+        workAreaXInput.setText(Double.toString(machine.getWorkAreaX()));
+        workAreaYInput.setText(Double.toString(machine.getWorkAreaY()));
+        setOptional(workAreaZInput, machine.getWorkAreaZ());
+        setOptional(maxFeedRateInput, machine.getMaxFeedRate());
+        setOptional(minSpindleSpeedInput, machine.getMinSpindleSpeed());
+        setOptional(maxSpindleSpeedInput, machine.getMaxSpindleSpeed());
+    }
+
     private double numeric(TextField input, String label) {
         return NumericInputParser.parseRequiredFinite(input.getText(), label);
     }
@@ -72,5 +90,9 @@ public final class CncMachineFormController {
 
     private void closeWindow() {
         ((Stage) statusLabel.getScene().getWindow()).close();
+    }
+
+    private void setOptional(TextField input, Double value) {
+        input.setText(value == null ? "" : Double.toString(value));
     }
 }
