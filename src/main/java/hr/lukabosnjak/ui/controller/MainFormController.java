@@ -12,6 +12,8 @@ import hr.lukabosnjak.domain.enums.ShapeType;
 import hr.lukabosnjak.gcode.GCodeProgram;
 import hr.lukabosnjak.service.MaterialReferenceDataService;
 import hr.lukabosnjak.service.AuthService;
+import hr.lukabosnjak.service.AuthorizationException;
+import hr.lukabosnjak.service.AuthorizationService;
 import hr.lukabosnjak.service.ProgramExportService;
 import hr.lukabosnjak.service.ProgramGenerationRequest;
 import hr.lukabosnjak.service.ProgramGenerationService;
@@ -25,6 +27,7 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.ComboBox;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TextArea;
@@ -64,6 +67,10 @@ public class MainFormController {
     @FXML private ListView<MachiningJob> savedJobsList;
     @FXML private Label currentUserLabel;
     @FXML private Label statusLabel;
+    @FXML private Button userManagementButton;
+    @FXML private Button addMaterialTypeButton;
+    @FXML private Button addMachineButton;
+    @FXML private Button addToolButton;
 
     private final ProgramGenerationService programGenerationService;
     private final ReferenceDataService referenceDataService;
@@ -72,6 +79,7 @@ public class MainFormController {
     private final ProgramExportService programExportService;
     private final AuthService authService;
     private final SessionContext sessionContext;
+    private final AuthorizationService authorizationService;
     private final ApplicationNavigation navigation;
     private final Callback<Class<?>, Object> controllerFactory;
     private final List<ShapeInput> shapeInputs = new ArrayList<>();
@@ -85,6 +93,7 @@ public class MainFormController {
             ProgramExportService programExportService,
             AuthService authService,
             SessionContext sessionContext,
+            AuthorizationService authorizationService,
             ApplicationNavigation navigation,
             Callback<Class<?>, Object> controllerFactory
     ) {
@@ -95,6 +104,7 @@ public class MainFormController {
         this.programExportService = programExportService;
         this.authService = authService;
         this.sessionContext = sessionContext;
+        this.authorizationService = authorizationService;
         this.navigation = navigation;
         this.controllerFactory = controllerFactory;
     }
@@ -104,6 +114,14 @@ public class MainFormController {
         currentUserLabel.setText(sessionContext.currentUser()
                 .map(user -> user.getUsername() + " (" + user.getRole().getName() + ")")
                 .orElse("Nema prijavljenog korisnika"));
+        boolean canManageReferenceData = authorizationService.isAllowed(
+                AuthorizationService.Permission.MANAGE_REFERENCE_DATA);
+        addMaterialTypeButton.setDisable(!canManageReferenceData);
+        addMachineButton.setDisable(!canManageReferenceData);
+        addToolButton.setDisable(!canManageReferenceData);
+        userManagementButton.setVisible(sessionContext.currentUser()
+                .map(user -> "ADMIN".equals(user.getRole().getName())).orElse(false));
+        userManagementButton.setManaged(userManagementButton.isVisible());
         shapeTypeComboBox.getItems().setAll(ShapeType.values());
         shapeTypeComboBox.setValue(ShapeType.SQUARE);
         shapeTypeComboBox.valueProperty().addListener((observable, oldValue, newValue) -> updateShapeFields(newValue));
@@ -139,6 +157,7 @@ public class MainFormController {
 
     @FXML
     private void handleAddMaterialType() {
+        if (!requireReferenceDataPermission()) return;
         MaterialTypeFormController controller = showDialog(
                 "/hr/lukabosnjak/ui/view/material-type-form.fxml",
                 "Dodavanje vrste materijala",
@@ -155,6 +174,7 @@ public class MainFormController {
 
     @FXML
     private void handleAddMachine() {
+        if (!requireReferenceDataPermission()) return;
         CncMachineFormController controller = showDialog(
                 "/hr/lukabosnjak/ui/view/cnc-machine-form.fxml",
                 "Dodavanje CNC stroja",
@@ -171,6 +191,7 @@ public class MainFormController {
 
     @FXML
     private void handleAddTool() {
+        if (!requireReferenceDataPermission()) return;
         CncMachine selectedMachine = machineComboBox.getValue();
         if (selectedMachine == null) {
             statusLabel.setText("Prije dodavanja alata odaberite ili dodajte CNC stroj.");
@@ -199,6 +220,25 @@ public class MainFormController {
     private void handleLogout() {
         authService.logout();
         navigation.showLogin();
+    }
+
+    @FXML
+    private void handleUserManagement() {
+        if (!sessionContext.currentUser().map(user -> "ADMIN".equals(user.getRole().getName())).orElse(false)) {
+            statusLabel.setText("Nemate pravo za upravljanje korisnicima.");
+            return;
+        }
+        navigation.showUserManagement();
+    }
+
+    private boolean requireReferenceDataPermission() {
+        try {
+            authorizationService.require(AuthorizationService.Permission.MANAGE_REFERENCE_DATA);
+            return true;
+        } catch (AuthorizationException exception) {
+            statusLabel.setText(exception.getMessage());
+            return false;
+        }
     }
 
     @FXML

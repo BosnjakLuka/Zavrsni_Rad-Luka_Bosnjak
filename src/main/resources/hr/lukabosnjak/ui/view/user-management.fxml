@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ListView?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+<BorderPane xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="hr.lukabosnjak.ui.controller.UserManagementController">
+    <center>
+        <VBox spacing="12.0">
+            <padding><Insets bottom="18.0" left="18.0" right="18.0" top="18.0"/></padding>
+            <Label style="-fx-font-size: 20px; -fx-font-weight: bold;" text="Upravljanje korisnicima"/>
+            <ListView fx:id="usersList" VBox.vgrow="ALWAYS"/>
+            <HBox spacing="8.0">
+                <Button fx:id="toggleActiveButton" onAction="#handleToggleActive" text="Aktiviraj/deaktiviraj"/>
+                <ComboBox fx:id="roleComboBox" promptText="Nova rola"/>
+                <Button onAction="#handleChangeRole" text="Promijeni rolu"/>
+            </HBox>
+            <Label fx:id="statusLabel" wrapText="true"/>
+            <Button onAction="#handleBack" text="Natrag"/>
+        </VBox>
+    </center>
+</BorderPane>

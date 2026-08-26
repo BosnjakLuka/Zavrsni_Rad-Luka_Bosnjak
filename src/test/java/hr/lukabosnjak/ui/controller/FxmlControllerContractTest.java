@@ -23,7 +23,8 @@ class FxmlControllerContractTest {
                 new FormContract("/hr/lukabosnjak/ui/view/main-form.fxml", MainFormController.class),
                 new FormContract("/hr/lukabosnjak/ui/view/material-type-form.fxml", MaterialTypeFormController.class),
                 new FormContract("/hr/lukabosnjak/ui/view/cnc-machine-form.fxml", CncMachineFormController.class),
-                new FormContract("/hr/lukabosnjak/ui/view/tool-form.fxml", ToolFormController.class));
+                new FormContract("/hr/lukabosnjak/ui/view/tool-form.fxml", ToolFormController.class),
+                new FormContract("/hr/lukabosnjak/ui/view/user-management.fxml", UserManagementController.class));
 
         for (FormContract form : forms) {
             verify(form);

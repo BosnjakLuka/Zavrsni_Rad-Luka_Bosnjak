@@ -6,4 +6,6 @@ public interface ApplicationNavigation {
     void showRegistration();
 
     void showMain();
+
+    void showUserManagement();
 }

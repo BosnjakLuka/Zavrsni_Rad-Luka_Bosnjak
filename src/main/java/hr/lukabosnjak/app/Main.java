@@ -4,6 +4,7 @@ import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
+import hr.lukabosnjak.service.AuthorizationService;
 import hr.lukabosnjak.ui.controller.ApplicationNavigation;
 
 import java.io.IOException;
@@ -46,7 +47,18 @@ public class Main extends Application implements ApplicationNavigation {
             showLogin();
             return;
         }
+
         showView("/hr/lukabosnjak/ui/view/main-form.fxml", 1100, 760, 900, 650);
+    }
+
+    @Override
+    public void showUserManagement() {
+        if (!compositionRoot.authorizationService().isAllowed(
+                AuthorizationService.Permission.MANAGE_USERS)) {
+            showMain();
+            return;
+        }
+        showView("/hr/lukabosnjak/ui/view/user-management.fxml", 850, 560, 700, 450);
     }
 
     private void showView(String resourcePath, double width, double height, double minWidth, double minHeight) {

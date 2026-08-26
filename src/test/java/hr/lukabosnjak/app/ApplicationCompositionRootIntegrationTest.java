@@ -143,6 +143,7 @@ class ApplicationCompositionRootIntegrationTest {
     private static final class NoOpNavigation implements ApplicationNavigation {
         @Override public void showLogin() { }
         @Override public void showRegistration() { }
+        @Override public void showUserManagement() { }
         @Override public void showMain() { }
     }
 }

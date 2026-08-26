@@ -22,6 +22,7 @@ import hr.lukabosnjak.persistence.repository.ToolRepository;
 import hr.lukabosnjak.persistence.repository.UserRepository;
 import hr.lukabosnjak.service.MaterialReferenceDataService;
 import hr.lukabosnjak.service.AuthService;
+import hr.lukabosnjak.service.AuthorizationService;
 import hr.lukabosnjak.service.PasswordHasher;
 import hr.lukabosnjak.service.ProgramExportService;
 import hr.lukabosnjak.service.ProgramGenerationService;
@@ -30,6 +31,7 @@ import hr.lukabosnjak.service.ReferenceDataManagementService;
 import hr.lukabosnjak.service.SavedJobService;
 import hr.lukabosnjak.service.SessionContext;
 import hr.lukabosnjak.service.V1BootstrapService;
+import hr.lukabosnjak.service.UserManagementService;
 import hr.lukabosnjak.ui.controller.CncMachineFormController;
 import hr.lukabosnjak.ui.controller.ApplicationNavigation;
 import hr.lukabosnjak.ui.controller.LoginController;
@@ -37,6 +39,7 @@ import hr.lukabosnjak.ui.controller.MainFormController;
 import hr.lukabosnjak.ui.controller.MaterialTypeFormController;
 import hr.lukabosnjak.ui.controller.RegistrationController;
 import hr.lukabosnjak.ui.controller.ToolFormController;
+import hr.lukabosnjak.ui.controller.UserManagementController;
 import hr.lukabosnjak.validation.MachiningJobValidator;
 import hr.lukabosnjak.validation.MachiningParametersValidator;
 import hr.lukabosnjak.validation.MaterialSheetValidator;
@@ -72,6 +75,8 @@ final class ApplicationCompositionRoot {
     private final V1BootstrapService v1BootstrapService;
     private final AuthService authService;
     private final SessionContext sessionContext;
+    private final AuthorizationService authorizationService;
+    private final UserManagementService userManagementService;
 
     private ApplicationCompositionRoot(ConnectionProvider connectionProvider) {
         Objects.requireNonNull(connectionProvider, "connectionProvider");
@@ -105,6 +110,9 @@ final class ApplicationCompositionRoot {
         PasswordHasher passwordHasher = new PasswordHasher();
         sessionContext = new SessionContext();
         authService = new AuthService(userRepository, roleRepository, passwordHasher, sessionContext);
+        authorizationService = new AuthorizationService(sessionContext);
+        userManagementService = new UserManagementService(
+                userRepository, roleRepository, sessionContext, authorizationService);
         v1BootstrapService = new V1BootstrapService(
                 roleRepository, materialTypeRepository, cncMachineRepository, userRepository);
     }
@@ -135,8 +143,11 @@ final class ApplicationCompositionRoot {
         if (controllerType == MainFormController.class) {
             return new MainFormController(
                     programGenerationService, referenceDataService, materialReferenceDataService,
-                    savedJobService, programExportService, authService, sessionContext, navigation,
+                    savedJobService, programExportService, authService, sessionContext, authorizationService, navigation,
                     type -> createController(type, navigation));
+        }
+        if (controllerType == UserManagementController.class) {
+            return new UserManagementController(userManagementService, navigation);
         }
         if (controllerType == MaterialTypeFormController.class) {
             return new MaterialTypeFormController(referenceDataManagementService);
@@ -184,6 +195,10 @@ final class ApplicationCompositionRoot {
 
     SessionContext sessionContext() {
         return sessionContext;
+    }
+
+    AuthorizationService authorizationService() {
+        return authorizationService;
     }
 
     private RichAutoA11Profile conservativePreviewProfile() {

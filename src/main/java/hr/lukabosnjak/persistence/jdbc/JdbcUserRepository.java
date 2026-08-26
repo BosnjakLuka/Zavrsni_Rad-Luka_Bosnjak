@@ -73,6 +73,40 @@ public final class JdbcUserRepository extends JdbcRepositorySupport implements U
         return users;
     }
 
+    @Override
+    public User updateActive(Long userId, boolean active) throws SQLException {
+        return updateUser(userId, "active = ?", statement -> statement.setBoolean(1, active));
+    }
+
+    @Override
+    public User updateRole(Long userId, Role role) throws SQLException {
+        if (role == null || role.getRoleId() == null) {
+            throw new IllegalArgumentException("User requires a persisted role");
+        }
+        return updateUser(userId, "role_id = ?", statement -> statement.setLong(1, role.getRoleId()));
+    }
+
+    private User updateUser(Long userId, String assignment, SqlBinder binder) throws SQLException {
+        if (userId == null) {
+            throw new IllegalArgumentException("User id is required");
+        }
+        try (Connection connection = connectionProvider.getConnection();
+             PreparedStatement statement = connection.prepareStatement(
+                     "UPDATE APP_USER SET " + assignment + ", updated_at = CURRENT_TIMESTAMP WHERE user_id = ?")) {
+            binder.bind(statement);
+            statement.setLong(2, userId);
+            if (statement.executeUpdate() != 1) {
+                throw new SQLException("User was not found");
+            }
+        }
+        return findById(userId).orElseThrow(() -> new SQLException("Updated user was not found"));
+    }
+
+    @FunctionalInterface
+    private interface SqlBinder {
+        void bind(PreparedStatement statement) throws SQLException;
+    }
+
     private Optional<User> findById(long userId) throws SQLException {
         try (Connection connection = connectionProvider.getConnection();
              PreparedStatement statement = connection.prepareStatement(SELECT_WITH_ROLE + " WHERE u.user_id = ?")) {
