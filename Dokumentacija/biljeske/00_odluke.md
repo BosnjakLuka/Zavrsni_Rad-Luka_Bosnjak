@@ -259,4 +259,35 @@ Ne zapisuj obične implementacijske detalje, privremene eksperimente ni nepotvr�
 **Razmotrene alternative:** <stvarno razmotrene alternative ili „Nisu razmatrane”>  
 **Utjecaj na implementaciju:** <koje dijelove projekta ili kasniji opis aplikacije odluka mijenja>
 
+## FXML view i non-modularni JavaFX UI
+
+**Datum:** 2026-08-26
+**Status:** IMPLEMENTIRANO / NIJE TESTIRANO
+
+**Odluka:** Glavna JavaFX forma koristi FXML kao resource na putanji `src/main/resources/hr/lukabosnjak/ui/view/`, dok JavaFX controlleri pripadaju paketu `ui.controller`. Projekt ostaje non-modularan; FXML ne uvodi `module-info.java`. Maven dobiva `javafx-fxml` ovisnost samo zato što se FXML sada stvarno koristi.
+
+**Razlog:** FXML jasno odvaja deklarativni prikaz od UI koordinacije u controlleru, što je održivo i jednostavno za obrazlaganje u studentskom radu. Postojeći Maven projekt već radi bez modula, a za trenutačni opseg nema potrebe uvoditi modularnu konfiguraciju.
+
+**Razmotrene alternative:** Programatski UI ostaje moguća JavaFX alternativa, ali nije odabran za formu s više grupa unosa i dinamičkim poljima. Java klasa u `ui.view` nije uvedena jer view pripada FXML resursu.
+
+**Utjecaj na implementaciju:** `Main` učitava FXML, a controller samo upravlja JavaFX kontrolama i lokalnim porukama. Buduće povezivanje na service sloj mora zadržati SQL, geometriju, layout i G-code izvan controllera.
+
+---
+
+<!-- Nove potvrđene odluke dodaju se iznad odjeljka predloška. -->
+## Konzervativni softverski profil Generate previewa
+
+**Datum:** 2026-08-26
+**Status:** IMPLEMENTIRANO / NIJE TESTIRANO NA STROJU
+
+**Odluka:** Generate preview koristi `RichAutoA11Profile` s milimetrima, apsolutnim pozicioniranjem, preciznošću 3 i `MATERIAL_SURFACE_ZERO_NEGATIVE_CUT`. Emitira samo neobavezne naredbe G21, G17, G90 i M30 iz postojećeg generatora; `F`, `S`, `G54`, `M03` i `M05` nisu konfigurirani za emitiranje. Skup fizički potvrđenih mogućnosti je prazan.
+
+**Razlog:** Korisnik je odobrio izričitu softversku Z konvenciju i konzervativan preview bez pretpostavke da ciljna konfiguracija stroja prihvaća neobavezne naredbe.
+
+**Razmotrene alternative:** Puni softverski output s F/S/G54/spindle naredbama te djelomični F/S profil nisu odabrani.
+
+**Utjecaj na implementaciju:** Preview se može deterministički generirati i testirati na razini softvera, ali nije dokaz fizičke kompatibilnosti ili sigurnosti na ZK-1325 / RichAuto A11.
+
+---
+
 <!-- Nove potvrđene odluke dodaju se iznad odjeljka predloška. -->

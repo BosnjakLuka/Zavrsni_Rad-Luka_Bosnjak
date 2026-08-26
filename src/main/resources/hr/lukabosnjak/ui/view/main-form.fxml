@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ListView?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<BorderPane xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="hr.lukabosnjak.ui.controller.MainFormController">
+    <top>
+        <VBox spacing="4.0" BorderPane.alignment="CENTER_LEFT">
+            <padding><Insets bottom="14.0" left="18.0" right="18.0" top="16.0" /></padding>
+            <Label style="-fx-font-size: 22px; -fx-font-weight: bold;" text="CNC Optimizer" />
+            <Label text="Single-element program — UI kostur" />
+        </VBox>
+    </top>
+    <center>
+        <ScrollPane fitToWidth="true" BorderPane.alignment="CENTER">
+            <content>
+                <VBox spacing="16.0">
+                    <padding><Insets bottom="18.0" left="18.0" right="18.0" top="4.0" /></padding>
+                    <GridPane hgap="18.0" vgap="18.0">
+                        <columnConstraints>
+                            <ColumnConstraints hgrow="ALWAYS" percentWidth="50.0" />
+                            <ColumnConstraints hgrow="ALWAYS" percentWidth="50.0" />
+                        </columnConstraints>
+                        <VBox spacing="10.0" GridPane.columnIndex="0" GridPane.rowIndex="0">
+                            <Label style="-fx-font-size: 16px; -fx-font-weight: bold;" text="Oblik" />
+                            <Label text="Tip oblika" />
+                            <ComboBox fx:id="shapeTypeComboBox" maxWidth="Infinity" />
+                            <VBox fx:id="dynamicShapeFields" spacing="8.0" />
+                            <Separator />
+                            <Label style="-fx-font-size: 16px; -fx-font-weight: bold;" text="Ploča materijala" />
+                            <Label text="Vrsta materijala" />
+                            <ComboBox fx:id="materialTypeComboBox" maxWidth="Infinity" promptText="Odaberite vrstu materijala" />
+                            <GridPane hgap="10.0" vgap="8.0">
+                                <Label text="Širina (mm)" GridPane.rowIndex="0" />
+                                <TextField fx:id="materialWidthInput" promptText="0.0" GridPane.columnIndex="1" GridPane.rowIndex="0" />
+                                <Label text="Visina (mm)" GridPane.rowIndex="1" />
+                                <TextField fx:id="materialHeightInput" promptText="0.0" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                                <Label text="Debljina (mm)" GridPane.rowIndex="2" />
+                                <TextField fx:id="materialThicknessInput" promptText="0.0" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+                            </GridPane>
+                        </VBox>
+                        <VBox spacing="10.0" GridPane.columnIndex="1" GridPane.rowIndex="0">
+                            <Label style="-fx-font-size: 16px; -fx-font-weight: bold;" text="Stroj i alat" />
+                            <Label text="Machine" />
+                            <ComboBox fx:id="machineComboBox" maxWidth="Infinity" onAction="#handleMachineChanged" promptText="Odaberite CNC stroj" />
+                            <Label text="Tool" />
+                            <ComboBox fx:id="toolComboBox" maxWidth="Infinity" promptText="Odaberite alat" />
+                            <Separator />
+                            <Label style="-fx-font-size: 16px; -fx-font-weight: bold;" text="Machining parameters" />
+                            <GridPane hgap="10.0" vgap="8.0">
+                                <Label text="Spindle speed" GridPane.rowIndex="0" />
+                                <TextField fx:id="spindleSpeedInput" promptText="0.0" GridPane.columnIndex="1" GridPane.rowIndex="0" />
+                                <Label text="Feed rate" GridPane.rowIndex="1" />
+                                <TextField fx:id="feedRateInput" promptText="0.0" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                                <Label text="Plunge rate" GridPane.rowIndex="2" />
+                                <TextField fx:id="plungeRateInput" promptText="0.0" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+                                <Label text="Cut depth (mm)" GridPane.rowIndex="3" />
+                                <TextField fx:id="cutDepthInput" promptText="0.0" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+                                <Label text="Step-down (mm)" GridPane.rowIndex="4" />
+                                <TextField fx:id="stepDownInput" promptText="0.0" GridPane.columnIndex="1" GridPane.rowIndex="4" />
+                                <Label text="Safe Z (mm)" GridPane.rowIndex="5" />
+                                <TextField fx:id="safeZInput" promptText="0.0" GridPane.columnIndex="1" GridPane.rowIndex="5" />
+                            </GridPane>
+                        </VBox>
+                    </GridPane>
+                    <HBox spacing="10.0">
+                        <TextField fx:id="jobNameInput" prefWidth="220.0" promptText="Naziv programa" />
+                        <Button mnemonicParsing="false" onAction="#handleGenerate" text="Generate" />
+                        <Button mnemonicParsing="false" onAction="#handleSave" text="Save" />
+                        <Button mnemonicParsing="false" onAction="#handleExport" text="Export .nc" />
+                        <Button mnemonicParsing="false" onAction="#handleSavedPrograms" text="Saved Programs" />
+                    </HBox>
+                    <Label style="-fx-font-weight: bold;" text="G-code preview" />
+                    <TextArea fx:id="gCodePreview" editable="false" prefRowCount="10" promptText="Generirani G-code bit će prikazan ovdje nakon buduće integracije." wrapText="false" />
+                    <Label style="-fx-font-weight: bold;" text="Saved Programs" />
+                    <ListView fx:id="savedJobsList" prefHeight="120.0" />
+                    <Button mnemonicParsing="false" onAction="#handleOpenSavedJob" text="Open selected program" />
+                    <Label fx:id="statusLabel" wrapText="true" />
+                </VBox>
+            </content>
+        </ScrollPane>
+    </center>
+</BorderPane>
