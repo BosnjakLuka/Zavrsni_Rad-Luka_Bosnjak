@@ -10,6 +10,7 @@ import hr.lukabosnjak.domain.entities.Tool;
 import hr.lukabosnjak.domain.entities.User;
 import hr.lukabosnjak.domain.enums.ShapeSubtype;
 import hr.lukabosnjak.domain.enums.ShapeType;
+import hr.lukabosnjak.service.V1BootstrapService;
 import org.h2.tools.RunScript;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -47,6 +48,9 @@ class JdbcRepositoriesIntegrationTest {
                 RunScript.execute(connection, reader);
             }
         }
+        new V1BootstrapService(new JdbcRoleRepository(connectionProvider),
+                new JdbcMaterialTypeRepository(connectionProvider),
+                new JdbcCncMachineRepository(connectionProvider)).initialize();
     }
 
     @Test
@@ -63,8 +67,9 @@ class JdbcRepositoriesIntegrationTest {
         assertNull(material.getDeletedAt());
         assertNotNull(material.getCreatedAt());
         assertEquals("Plywood", materialTypes.findById(material.getMaterialTypeId()).orElseThrow().getName());
-        assertEquals(List.of(material.getMaterialTypeId()), materialTypes.findAll().stream()
-                .map(MaterialType::getMaterialTypeId).toList());
+        assertTrue(materialTypes.findAll().stream()
+                .map(MaterialType::getMaterialTypeId)
+                .anyMatch(material.getMaterialTypeId()::equals));
 
         CncMachine loadedMachine = machines.findById(machine.getCncMachineId()).orElseThrow();
         assertEquals("Machine A", loadedMachine.getName());
@@ -74,7 +79,7 @@ class JdbcRepositoriesIntegrationTest {
         assertNull(loadedMachine.getMaxFeedRate());
         assertNull(loadedMachine.getMinSpindleSpeed());
         assertNull(loadedMachine.getMaxSpindleSpeed());
-        assertEquals(1, machines.findAll().size());
+        assertEquals(2, machines.findAll().size());
     }
 
     @Test
@@ -116,7 +121,7 @@ class JdbcRepositoriesIntegrationTest {
         JdbcRoleRepository roles = new JdbcRoleRepository(connectionProvider);
         JdbcUserRepository users = new JdbcUserRepository(connectionProvider);
 
-        Role role = roles.findByName("USER").orElseThrow();
+        Role role = roles.findByName("OPERATOR").orElseThrow();
         assertNull(role.getDescription());
 
         User saved = users.save(new User(
@@ -126,7 +131,7 @@ class JdbcRepositoriesIntegrationTest {
 
         assertNotNull(saved.getUserId());
         assertEquals(saved.getUserId(), loaded.getUserId());
-        assertEquals("USER", loaded.getRole().getName());
+        assertEquals("OPERATOR", loaded.getRole().getName());
         assertEquals("test-hash", loaded.getPasswordHash());
         assertTrue(loaded.isActive());
         assertFalse(users.findByUsername("missing-user").isPresent());

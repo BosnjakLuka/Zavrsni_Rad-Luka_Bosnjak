@@ -68,7 +68,7 @@ class JdbcMachiningJobRepositoryIntegrationTest {
         assertNotNull(loaded.getUpdatedAt());
 
         assertEquals(references.user().getUserId(), loaded.getCreatedBy().getUserId());
-        assertEquals("USER", loaded.getCreatedBy().getRole().getName());
+        assertEquals("OPERATOR", loaded.getCreatedBy().getRole().getName());
         assertEquals(references.machine().getCncMachineId(), loaded.getCncMachine().getCncMachineId());
         assertEquals(references.tool().getToolId(), loaded.getTool().getToolId());
         assertEquals(references.machine().getCncMachineId(),
@@ -121,7 +121,8 @@ class JdbcMachiningJobRepositoryIntegrationTest {
         Tool tool = new JdbcToolRepository(connectionProvider).save(new Tool(
                 null, machine, 1, "Test tool", "TEST_TYPE", 6.0, 20.0, 2,
                 true, null, null));
-        Role role = new JdbcRoleRepository(connectionProvider).findByName("USER").orElseThrow();
+        JdbcRoleRepository roleRepository = new JdbcRoleRepository(connectionProvider);
+        Role role = roleRepository.save(new Role(null, "OPERATOR", null));
         User user = new JdbcUserRepository(connectionProvider).save(new User(
                 null, role, "job-repository-user", "test-hash", "Test", "User",
                 true, null, null));

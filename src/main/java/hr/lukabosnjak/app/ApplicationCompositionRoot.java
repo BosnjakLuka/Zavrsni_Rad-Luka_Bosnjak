@@ -26,6 +26,7 @@ import hr.lukabosnjak.service.ProgramGenerationService;
 import hr.lukabosnjak.service.ReferenceDataService;
 import hr.lukabosnjak.service.ReferenceDataManagementService;
 import hr.lukabosnjak.service.SavedJobService;
+import hr.lukabosnjak.service.V1BootstrapService;
 import hr.lukabosnjak.ui.controller.CncMachineFormController;
 import hr.lukabosnjak.ui.controller.MainFormController;
 import hr.lukabosnjak.ui.controller.MaterialTypeFormController;
@@ -48,6 +49,7 @@ import static hr.lukabosnjak.gcode.RichAutoA11Profile.ZCoordinateConvention.MATE
 
 /** The single manual composition root for the non-modular JavaFX application. */
 final class ApplicationCompositionRoot {
+    private final ConnectionProvider connectionProvider;
     private final RoleRepository roleRepository;
     private final UserRepository userRepository;
     private final MaterialTypeRepository materialTypeRepository;
@@ -61,9 +63,11 @@ final class ApplicationCompositionRoot {
     private final ReferenceDataManagementService referenceDataManagementService;
     private final SavedJobService savedJobService;
     private final ProgramExportService programExportService;
+    private final V1BootstrapService v1BootstrapService;
 
     private ApplicationCompositionRoot(ConnectionProvider connectionProvider) {
         Objects.requireNonNull(connectionProvider, "connectionProvider");
+        this.connectionProvider = connectionProvider;
 
         roleRepository = new JdbcRoleRepository(connectionProvider);
         userRepository = new JdbcUserRepository(connectionProvider);
@@ -90,6 +94,8 @@ final class ApplicationCompositionRoot {
                 materialTypeRepository, cncMachineRepository, toolRepository, new ReferenceDataValidator());
         savedJobService = new SavedJobService(machiningJobRepository);
         programExportService = new ProgramExportService(new NcExportService());
+        v1BootstrapService = new V1BootstrapService(
+                roleRepository, materialTypeRepository, cncMachineRepository);
     }
 
     static ApplicationCompositionRoot production() {
@@ -101,7 +107,10 @@ final class ApplicationCompositionRoot {
     }
 
     void initializeDatabase() throws SQLException {
-        DatabaseInitializer.initialize();
+        try (java.sql.Connection connection = connectionProvider.getConnection()) {
+            DatabaseInitializer.initialize(connection);
+        }
+        v1BootstrapService.initialize();
     }
 
     Object createController(Class<?> controllerType) {

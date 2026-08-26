@@ -4,6 +4,21 @@ Ovdje se zapisuju samo potvrđene odluke koje mijenjaju arhitekturu, tehnologiju
 
 Ne zapisuj obične implementacijske detalje, privremene eksperimente ni nepotvrđene pretpostavke. Postojeće odluke iz `AGENTS.md` ne kopiraj bez nove potrebe; ovdje se bilježi njihov nastanak ili kasnija promjena.
 
+## V1 bootstrap podaci i uklanjanje legacy USER role
+
+**Datum:** 2026-08-26
+**Status:** IMPLEMENTIRANO / SOFTVERSKI TESTIRANO / NIJE FIZIČKI TESTIRANO
+
+**Odluka:** Nakon uspješne inicijalizacije H2 sheme aplikacija idempotentno osigurava role `ADMIN`, `ENGINEER` i `OPERATOR`, pet jasno označenih `TEST_MATERIAL_*` vrsta materijala te jedan stroj `ZK-1325` / `RichAuto A11` s X=1250 mm, Y=2500 mm i `NULL` za nepotvrđene tehničke granice. Bootstrap ne umeće `APP_USER`, `TOOL`, `MATERIAL_SHEET`, `MACHINING_PARAMETERS`, `SHAPE` ni `MACHINING_JOB` zapise. Stara rola `USER` uklanja se samo ako nije povezana ni s jednim korisnikom; ako jest povezana, bootstrap prekida rad jasnom SQL greškom bez prešutnog mijenjanja korisničkih uloga.
+
+**Razlog:** Plan potvrđuje tri V1 role, ali postojeća razvojna baza naslijedila je `USER`/`ADMIN` seed. Uklanjanje samo neupotrebljene legacy role usklađuje praznu staru bazu bez gubitka korisničkih podataka i bez izmišljanja preslikavanja `USER` u novu rolu.
+
+**Razmotrene alternative:** Nisu odabrani seed korisnika s privremenim ili plaintext lozinkama, seed alata s nepotvrđenim atributima, brisanje povezanih role/user zapisa ni pretpostavljeno automatsko mapiranje stare `USER` role u `OPERATOR` ili `ENGINEER`.
+
+**Utjecaj na implementaciju:** `V1BootstrapService` koordinira repositoryje nakon `DatabaseInitializer`a, dok repository sloj izvodi parametrizirani JDBC upis i uvjetno brisanje role. Korak 13 i dalje mora odlučiti matricu prava, default rolu registracije i password hashing prije stvaranja korisnika.
+
+---
+
 ## Nullable reprezentacija nepoznatih granica CNC stroja
 
 **Datum:** 2026-08-26

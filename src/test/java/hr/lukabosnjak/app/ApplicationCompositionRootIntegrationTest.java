@@ -53,6 +53,7 @@ class ApplicationCompositionRootIntegrationTest {
     @Test
     void generatesPersistsAndReloadsSingleEquilateralTriangleFromFreshContext() throws Exception {
         ApplicationCompositionRoot firstContext = ApplicationCompositionRoot.forConnectionProvider(connectionProvider);
+        firstContext.initializeDatabase();
         PersistedReferences references = saveReferences(firstContext);
 
         MaterialSheet sheet = new MaterialSheet(
@@ -122,7 +123,7 @@ class ApplicationCompositionRootIntegrationTest {
         Tool tool = context.toolRepository().save(new Tool(
                 null, machine, 1, "Software test tool", "SOFTWARE_TEST_TYPE",
                 6.0, 20.0, 2, true, null, null));
-        Role role = context.roleRepository().findByName("USER").orElseThrow();
+        Role role = context.roleRepository().findByName("OPERATOR").orElseThrow();
         User user = context.userRepository().save(new User(
                 null, role, "software-e2e-user", "software-test-hash",
                 "Software", "Test", true, null, null));

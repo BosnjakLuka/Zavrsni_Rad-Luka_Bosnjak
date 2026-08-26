@@ -39,7 +39,7 @@ class DatabaseSchemaIntegrationTest {
             Set<String> actualTables = readPublicTableNames(connection);
             assertEquals(EXPECTED_TABLES, actualTables);
             assertFalse(actualTables.contains("USER"));
-            assertEquals(Set.of("USER", "ADMIN"), readRoleNames(connection));
+            assertEquals(Set.of(), readRoleNames(connection));
             assertEquals(0, countUsers(connection));
             assertEquals("NO", readNullableStatus(connection, "WORK_AREA_X"));
             assertEquals("NO", readNullableStatus(connection, "WORK_AREA_Y"));
