@@ -13,9 +13,11 @@ import hr.lukabosnjak.domain.entities.User;
 import hr.lukabosnjak.domain.enums.ShapeSubtype;
 import hr.lukabosnjak.domain.enums.ShapeType;
 import hr.lukabosnjak.gcode.GCodeProgram;
+import hr.lukabosnjak.gcode.NcExportService;
 import hr.lukabosnjak.geometry.CutSide;
 import hr.lukabosnjak.persistence.jdbc.ConnectionProvider;
 import hr.lukabosnjak.service.ProgramGenerationRequest;
+import hr.lukabosnjak.service.SavedJobService;
 import hr.lukabosnjak.ui.controller.CncMachineFormController;
 import hr.lukabosnjak.ui.controller.ApplicationNavigation;
 import hr.lukabosnjak.ui.controller.LoginController;
@@ -25,9 +27,12 @@ import hr.lukabosnjak.ui.controller.RegistrationController;
 import hr.lukabosnjak.ui.controller.ToolFormController;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -44,6 +49,8 @@ class ApplicationCompositionRootIntegrationTest {
     private static final double SOFTWARE_TEST_SAFE_Z = 5.0;
 
     private ConnectionProvider connectionProvider;
+    @TempDir
+    private Path tempDirectory;
 
     @BeforeEach
     void initializeFreshDatabase() throws Exception {
@@ -120,6 +127,62 @@ class ApplicationCompositionRootIntegrationTest {
         assertInstanceOf(CncMachineFormController.class,
                 context.createController(CncMachineFormController.class, navigation));
         assertInstanceOf(ToolFormController.class, context.createController(ToolFormController.class, navigation));
+    }
+
+    @Test
+    void preservesBootstrapUserAndSavedProgramAcrossApplicationRestart() throws Exception {
+        String databasePath = tempDirectory.resolve("restart-round-trip").toAbsolutePath()
+                .toString().replace('\\', '/');
+        String jdbcUrl = "jdbc:h2:file:" + databasePath;
+        connectionProvider = () -> DriverManager.getConnection(jdbcUrl, "sa", "");
+
+        ApplicationCompositionRoot firstContext = ApplicationCompositionRoot.forConnectionProvider(connectionProvider);
+        firstContext.initializeDatabase();
+        User registered = firstContext.authService().register(
+                "restart-user", "SoftwareTest1".toCharArray(), "Restart", "User");
+        firstContext.authService().login("restart-user", "SoftwareTest1".toCharArray());
+
+        MaterialType materialType = firstContext.materialTypeRepository().findAll().stream()
+                .filter(value -> "TEST_MATERIAL_1".equals(value.getName()))
+                .findFirst().orElseThrow();
+        CncMachine machine = firstContext.cncMachineRepository().findAll().stream()
+                .filter(value -> "ZK-1325".equals(value.getName()))
+                .findFirst().orElseThrow();
+        Tool tool = firstContext.toolRepository().findByMachineIdAndToolNumber(
+                machine.getCncMachineId(), 9006).orElseThrow();
+        MachiningParameters parameters = new MachiningParameters(
+                null, SOFTWARE_TEST_SPINDLE_SPEED, SOFTWARE_TEST_FEED_RATE,
+                SOFTWARE_TEST_PLUNGE_RATE, SOFTWARE_TEST_CUT_DEPTH,
+                SOFTWARE_TEST_STEP_DOWN, SOFTWARE_TEST_SAFE_Z);
+        MaterialSheet sheet = new MaterialSheet(null, materialType, 500.0, 500.0, 18.0, null, null);
+        Shape shape = new Shape(null, ShapeType.SQUARE, null, 30.0, null, null, null, null, null);
+        GCodeProgram preview = firstContext.programGenerationService().generate(
+                new ProgramGenerationRequest(machine, tool, sheet, parameters, shape, CutSide.INSIDE));
+        MachiningJob saved = firstContext.machiningJobRepository().save(new MachiningJob(
+                null, registered, machine, tool, sheet, parameters, shape,
+                "Restart round-trip", 1, preview.text(), null, null));
+
+        ApplicationCompositionRoot restartedContext =
+                ApplicationCompositionRoot.forConnectionProvider(connectionProvider);
+        restartedContext.initializeDatabase();
+        restartedContext.authService().login("restart-user", "SoftwareTest1".toCharArray());
+        MachiningJob reloaded = restartedContext.machiningJobRepository()
+                .findById(saved.getMachiningJobId()).orElseThrow();
+        Path exportPath = tempDirectory.resolve("restart-round-trip.nc");
+        new NcExportService().export(
+                new SavedJobService(restartedContext.machiningJobRepository()).gCodeProgramOf(reloaded),
+                exportPath);
+
+        assertEquals(3, restartedContext.roleRepository().findAll().size());
+        assertEquals(5, restartedContext.materialTypeRepository().findAll().size());
+        assertEquals(1, restartedContext.cncMachineRepository().findAll().size());
+        assertEquals(4, restartedContext.userRepository().findAll().size());
+        assertEquals(1, restartedContext.machiningJobRepository().findAll().size());
+        assertEquals("restart-user",
+                restartedContext.authService().login("RESTART-USER", "SoftwareTest1".toCharArray()).getUsername());
+        assertEquals(preview.text(), reloaded.getGCode());
+        assertEquals(preview.text(), Files.readString(exportPath));
+        assertEquals(1, reloaded.getQuantity());
     }
 
     private PersistedReferences saveReferences(ApplicationCompositionRoot context) throws Exception {

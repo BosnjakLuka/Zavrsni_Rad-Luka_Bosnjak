@@ -87,7 +87,11 @@ public final class SavedProgramsController {
             return;
         }
         MachiningJob selected = savedJobsList.getSelectionModel().getSelectedItem();
-        navigation.showMainWithJob(savedJobService.loadById(selected.getMachiningJobId()));
+        try {
+            navigation.showMainWithJob(savedJobService.loadById(selected.getMachiningJobId()));
+        } catch (IllegalArgumentException | SavedJobAccessException exception) {
+            statusLabel.setText(exception.getMessage());
+        }
     }
 
     @FXML

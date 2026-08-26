@@ -148,6 +148,7 @@ public class MainFormController {
         updateShapeFields(shapeTypeComboBox.getValue());
         applyMachiningPreset();
         loadReferenceData();
+        refreshSavedJobs();
         saveButton.setDisable(true);
         exportButton.setDisable(true);
     }
@@ -254,6 +255,7 @@ public class MainFormController {
                     displayedProgram.text(),
                     null,
                     null));
+            refreshSavedJobs();
             statusLabel.setText("Program je spremljen pod nazivom: " + saved.getName() + ".");
         } catch (IllegalArgumentException | AuthorizationException | SavedJobAccessException exception) {
             statusLabel.setText(exception.getMessage());
@@ -355,6 +357,14 @@ public class MainFormController {
         try {
             toolComboBox.getItems().setAll(referenceDataService.loadTools(machineComboBox.getValue()));
         } catch (ReferenceDataAccessException exception) {
+            statusLabel.setText(exception.getMessage());
+        }
+    }
+
+    private void refreshSavedJobs() {
+        try {
+            savedJobsList.getItems().setAll(savedJobService.loadAll());
+        } catch (SavedJobAccessException exception) {
             statusLabel.setText(exception.getMessage());
         }
     }
@@ -469,7 +479,7 @@ public class MainFormController {
     private void addShapeInput(GridPane fields, int row, String label) {
         TextField input = new TextField();
         input.setPromptText("0.0");
-        fields.add(new Label(label), 0, row);
+        fields.add(new Label(label + " *"), 0, row);
         fields.add(input, 1, row);
         shapeInputs.add(new ShapeInput(label, input));
     }

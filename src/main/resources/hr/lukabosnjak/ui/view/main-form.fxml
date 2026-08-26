@@ -49,33 +49,33 @@
                         </columnConstraints>
                         <VBox spacing="10.0" GridPane.columnIndex="0" GridPane.rowIndex="0">
                             <Label style="-fx-font-size: 16px; -fx-font-weight: bold;" text="Oblik" />
-                            <Label text="Tip oblika" />
+                            <Label text="Tip oblika *" />
                             <ComboBox fx:id="shapeTypeComboBox" maxWidth="Infinity" />
                             <VBox fx:id="dynamicShapeFields" spacing="8.0" />
                             <Separator />
                             <Label style="-fx-font-size: 16px; -fx-font-weight: bold;" text="Ploča materijala" />
-                            <Label text="Vrsta materijala" />
+                            <Label text="Vrsta materijala *" />
                             <HBox spacing="8.0">
                                 <ComboBox fx:id="materialTypeComboBox" maxWidth="Infinity" promptText="Odaberite vrstu materijala" HBox.hgrow="ALWAYS" />
                                 <Button fx:id="addMaterialTypeButton" mnemonicParsing="false" onAction="#handleAddMaterialType" text="Dodaj..." />
                             </HBox>
                             <GridPane hgap="10.0" vgap="8.0">
-                                <Label text="Širina (mm)" GridPane.rowIndex="0" />
+                                <Label text="Širina (mm) *" GridPane.rowIndex="0" />
                                 <TextField fx:id="materialWidthInput" promptText="0.0" GridPane.columnIndex="1" GridPane.rowIndex="0" />
-                                <Label text="Visina (mm)" GridPane.rowIndex="1" />
+                                <Label text="Visina (mm) *" GridPane.rowIndex="1" />
                                 <TextField fx:id="materialHeightInput" promptText="0.0" GridPane.columnIndex="1" GridPane.rowIndex="1" />
-                                <Label text="Debljina (mm)" GridPane.rowIndex="2" />
+                                <Label text="Debljina (mm) *" GridPane.rowIndex="2" />
                                 <TextField fx:id="materialThicknessInput" promptText="0.0" GridPane.columnIndex="1" GridPane.rowIndex="2" />
                             </GridPane>
                         </VBox>
                         <VBox spacing="10.0" GridPane.columnIndex="1" GridPane.rowIndex="0">
                             <Label style="-fx-font-size: 16px; -fx-font-weight: bold;" text="Stroj i alat" />
-                            <Label text="CNC stroj" />
+                            <Label text="CNC stroj *" />
                             <HBox spacing="8.0">
                                 <ComboBox fx:id="machineComboBox" maxWidth="Infinity" onAction="#handleMachineChanged" promptText="Odaberite CNC stroj" HBox.hgrow="ALWAYS" />
                                 <Button fx:id="addMachineButton" mnemonicParsing="false" onAction="#handleAddMachine" text="Dodaj..." />
                             </HBox>
-                            <Label text="Alat" />
+                            <Label text="Alat *" />
                             <HBox spacing="8.0">
                                 <ComboBox fx:id="toolComboBox" maxWidth="Infinity" promptText="Odaberite alat" HBox.hgrow="ALWAYS" />
                                 <Button fx:id="addToolButton" mnemonicParsing="false" onAction="#handleAddTool" text="Dodaj..." />
@@ -85,17 +85,17 @@
                                     <VBox spacing="8.0">
                                         <Label fx:id="machiningPresetLabel" wrapText="true" />
                                         <GridPane hgap="10.0" vgap="8.0">
-                                            <Label text="Spindle speed" GridPane.rowIndex="0" />
+                                            <Label text="Brzina vretena" GridPane.rowIndex="0" />
                                             <TextField fx:id="spindleSpeedInput" promptText="0.0" GridPane.columnIndex="1" GridPane.rowIndex="0" />
-                                            <Label text="Feed rate" GridPane.rowIndex="1" />
+                                            <Label text="Brzina posmaka" GridPane.rowIndex="1" />
                                             <TextField fx:id="feedRateInput" promptText="0.0" GridPane.columnIndex="1" GridPane.rowIndex="1" />
-                                            <Label text="Plunge rate" GridPane.rowIndex="2" />
+                                            <Label text="Brzina uranjanja" GridPane.rowIndex="2" />
                                             <TextField fx:id="plungeRateInput" promptText="0.0" GridPane.columnIndex="1" GridPane.rowIndex="2" />
-                                            <Label text="Cut depth (mm)" GridPane.rowIndex="3" />
+                                            <Label text="Dubina reza (mm)" GridPane.rowIndex="3" />
                                             <TextField fx:id="cutDepthInput" promptText="0.0" GridPane.columnIndex="1" GridPane.rowIndex="3" />
                                             <Label text="Step-down (mm)" GridPane.rowIndex="4" />
                                             <TextField fx:id="stepDownInput" promptText="0.0" GridPane.columnIndex="1" GridPane.rowIndex="4" />
-                                            <Label text="Safe Z (mm)" GridPane.rowIndex="5" />
+                                            <Label text="Sigurni Z (mm)" GridPane.rowIndex="5" />
                                             <TextField fx:id="safeZInput" promptText="0.0" GridPane.columnIndex="1" GridPane.rowIndex="5" />
                                         </GridPane>
                                     </VBox>
