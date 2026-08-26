@@ -4,6 +4,7 @@ Kronološki katalog dokumentiranih razvojnih koraka. Nakon svakog dokumentiranog
 
 | Prompt | Tema | Status | Glavne datoteke | Testirano | Kandidat za završni rad | Bilješka |
 |---|---|---|---|---|---|---|
+| 10.3 | Generate workflow za jedan element | IMPLEMENTIRANO / NIJE TESTIRANO | `service`, `MainFormController`, FXML | Maven je stao na postojećoj H2 JAR ovisnosti prije testova | Orkestracija validation → ToolPath → G-code | [10-03-generate-workflow.md](10-03-generate-workflow.md) |
 | 10.2 | FXML glavni UI kostur | IMPLEMENTIRANO / NIJE TESTIRANO | FXML view, controller i parser | Maven je pokrenut, ali lokalni JDK ne podržava `release 26`; vizualni JavaFX test nije izvršen | Dinamička semantička polja oblika | [10-02-fxml-glavni-ui-kostur.md](10-02-fxml-glavni-ui-kostur.md) |
 | 1.2 | Minimalni Maven projekt | IMPLEMENTIRANO / TESTIRANO | `pom.xml`, `AGENTS.md` | `mvn test` — BUILD SUCCESS; nema testnih klasa | Tablica tehnologija; nema isječka koda | [01-02-minimalni-maven-projekt.md](01-02-minimalni-maven-projekt.md) |
 | 1.3 | Minimalni JavaFX smoke test | IMPLEMENTIRANO / TESTIRANO / NIJE TESTIRANO | `Main.java` | Compile i JavaFX runtime testirani; Stage nije vizualno potvrđen | `Main#main`, `Main#start`; snimka Stagea nakon potvrde | [01-03-minimalni-javafx-smoke-test.md](01-03-minimalni-javafx-smoke-test.md) |

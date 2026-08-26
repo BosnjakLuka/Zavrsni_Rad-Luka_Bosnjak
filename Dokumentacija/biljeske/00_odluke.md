@@ -275,3 +275,19 @@ Ne zapisuj obične implementacijske detalje, privremene eksperimente ni nepotvr�
 ---
 
 <!-- Nove potvrđene odluke dodaju se iznad odjeljka predloška. -->
+## Konzervativni softverski profil Generate previewa
+
+**Datum:** 2026-08-26
+**Status:** IMPLEMENTIRANO / NIJE TESTIRANO NA STROJU
+
+**Odluka:** Generate preview koristi `RichAutoA11Profile` s milimetrima, apsolutnim pozicioniranjem, preciznošću 3 i `MATERIAL_SURFACE_ZERO_NEGATIVE_CUT`. Emitira samo neobavezne naredbe G21, G17, G90 i M30 iz postojećeg generatora; `F`, `S`, `G54`, `M03` i `M05` nisu konfigurirani za emitiranje. Skup fizički potvrđenih mogućnosti je prazan.
+
+**Razlog:** Korisnik je odobrio izričitu softversku Z konvenciju i konzervativan preview bez pretpostavke da ciljna konfiguracija stroja prihvaća neobavezne naredbe.
+
+**Razmotrene alternative:** Puni softverski output s F/S/G54/spindle naredbama te djelomični F/S profil nisu odabrani.
+
+**Utjecaj na implementaciju:** Preview se može deterministički generirati i testirati na razini softvera, ali nije dokaz fizičke kompatibilnosti ili sigurnosti na ZK-1325 / RichAuto A11.
+
+---
+
+<!-- Nove potvrđene odluke dodaju se iznad odjeljka predloška. -->

@@ -12,7 +12,6 @@
 <?import javafx.scene.layout.ColumnConstraints?>
 <?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.layout.HBox?>
-<?import javafx.scene.layout.Priority?>
 <?import javafx.scene.layout.VBox?>
 
 <BorderPane xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="hr.lukabosnjak.ui.controller.MainFormController">
@@ -52,9 +51,9 @@
                         <VBox spacing="10.0" GridPane.columnIndex="1" GridPane.rowIndex="0">
                             <Label style="-fx-font-size: 16px; -fx-font-weight: bold;" text="Stroj i alat" />
                             <Label text="Machine" />
-                            <ComboBox maxWidth="Infinity" promptText="Nema učitanih strojeva" />
+                            <ComboBox fx:id="machineComboBox" maxWidth="Infinity" onAction="#handleMachineChanged" promptText="Odaberite CNC stroj" />
                             <Label text="Tool" />
-                            <ComboBox maxWidth="Infinity" promptText="Nema učitanih alata" />
+                            <ComboBox fx:id="toolComboBox" maxWidth="Infinity" promptText="Odaberite alat" />
                             <Separator />
                             <Label style="-fx-font-size: 16px; -fx-font-weight: bold;" text="Machining parameters" />
                             <GridPane hgap="10.0" vgap="8.0">

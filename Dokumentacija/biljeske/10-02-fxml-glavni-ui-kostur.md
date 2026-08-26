@@ -43,8 +43,8 @@ FXML i controller pripadaju UI sloju. Controller ne izvršava SQL, ne stvara dom
 
 ```text
 mvn test
-<IntelliJ Maven> -Dmaven.repo.local=C:\\Users\\lukab\\.m2\\repository test
-<IntelliJ Maven> -Dmaven.repo.local=C:\\Users\\lukab\\.m2\\repository -Dmaven.compiler.release=25 test
+<IntelliJ Maven> -Dmaven.repo.local=<lokalni Maven repository> test
+<IntelliJ Maven> -Dmaven.repo.local=<lokalni Maven repository> -Dmaven.compiler.release=25 test
 ```
 
 ### Stvarni rezultat
