@@ -165,7 +165,8 @@ final class ApplicationCompositionRoot {
         }
         if (controllerType == CatalogController.class) {
             return new CatalogController(
-                    referenceDataManagementService, authorizationService, sessionContext,
+                    referenceDataManagementService, savedJobService, programExportService,
+                    authorizationService, sessionContext,
                     navigation, type -> createController(type, navigation));
         }
         if (controllerType == MaterialTypeFormController.class) {

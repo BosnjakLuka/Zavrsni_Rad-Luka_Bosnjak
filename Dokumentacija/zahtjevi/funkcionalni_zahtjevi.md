@@ -261,8 +261,8 @@ Aktualna softverska provjera izvršena je naredbom Maven `test`: **141 test, 0 n
 **Zahtjev:** Aplikacija mora prikazati popis spremljenih programa i omogućiti pregled njihova G-koda i osnovnih podataka.
 
 **Status:** IMPLEMENTIRANO / TESTIRANO  
-**Dokaz u kodu:** `src/main/java/hr/lukabosnjak/service/SavedJobService.java` — `loadAll`, `gCodeProgramOf`; `src/main/java/hr/lukabosnjak/ui/controller/SavedProgramsController.java` — `initialize`, `refresh`; `src/main/java/hr/lukabosnjak/persistence/jdbc/JdbcMachiningJobRepository.java` — `findAll`.  
-**Povezani UI:** `saved-programs.fxml`; quick-access lista u `main-form.fxml`.  
+**Dokaz u kodu:** `src/main/java/hr/lukabosnjak/service/SavedJobService.java` — `loadAll`, `gCodeProgramOf`; `src/main/java/hr/lukabosnjak/ui/controller/SavedProgramsController.java` i `CatalogController.java`; `src/main/java/hr/lukabosnjak/persistence/jdbc/JdbcMachiningJobRepository.java` — `findAll`.
+**Povezani UI:** `saved-programs.fxml`; sekcija spremljenih programa ispod triju kartica u `catalog.fxml`; quick-access lista u `main-form.fxml`.
 **Povezani dio:** UI, service i persistence.  
 **Testni dokaz:** `SavedJobServiceTest`; persistence i composition-root integracijski testovi; FXML ugovor.  
 **Napomena za završni rad:** Trenutačni kod prikazuje sve spremljene programe svim prijavljenim rolama; nema filtriranja na vlastite naloge.
@@ -335,6 +335,28 @@ Aktualna softverska provjera izvršena je naredbom Maven `test`: **141 test, 0 n
 **Testni dokaz:** Nema batch G-kod ni quantity/layout UI testa.  
 **Napomena za završni rad:** Trenutačni generator jest testiran za više dubinskih prolaza jednog elementa, što nije isto što i batch obrada više elemenata.
 
+### FZ-30 — Povijest naloga i dostupni podaci o iskorištenju
+
+**Zahtjev:** Aplikacija mora rolama `ADMIN` i `ENGINEER` omogućiti pregled povijesti svih naloga. Za svaki nalog mora prikazati autora te broj korištenih ploča, ukupnu površinu obrađenih elemenata, iskorištenje ploča i preostalu površinu samo kada se ti podaci mogu dobiti iz stvarno implementiranog i spremljenog modela.
+
+**Status:** PLANIRANO / NIJE IMPLEMENTIRANO / NIJE TESTIRANO
+**Dokaz u kodu:** `MachiningJob` trenutačno sprema autora, jednu ploču, jedan oblik i količinu, ali `ProgramGenerationRequest` nema quantity ulaz, `ProgramGenerationService` generira jedan element, a layout model i podaci o ostacima ne postoje.
+**Povezani UI:** planirani prikaz povijesti u katalogu spremljenih programa; trenutačni `saved-programs.fxml` prikazuje osnovne podatke i G-kod bez traženih pokazatelja.
+**Povezani dio:** budući UI, service, layout i persistence tok, bez zasebnog statističkog modula.
+**Testni dokaz:** Nema testa broja korištenih ploča, ukupne površine, iskorištenja ili ostatka.
+**Napomena za završni rad:** Dimenzije jedne ploče i jednog oblika nisu dovoljne za tvrdnju o stvarno korištenim pločama, rasporedu ili ostatku. Nedostupne vrijednosti ne smiju se procjenjivati niti izmišljati.
+
+### FZ-31 — Katalog spremljenih programa i upravljanje prema roli
+
+**Zahtjev:** Katalog mora rolama `ADMIN` i `ENGINEER` prikazati sve aktivne spremljene programe i korisnika koji ih je programirao. `ADMIN` smije uređivati i soft-brisati svaki program. `ENGINEER` smije uređivati i soft-brisati vlastite programe te programe čiji autor trenutačno ima rolu `OPERATOR`. Uređivanje mijenja postojeći spremljeni nalog. Soft-delete mora zapisati vrijeme brisanja i identifikator korisnika koji je izvršio brisanje; takav zapis više nije vidljiv u aplikaciji, ali ostaje vidljiv izravnim pregledom baze.
+
+**Status:** PLANIRANO / NIJE IMPLEMENTIRANO / NIJE TESTIRANO
+**Dokaz u kodu:** `SavedJobService#loadAll` i `JdbcMachiningJobRepository#findAll` trenutačno vraćaju sve zapise bez role provjere i soft-delete filtra. Repository nema update ni delete ugovor, a tablica `MACHINING_JOB` nema `deleted_at` ni `deleted_by_user_id`.
+**Povezani UI:** planirano proširenje kataloga; trenutačni `catalog.fxml` sadrži samo materijale, strojeve i alate, dok je pregled programa na zasebnom `saved-programs.fxml` ekranu.
+**Povezani dio:** budući UI, centralizirana autorizacija u service sloju i JDBC persistence.
+**Testni dokaz:** Nema testa role-ovisnog uređivanja, soft-deletea, skrivanja obrisanih zapisa ni zapisa korisnika koji je izvršio brisanje.
+**Napomena za završni rad:** „Programer” u ovom zahtjevu znači postojeća rola `OPERATOR`; ne uvodi se nova rola. Soft-obrisani program ne može se uređivati, a vraćanje obrisanog zapisa nije dio potvrđenog opsega.
+
 ## Usporedba sa starim FR popisom
 
 | Stara stavka | Aktualni zaključak |
@@ -355,5 +377,7 @@ Aktualna softverska provjera izvršena je naredbom Maven `test`: **141 test, 0 n
 Stari FR popis dodatno nije sadržavao registraciju, prijavu, odjavu, sesiju, RBAC, upravljanje korisnicima i katalozima, referentni machining preset, geometrijsku kompenzaciju alata, više dubinskih prolaza ni `.nc` export kao samostalan zahtjev. Te su stvarno implementirane funkcionalnosti dodane kao novi kandidati.
 
 Promjena vlastite lozinke nije implementirana. Također nije implementirana stara RBAC zamisao prema kojoj `OPERATOR` vidi samo vlastite spremljene programe, dok `ADMIN` i `ENGINEER` vide sve: aktualni `SavedJobService#loadAll` nema korisnički ni role filter.
+
+Nova potvrđena pravila povijesti naloga, kataloga programa, uređivanja i soft-deletea evidentirana su u `FZ-30` i `FZ-31`. Ta pravila opisuju buduće ponašanje i ne mijenjaju status trenutačnog koda.
 
 Pseudojezik i AI nisu uključeni jer nisu dio stabilne aplikacije ni trenutačnog produkcijskog koda.

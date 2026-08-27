@@ -89,7 +89,7 @@ public class Main extends Application implements ApplicationNavigation {
             showLogin();
             return;
         }
-        showView("/hr/lukabosnjak/ui/view/catalog.fxml", 820, 560, 700, 450);
+        showView("/hr/lukabosnjak/ui/view/catalog.fxml", 1100, 760, 900, 600);
     }
 
     @Override

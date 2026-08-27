@@ -478,4 +478,23 @@ Bootstrap nakon stvarnog hashera dobiva po jedan development/test račun za svak
 
 ---
 
+## Povijest naloga i upravljanje spremljenim programima
+
+**Datum:** 2026-08-27
+**Status:** ODLUČENO / PLANIRANO / NIJE IMPLEMENTIRANO / NIJE TESTIRANO
+
+**Odluka:** `ADMIN` i `ENGINEER` u katalogu vide sve aktivne spremljene programe i njihova autora. `ADMIN` smije uređivati i soft-brisati sve programe. `ENGINEER` smije uređivati i soft-brisati vlastite programe te programe korisnika čija je trenutačna rola `OPERATOR`; izraz „programer” ne uvodi novu rolu. Uređivanje mijenja postojeći spremljeni nalog. Soft-delete zapisuje `deleted_at` i `deleted_by_user_id`, skriva zapis iz aplikacije i zadržava ga u bazi. Soft-obrisani program ne može se uređivati, a restore nije dio potvrđenog opsega.
+
+`ADMIN` i `ENGINEER` mogu pregledati povijest svih naloga. Za nalog se prikazuju broj korištenih ploča, ukupna površina obrađenih elemenata, iskorištenje ploča i preostala površina samo kada ti podaci postoje u stvarno implementiranom i spremljenom modelu. Ne uvodi se zaseban statistički modul niti se nedostupne vrijednosti procjenjuju iz nepotpunih podataka.
+
+**Razlog:** Pravila omogućuju administrativnu kontrolu i inženjersko upravljanje operatorskim programima uz sljedivost soft-deletea. Uvjetni prikaz pokazatelja sprječava da single-element model bez layouta bude pogrešno predstavljen kao izvor stvarnih proizvodnih statistika.
+
+**Razmotrene alternative:** Nisu odabrani hard-delete, nova rola `PROGRAMMER`, uređivanje soft-obrisanih zapisa, restore UI ni zaseban statistički modul. Nije odabrano ni izračunavanje broja ploča, iskorištenja ili ostatka samo iz dimenzija jedne ploče i jednog oblika.
+
+**Utjecaj na prethodne odluke:** Ova odluka nadjačava samo dio odluke „V1 RBAC, registracija, korisnički računi i session” prema kojem se spremljeni job nikada ne prepisuje. Ostala pravila te odluke ostaju na snazi, uključujući fiksne role `ADMIN`, `ENGINEER` i `OPERATOR`. Pravo `OPERATOR` korisnika na vlastite spremljene programe izvan upravljačkog kataloga nije ukinuto.
+
+**Utjecaj na buduću implementaciju:** Autorizacija uređivanja i soft-deletea pripada service sloju, SQL i filtriranje soft-obrisanih zapisa persistence sloju, a JavaFX controller samo koordinira katalog. Pokazatelji iskorištenja smiju se prikazati tek kada ih budući layout i spremljeni model stvarno mogu isporučiti.
+
+---
+
 <!-- Nove potvrđene odluke dodaju se iznad odjeljka predloška. -->

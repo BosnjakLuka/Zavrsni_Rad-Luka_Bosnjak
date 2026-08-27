@@ -11,7 +11,9 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class FxmlControllerContractTest {
 
@@ -30,6 +32,55 @@ class FxmlControllerContractTest {
 
         for (FormContract form : forms) {
             verify(form);
+        }
+    }
+
+    @Test
+    void catalogProvidesMachineSelectorAboveToolList() throws Exception {
+        try (InputStream stream = getClass().getResourceAsStream(
+                "/hr/lukabosnjak/ui/view/catalog.fxml")) {
+            assertNotNull(stream);
+            Document document = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(stream);
+            NodeList comboBoxes = document.getElementsByTagName("ComboBox");
+            boolean selectorFound = false;
+            for (int index = 0; index < comboBoxes.getLength(); index++) {
+                Element comboBox = (Element) comboBoxes.item(index);
+                if ("toolMachineComboBox".equals(comboBox.getAttribute("fx:id"))) {
+                    assertEquals("#handleToolMachineChanged", comboBox.getAttribute("onAction"));
+                    selectorFound = true;
+                }
+            }
+            assertTrue(selectorFound, "catalog must provide a machine selector for the tool list");
+        }
+    }
+
+    @Test
+    void catalogPlacesSavedProgramsBelowReferenceDataCards() throws Exception {
+        try (InputStream stream = getClass().getResourceAsStream(
+                "/hr/lukabosnjak/ui/view/catalog.fxml")) {
+            assertNotNull(stream);
+            Document document = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(stream);
+            NodeList elements = document.getElementsByTagName("*");
+            int referenceDataCardsIndex = -1;
+            int savedProgramsIndex = -1;
+            Element savedPrograms = null;
+            for (int index = 0; index < elements.getLength(); index++) {
+                Element element = (Element) elements.item(index);
+                if ("FlowPane".equals(element.getTagName())) {
+                    referenceDataCardsIndex = index;
+                }
+                if ("savedProgramsList".equals(element.getAttribute("fx:id"))) {
+                    savedProgramsIndex = index;
+                    savedPrograms = element;
+                }
+            }
+            assertTrue(referenceDataCardsIndex >= 0);
+            assertTrue(savedProgramsIndex > referenceDataCardsIndex,
+                    "saved programs must be declared below the three reference-data cards");
+            for (var parent = savedPrograms.getParentNode(); parent != null; parent = parent.getParentNode()) {
+                assertFalse("FlowPane".equals(parent.getNodeName()),
+                        "saved programs must not be placed beside the reference-data cards");
+            }
         }
     }
 

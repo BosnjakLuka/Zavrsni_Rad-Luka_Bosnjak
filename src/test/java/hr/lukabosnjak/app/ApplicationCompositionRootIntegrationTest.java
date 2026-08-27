@@ -19,6 +19,7 @@ import hr.lukabosnjak.persistence.jdbc.ConnectionProvider;
 import hr.lukabosnjak.service.ProgramGenerationRequest;
 import hr.lukabosnjak.service.SavedJobService;
 import hr.lukabosnjak.ui.controller.CncMachineFormController;
+import hr.lukabosnjak.ui.controller.CatalogController;
 import hr.lukabosnjak.ui.controller.ApplicationNavigation;
 import hr.lukabosnjak.ui.controller.LoginController;
 import hr.lukabosnjak.ui.controller.MainFormController;
@@ -126,6 +127,8 @@ class ApplicationCompositionRootIntegrationTest {
                 context.createController(MaterialTypeFormController.class, navigation));
         assertInstanceOf(CncMachineFormController.class,
                 context.createController(CncMachineFormController.class, navigation));
+        assertInstanceOf(CatalogController.class,
+                context.createController(CatalogController.class, navigation));
         assertInstanceOf(ToolFormController.class, context.createController(ToolFormController.class, navigation));
     }
 
