@@ -1,4 +1,4 @@
-# 18.4 — Audit aplikacijskog `.nc` koda i fizička potvrda referentnih programa
+# 18.A — Audit aplikacijskog `.nc` koda i fizička potvrda referentnih programa
 
 **Datum:** 2026-08-27  
 **Status:** IMPLEMENTIRANO / SOFTVERSKI TESTIRANO / PROGRAMERSKI PREGLEDANO / REFERENTNI PROGRAMI FIZIČKI TESTIRANI / APLIKACIJSKI `test01.nc` NIJE FIZIČKI TESTIRAN
