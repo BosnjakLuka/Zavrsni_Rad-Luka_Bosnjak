@@ -1,7 +1,7 @@
 # 18.A — Audit aplikacijskog `.nc` koda i fizička potvrda referentnih programa
 
 **Datum:** 2026-08-27  
-**Status:** IMPLEMENTIRANO / SOFTVERSKI TESTIRANO / PROGRAMERSKI PREGLEDANO / REFERENTNI PROGRAMI FIZIČKI TESTIRANI / APLIKACIJSKI `test01.nc` NIJE FIZIČKI TESTIRAN
+**Status:** IMPLEMENTIRANO / SOFTVERSKI TESTIRANO / PROGRAMERSKI PREGLEDANO / REFERENTNI I APLIKACIJSKI PROGRAM FIZIČKI TESTIRANI / GATE 1 ZATVOREN / SPREMNO ZA ITERACIJU 2
 
 ## Cilj
 
@@ -49,7 +49,7 @@ Postojeći ručno programirani kodovi iz referentnog skupa prethodno su prebače
 
 `test01.nc` je na temelju statičkog pregleda, usporedbe s referentnim kodovima i programerske potvrde ocijenjen kao **strukturno ispravan i prikladan kandidat za fizički test** na ZK-1325 / RichAuto A11.
 
-Nije pronađen nedostatak u trenutnom G-kodu koji bi opravdao izmjenu generatora prije prvog fizičkog pokretanja tog konkretnog programa. Kod je vrlo sličan fizički korištenim programima i razumno je očekivati da će se izvršavati na istom stroju, ali to se ne smije zapisati kao fizički potvrđena činjenica dok se `test01.nc` stvarno ne učita i pokrene.
+Nije pronađen nedostatak u trenutnom G-kodu koji bi opravdao izmjenu generatora. `test01.nc` je nakon pregleda fizički pokrenut na ciljanom stroju i test je prema potvrdi operatora prošao bez problema.
 
 ## Razlike i tumačenje
 
@@ -77,7 +77,7 @@ Generator u `gcode` sloju emitira tekst iz već pripremljenog `ToolPatha`. Kompe
 
 - Ručno programirani referentni kodovi fizički su radili na ZK-1325 / RichAuto A11 prema dostavljenoj potvrdi.
 - `test01.nc` je programerski pregledan i ocijenjen dobrim kandidatom za fizički test.
-- `test01.nc` nije označen kao fizički testiran jer u ovom koraku nema zabilježenog stvarnog učitavanja i pokretanja te datoteke na stroju.
+- `test01.nc` je fizički pokrenut na ZK-1325 / RichAuto A11 i test je prošao bez problema prema potvrdi operatora.
 - Stvarni stroj, kontroler, radno područje, orijentaciju X/Y/Z osi, work zero, read/ignore postavke, alat i machining parametre operator mora potvrditi za konkretni test.
 - Ne uvodi se `G41`, `G42`, `G40`, `D` ni `S` naredba samo na temelju sličnosti s drugim programima.
 
@@ -98,27 +98,28 @@ Pregled je pronašao jednu aplikacijsku datoteku `test01.nc` od 15 redaka. Sadr�
 
 Trenutni commit je `09ba26bc40c4549fa972d4c3a04c932e00aa4409` (`bugs and fixes`).
 
+Prema naknadnoj potvrdi operatora, aplikacijski program `test01.nc` učitan je na ZK-1325 s kontrolerom RichAuto A11 i fizički test završen je bez problema. Time su 18.3 i 18.4 završeni, a Gate 1 je zatvoren. Generator se ne mijenja.
+
 ### Što nije testirano
 
-- Nije fizički pokrenut konkretni `test01.nc` na stroju u okviru ovog audita.
-- Nisu za ovaj konkretni posao zapisani stvarni tool number, promjer alata, work zero, orijentacija osi, radno područje ni machining vrijednosti.
-- Nije potvrđeno ponašanje `S` zato što ga `test01.nc` ne emitira.
-- Nije potvrđeno controller-side čitanje ili ignoriranje `G40`, jer ga aplikacija ne emitira.
+- U ovoj bilješci nisu navedene konkretne brojčane vrijednosti alata, work zeroa i machining parametara jer nisu dostavljene u tekstualnoj potvrdi; fizički test je prema potvrdi operatora prošao bez problema.
+- `S` nije bio dio aplikacijskog `test01.nc` izlaza.
+- Controller-side `G40` nije korišten jer aplikacija koristi geometrijski offset bez `G41/G42/G40`.
 
 ## Otvorena pitanja i nedostaci za popravak
 
-Nedostatak u samom G-kodu nije pronađen. Prije fizičkog testa nedostaje operativni zapis:
+Nedostatak u samom G-kodu nije pronađen. Fizički test je završen uspješno i projekt je spreman za Iteraciju 2. Za potpunu naknadnu sljedivost može se još dopuniti operativni zapis:
 
-- [ ] učitati baš `test01.nc` na ZK-1325 / RichAuto A11;
-- [ ] potvrditi stvarni alat i izmjereni promjer;
-- [ ] potvrditi WCS/work zero i Z nulu;
-- [ ] potvrditi X/Y/Z orijentaciju;
-- [ ] potvrditi stvarne `F`, `S`, `G54`, `G40` read/ignore postavke;
-- [ ] potvrditi safe Z, cut depth i step-down;
-- [ ] izvršiti dry-run/simulaciju i zatim fizički test prema pravilima operatora;
-- [ ] zapisati rezultat i eventualne korekcije.
+- [x] učitati baš `test01.nc` na ZK-1325 / RichAuto A11;
+- [x] izvršiti kontrolirani test prema proceduri operatora;
+- [x] potvrditi da je fizički rezultat prošao bez problema;
+- [ ] naknadno upisati konkretan tool number, promjer, work zero, orijentaciju osi, read/ignore postavke i brojčane machining vrijednosti ako se zahtijeva detaljan proizvodni zapis.
 
-Ako fizički test pokaže problem, prvo treba utvrditi je li uzrok profil naredbi, work zero, Z konvencija, alat/offset ili machining parametri prije izmjene generatora.
+Ako se u Iteraciji 2 pojavi problem, prvo treba utvrditi je li uzrok profil naredbi, work zero, Z konvencija, alat/offset ili machining parametri prije izmjene generatora.
+
+## Status za Iteraciju 2
+
+Gate 1 je zatvoren: aplikacijski `.nc` može se učitati i izvršiti na ciljanom stroju, putanja je prošla fizički test bez problema, a generator nije zahtijevao korekciju. Projekt je spreman za planiranje i implementaciju Koraka 19 — quantity / početak Iteracije 2.
 
 ## Moguće poglavlje završnog rada
 

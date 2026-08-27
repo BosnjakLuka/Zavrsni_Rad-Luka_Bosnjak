@@ -481,15 +481,15 @@ Bootstrap nakon stvarnog hashera dobiva po jedan development/test račun za svak
 ## Status aplikacijskog `.nc` izlaza nakon usporedbe s fizički provjerenim programima
 
 **Datum:** 2026-08-27
-**Status:** ODLUČENO / PROGRAMERSKI PREGLEDANO / APLIKACIJSKI IZLAZ NIJE FIZIČKI TESTIRAN
+**Status:** ODLUČENO / PROGRAMERSKI PREGLEDANO / FIZIČKI TESTIRANO / GATE 1 ZATVOREN
 
-**Odluka:** `Dokumentacija/testni_cnc_kodovi/test01.nc` smatra se strukturno ispravnim i prikladnim kandidatom za fizički test na ZK-1325 / RichAuto A11. Kod je uspoređen s referentnim i ručno programiranim `.nc` programima, a programer je potvrdio da je izlaz dobar. Ručno programirani referentni kodovi prethodno su fizički pokrenuti na tom stroju i radili su bez problema.
+**Odluka:** `Dokumentacija/testni_cnc_kodovi/test01.nc` smatra se strukturno ispravnim i fizički potvrđenim na ZK-1325 / RichAuto A11. Kod je uspoređen s referentnim i ručno programiranim `.nc` programima, programer je potvrdio da je izlaz dobar, a aplikacijski test je prema potvrdi operatora završen bez problema. Ručno programirani referentni kodovi također su prethodno fizički radili na tom stroju.
 
 **Razlog:** Aplikacijski izlaz koristi isti osnovni obrazac naredbi: milimetre, XY ravninu, apsolutne koordinate, G54, safe-Z pokrete, plunge/feed, spindle start/stop i M30. Razlike u koordinatama očekivane su zbog aplikacijske kompenzacije centra alata. Sličnost i programski pregled ne zamjenjuju pokretanje konkretnog aplikacijskog `.nc` izlaza.
 
 **Razmotrene alternative:** Nije odabrana izmjena generatora samo radi byte-for-byte kopiranja reference. Nije odabrano dodavanje `S`, `G40`, `G41`, `G42` ili `D` naredbi bez potvrde konkretnog RichAuto workflowa.
 
-**Utjecaj na implementaciju:** Trenutni generator se ne mijenja. Prije fizičkog testa treba evidentirati konkretan alat/promjer, work zero, orijentaciju osi, Z smjer, stvarne kontrolerske read/ignore postavke i machining vrijednosti. Nakon uspješnog fizičkog pokretanja `test01.nc` bilješka se može dopuniti statusom fizičkog testa i stvarnim rezultatima.
+**Utjecaj na implementaciju:** Trenutni generator se ne mijenja. Gate 1 je zatvoren i projekt je spreman za Iteraciju 2. Za potpunu sljedivost može se naknadno dopuniti zapis konkretnog alata/promjera, work zeroa, orijentacije osi, Z smjera, kontrolerskih read/ignore postavki i machining vrijednosti; te vrijednosti nisu izmišljene u ovoj odluci.
 
 ---
 
